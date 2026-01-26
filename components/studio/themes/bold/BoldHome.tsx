@@ -48,201 +48,87 @@ export default function BoldHome({ photographer, slug }: BoldHomeProps) {
     ];
 
     return (
-        <>
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes fade-right { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-                .animate-fade-up { animation: fade-up 0.8s ease-out forwards; }
-                .animate-fade-up-1 { animation: fade-up 0.8s ease-out 0.1s forwards; opacity: 0; }
-                .animate-fade-up-2 { animation: fade-up 0.8s ease-out 0.2s forwards; opacity: 0; }
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            ` }} />
-
-            <main className="min-h-screen bg-[#FDF8F5] pb-20">
-                {/* Hero Section - Split Design */}
-                <section className="min-h-screen flex flex-col lg:flex-row">
-                    {/* Left - Dark Section */}
-                    <div
-                        className="flex-1 flex flex-col justify-center px-8 md:px-16 py-24 lg:py-0 relative overflow-hidden"
-                        style={{ backgroundColor: primaryColor }}
-                    >
-                        <div className="absolute top-10 left-10 w-20 h-20 border border-white/20 rounded-full" />
-                        <div className="absolute bottom-20 right-10 w-32 h-32 border border-white/10 rounded-full" />
-
-                        <div className="relative z-10 max-w-xl">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-8 animate-fade-up">
-                                <span className="text-white/70 text-xs uppercase tracking-wider">Premium Fotoğrafçılık</span>
-                            </div>
-
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-white leading-tight mb-6 animate-fade-up-1">
-                                Anılarınızı
-                                <br />
-                                <span className="font-bold italic">Sanat Eserine</span>
-                                <br />
-                                Dönüştürüyoruz
-                            </h1>
-
-                            <p className="text-white/70 text-lg mb-10 max-w-md animate-fade-up-2">
-                                {photographer.aboutText || 'Profesyonel ekibimizle, en değerli anlarınızı ölümsüzleştiriyoruz.'}
-                            </p>
-
-                            <div className="flex flex-wrap gap-4 animate-fade-up-2">
-                                <Link
-                                    href={`/studio/${slug}/gallery`}
-                                    className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-full font-bold hover:bg-gray-100 transition-all shadow-xl"
-                                >
-                                    Galeri
-                                    <ArrowRight className="w-5 h-5" />
-                                </Link>
-                                <Link
-                                    href={`/studio/${slug}/packages`}
-                                    className="inline-flex items-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-full font-medium hover:bg-white/10 transition-all"
-                                >
-                                    Paketler
-                                </Link>
-                            </div>
-
-                            <div className="flex gap-8 mt-12 pt-8 border-t border-white/10">
-                                {[
-                                    { value: '500+', label: 'Mutlu Çift' },
-                                    { value: '10+', label: 'Yıl Deneyim' },
-                                    { value: '50+', label: 'Ödül' }
-                                ].map((stat, i) => (
-                                    <div key={i}>
-                                        <div className="text-2xl font-bold text-white">{stat.value}</div>
-                                        <div className="text-xs text-white/50 uppercase tracking-wider">{stat.label}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right - Image Section */}
-                    <div className="flex-1 relative min-h-[400px] lg:min-h-screen">
-                        <img src={bgImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                        <div className="absolute bottom-8 left-8 right-8 flex gap-4">
-                            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-xl flex items-center gap-3">
-                                <div
-                                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                                    style={{ backgroundColor: `${primaryColor}20` }}
-                                >
-                                    <Camera className="w-6 h-6" style={{ color: primaryColor }} />
-                                </div>
-                                <div>
-                                    <div className="font-bold text-gray-900">1000+</div>
-                                    <div className="text-xs text-gray-500">Projeler</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Horizontal Photo Slider */}
-                {portfolioPhotos.length > 0 && (
-                    <section className="py-16 bg-[#FDF8F5]">
-                        <div className="max-w-7xl mx-auto px-6 mb-6 flex items-center justify-between">
-                            <div>
-                                <span className="text-xs uppercase tracking-widest" style={{ color: primaryColor }}>Portfolyo</span>
-                                <h2 className="text-3xl font-bold text-gray-900 mt-2">Son Çalışmalar</h2>
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => scroll('left')}
-                                    disabled={!canScrollLeft}
-                                    className="p-3 rounded-full bg-white shadow-md border border-gray-100 disabled:opacity-30 hover:shadow-lg transition-all"
-                                >
-                                    <ChevronLeft className="w-5 h-5 text-gray-700" />
-                                </button>
-                                <button
-                                    onClick={() => scroll('right')}
-                                    disabled={!canScrollRight}
-                                    className="p-3 rounded-full text-white shadow-md disabled:opacity-30 hover:shadow-lg transition-all"
-                                    style={{ backgroundColor: primaryColor }}
-                                >
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div
-                            ref={sliderRef}
-                            className="flex gap-6 overflow-x-auto px-6 hide-scrollbar snap-x snap-mandatory"
-                        >
-                            {portfolioPhotos.map((photo: any, index: number) => (
-                                <Link
-                                    key={index}
-                                    href={`/studio/${slug}/gallery`}
-                                    className="flex-shrink-0 snap-start group"
-                                    style={{ width: '340px', height: '450px' }}
-                                >
-                                    <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-xl">
-                                        <img
-                                            src={photo.url}
-                                            alt={photo.title || ''}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                        <div
-                                            className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
-                                        />
-                                        <div className="absolute bottom-6 left-6 right-6">
-                                            <div
-                                                className="text-6xl font-bold opacity-20"
-                                                style={{ color: 'white' }}
-                                            >
-                                                {String(index + 1).padStart(2, '0')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
+        <main className="min-h-screen relative pb-24 bg-white text-gray-900">
+            {/* 1. Logo Section */}
+            <div className="pt-8 pb-6 bg-white text-center">
+                {photographer.logo ? (
+                    <img src={photographer.logo} alt={photographer.studioName} className="h-16 md:h-24 w-auto mx-auto object-contain" />
+                ) : (
+                    <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-gray-900">
+                        {photographer.studioName}
+                    </h1>
                 )}
+            </div>
 
-                {/* Features Section */}
-                <section className="py-20 px-6 bg-[#FDF8F5]">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="text-center mb-16">
-                            <span className="text-xs uppercase tracking-widest" style={{ color: primaryColor }}>Neden Biz</span>
-                            <h2 className="text-4xl font-bold text-gray-900 mt-4">Profesyonel Hizmet</h2>
-                        </div>
+            {/* 2. Banner/Slider Section */}
+            <div className="relative w-full h-[50vh] bg-black mb-12">
+                <img
+                    src={bgImage}
+                    alt="Cover"
+                    className="w-full h-full object-cover opacity-90"
+                />
+            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {features.map((feature, index) => (
-                                <div key={index} className="relative">
-                                    <div className="text-7xl font-bold opacity-10 mb-2" style={{ color: primaryColor }}>
-                                        {feature.num}
-                                    </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-3 -mt-10">{feature.title}</h3>
-                                    <p className="text-gray-600">{feature.desc}</p>
-                                </div>
-                            ))}
-                        </div>
+            <div className="max-w-4xl mx-auto px-6 space-y-16">
+                {/* 3. About Section */}
+                <section className="text-center">
+                    <h2 className="text-xs font-bold uppercase tracking-[0.2em] mb-4 text-gray-400">Hakkımızda</h2>
+                    <p className="text-xl md:text-2xl font-bold leading-tight text-gray-900">
+                        {photographer.aboutText || 'Profesyonel bakış açısıyla en iyi kareleri yakalıyoruz.'}
+                    </p>
+                </section>
+
+                {/* 4. Contact & Social Section */}
+                <section className="text-center space-y-8 border-t border-b border-gray-100 py-12">
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-900">İLETİŞİM</span>
+                        {photographer.phone && (
+                            <a href={`tel:${photographer.phone}`} className="text-3xl font-black tracking-tight hover:text-gray-600 transition-colors">
+                                {photographer.phone}
+                            </a>
+                        )}
+                    </div>
+
+                    <div className="flex justify-center gap-4">
+                        {photographer.instagram && (
+                            <a href={photographer.instagram} target="_blank" rel="noopener noreferrer" className="p-4 bg-gray-100 hover:bg-black hover:text-white transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+                            </a>
+                        )}
+                        {photographer.facebook && (
+                            <a href={photographer.facebook} target="_blank" rel="noopener noreferrer" className="p-4 bg-gray-100 hover:bg-black hover:text-white transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+                            </a>
+                        )}
+                        {photographer.whatsapp && (
+                            <a href={`https://wa.me/${photographer.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-4 bg-gray-100 hover:bg-black hover:text-white transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M16.24 14.76c-.22-.1-.95-.45-1.1-.5-.14-.06-.25-.08-.35.08-.11.16-.43.53-.52.64-.1.11-.2.13-.42.02a11.1 11.1 0 0 1-3.23-2 11.35 11.35 0 0 1-1.95-2.42c-.11-.2-.01-.3.09-.4.08-.09.19-.23.28-.35.1-.1.12-.18.18-.3.06-.12.03-.23-.01-.32-.05-.1-.45-1.09-.62-1.5-.16-.38-.33-.33-.45-.33-.12 0-.25 0-.38 0a.73.73 0 0 0-.54.26c-.19.2-.72.7-.72 1.71 0 1.01.74 2 .84 2.13.1.14 2.92 4.47 7.08 6.27.99.43 1.77.7 2.37.9.99.33 1.9.28 2.61.18.8-.12 2.48-1.02 2.83-2 .35-.99.35-1.83.25-2-.1-.18-.36-.28-.58-.39z" /></svg>
+                            </a>
+                        )}
                     </div>
                 </section>
 
-                {/* CTA Section */}
-                <section className="py-20 px-6" style={{ backgroundColor: primaryColor }}>
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Hikayenizi Anlatmaya Hazır mısınız?</h2>
-                        <p className="text-white/70 text-lg mb-10 max-w-xl mx-auto">Size özel teklif almak için hemen iletişime geçin</p>
-                        <Link
-                            href={`/studio/${slug}/contact`}
-                            className="inline-flex items-center gap-2 px-10 py-5 bg-white text-gray-900 rounded-full font-bold hover:bg-gray-100 transition-all shadow-xl text-lg"
-                        >
-                            İletişime Geç
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                    </div>
+                {/* 5. Menu Links Grid */}
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link href={`/studio/${slug}/gallery`} className="group block p-8 bg-black text-white text-center hover:bg-gray-900 transition-colors">
+                        <span className="font-bold uppercase tracking-widest group-hover:underline decoration-2 underline-offset-4">Galeri</span>
+                    </Link>
+                    <Link href={`/studio/${slug}/packages`} className="group block p-8 bg-gray-100 text-gray-900 text-center hover:bg-gray-200 transition-colors">
+                        <span className="font-bold uppercase tracking-widest">Paketler</span>
+                    </Link>
+                    <Link href={`/studio/${slug}/contact`} className="group block p-8 bg-gray-100 text-gray-900 text-center hover:bg-gray-200 transition-colors">
+                        <span className="font-bold uppercase tracking-widest">İletişim</span>
+                    </Link>
+                    <Link href={`/studio/${slug}/about`} className="group block p-8 bg-black text-white text-center hover:bg-gray-900 transition-colors">
+                        <span className="font-bold uppercase tracking-widest group-hover:underline decoration-2 underline-offset-4">Hakkımızda</span>
+                    </Link>
                 </section>
+            </div>
 
-                {/* Footer */}
-                <footer className="py-8 bg-[#FDF8F5] text-center text-gray-500 text-sm">
-                    © {new Date().getFullYear()} {photographer.studioName}
-                </footer>
-            </main>
-        </>
+            {/* Footer */}
+            <footer className="py-8 text-center text-gray-400 text-xs uppercase tracking-widest mt-12 mb-4">
+                © {new Date().getFullYear()} {photographer.studioName}
+            </footer>
+        </main>
     );
 }

@@ -7,6 +7,9 @@ import WarmHome from '@/components/studio/themes/warm/WarmHome';
 import PlayfulHome from '@/components/studio/themes/playful/PlayfulHome';
 import BoldHome from '@/components/studio/themes/bold/BoldHome';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const photographer = await getPhotographer(slug);

@@ -14,6 +14,7 @@ declare module "next-auth" {
             storageLimit: number;
             studioName?: string;
             subscriptionExpiry?: string;
+            packageType?: 'trial' | 'starter' | 'pro' | 'premium';
         } & DefaultSession["user"]
     }
 
@@ -26,6 +27,7 @@ declare module "next-auth" {
         storageLimit: number;
         studioName?: string;
         subscriptionExpiry?: string;
+        packageType?: 'trial' | 'starter' | 'pro' | 'premium';
     }
 }
 
@@ -39,5 +41,6 @@ declare module "next-auth/jwt" {
         storageLimit: number;
         studioName?: string;
         subscriptionExpiry?: string;
+        packageType?: 'trial' | 'starter' | 'pro' | 'premium';
     }
 }

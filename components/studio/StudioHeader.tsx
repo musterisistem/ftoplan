@@ -77,33 +77,36 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
         switch (theme) {
             case 'playful':
                 return {
-                    header: scrolled
+                    headerClass: scrolled
                         ? 'bg-white/95 backdrop-blur-xl shadow-sm'
                         : 'bg-[#E8F4FC]/90 backdrop-blur-md',
-                    text: 'text-gray-800',
-                    loginBg: 'bg-gray-900 text-white',
-                    loginHover: 'hover:bg-gray-800',
+                    headerStyle: {},
+                    textClass: 'text-gray-800',
+                    loginClass: 'bg-gray-900 text-white hover:bg-gray-800',
+                    loginStyle: {},
                     modalAccent: '#f97316'
                 };
             case 'bold':
                 return {
-                    header: scrolled
+                    headerClass: scrolled
                         ? 'bg-white/95 backdrop-blur-xl shadow-sm'
-                        : `bg-[${primaryColor}]/90 backdrop-blur-md`,
-                    text: scrolled ? 'text-gray-800' : 'text-white',
-                    loginBg: 'bg-white text-gray-900',
-                    loginHover: 'hover:bg-gray-100',
+                        : 'backdrop-blur-md',
+                    headerStyle: scrolled ? {} : { backgroundColor: `${primaryColor}e6` },
+                    textClass: scrolled ? 'text-gray-800' : 'text-white',
+                    loginClass: 'bg-white text-gray-900 hover:bg-gray-100',
+                    loginStyle: {},
                     modalAccent: primaryColor
                 };
             case 'warm':
             default:
                 return {
-                    header: scrolled
+                    headerClass: scrolled
                         ? 'bg-white/95 backdrop-blur-xl shadow-sm'
                         : 'bg-white/80 backdrop-blur-md',
-                    text: 'text-gray-800',
-                    loginBg: `bg-[${primaryColor}] text-white`,
-                    loginHover: 'hover:opacity-90',
+                    headerStyle: {},
+                    textClass: 'text-gray-800',
+                    loginClass: 'text-white hover:opacity-90',
+                    loginStyle: { backgroundColor: primaryColor },
                     modalAccent: primaryColor
                 };
         }
@@ -114,14 +117,15 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 py-3 ${styles.header}`}
+                className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 py-3 ${styles.headerClass}`}
+                style={styles.headerStyle}
             >
                 <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
                     {/* Left: Menu Button (Mobile) */}
                     <div className="flex items-center min-w-[100px] lg:min-w-0">
                         <button
                             onClick={() => setShowMenu(true)}
-                            className={`p-2 transition-colors lg:hidden ${styles.text}`}
+                            className={`p-2 transition-colors lg:hidden ${styles.textClass}`}
                         >
                             <Menu className="w-6 h-6" />
                         </button>
@@ -133,8 +137,8 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
                                     key={item.label}
                                     href={item.href}
                                     className={`text-sm font-medium transition-colors ${pathname === item.href
-                                        ? styles.text
-                                        : `${styles.text} opacity-70 hover:opacity-100`
+                                        ? styles.textClass
+                                        : `${styles.textClass} opacity-70 hover:opacity-100`
                                         }`}
                                 >
                                     {item.label}
@@ -149,8 +153,8 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
                             <img src={photographer.logo} alt="" className="h-8 sm:h-10 w-auto" />
                         ) : (
                             <div className="flex items-center gap-2">
-                                <Camera className={`w-5 h-5 sm:w-6 sm:h-6 ${styles.text}`} />
-                                <span className={`font-bold text-sm sm:text-lg ${styles.text} hidden sm:inline`} style={{ fontFamily: theme === 'warm' ? 'Georgia, serif' : 'inherit' }}>
+                                <Camera className={`w-5 h-5 sm:w-6 sm:h-6 ${styles.textClass}`} />
+                                <span className={`font-bold text-sm sm:text-lg ${styles.textClass} hidden sm:inline`} style={{ fontFamily: theme === 'warm' ? 'Georgia, serif' : 'inherit' }}>
                                     {photographer.studioName}
                                 </span>
                             </div>
@@ -164,8 +168,8 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
                                 key={item.label}
                                 href={item.href}
                                 className={`text-sm font-medium transition-colors ${pathname === item.href
-                                    ? styles.text
-                                    : `${styles.text} opacity-70 hover:opacity-100`
+                                    ? styles.textClass
+                                    : `${styles.textClass} opacity-70 hover:opacity-100`
                                     }`}
                             >
                                 {item.label}
@@ -179,7 +183,8 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
                             <div className="flex items-center gap-2">
                                 <Link
                                     href={`/studio/${photographer.slug}/selection`}
-                                    className={`hidden sm:flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full transition-all ${styles.loginBg} ${styles.loginHover}`}
+                                    className={`hidden sm:flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full transition-all ${styles.loginClass}`}
+                                    style={styles.loginStyle}
                                 >
                                     Panelim
                                 </Link>
@@ -193,7 +198,8 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
                         ) : (
                             <button
                                 onClick={() => setShowLogin(true)}
-                                className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${styles.loginBg} ${styles.loginHover}`}
+                                className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${styles.loginClass}`}
+                                style={styles.loginStyle}
                             >
                                 <User className="w-4 h-4" />
                                 <span>Müşteri Girişi</span>

@@ -53,9 +53,13 @@ export async function POST(req: Request) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Calculate subscription expiry (1 year from now)
+        // Calculate subscription expiry
         const subscriptionExpiry = new Date();
-        subscriptionExpiry.setFullYear(subscriptionExpiry.getFullYear() + 1);
+        if (packageType === 'trial') {
+            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 7); // 7 days for trial
+        } else {
+            subscriptionExpiry.setFullYear(subscriptionExpiry.getFullYear() + 1); // 1 year for others
+        }
 
         // Create photographer
         const photographerData = {

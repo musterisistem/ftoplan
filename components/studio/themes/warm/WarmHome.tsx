@@ -42,142 +42,95 @@ export default function WarmHome({ photographer, slug }: WarmHomeProps) {
     };
 
     return (
-        <>
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @keyframes fade-up { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-                .animate-fade-up { animation: fade-up 0.8s ease-out forwards; }
-                .animate-fade-up-delay { animation: fade-up 0.8s ease-out 0.2s forwards; opacity: 0; }
-                .animate-fade-up-delay-2 { animation: fade-up 0.8s ease-out 0.4s forwards; opacity: 0; }
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            ` }} />
+        <main className="min-h-screen relative pb-24" style={{ backgroundColor: '#FDF8F5' }}>
+            {/* 1. Logo Section */}
+            <div className="pt-8 pb-6 bg-white/50 backdrop-blur-sm text-center">
+                {photographer.logo ? (
+                    <img src={photographer.logo} alt={photographer.studioName} className="h-16 md:h-20 w-auto mx-auto object-contain" />
+                ) : (
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800" style={{ fontFamily: 'Georgia, serif' }}>
+                        {photographer.studioName}
+                    </h1>
+                )}
+            </div>
 
-            <main className="min-h-screen relative overflow-hidden pb-20">
-                {/* Warm Gradient Background */}
-                <div
-                    className="fixed inset-0 z-0"
-                    style={{ background: 'linear-gradient(180deg, #87CEEB 0%, #F5D5C8 30%, #FBEAE3 60%, #FDF8F5 100%)' }}
+            {/* 2. Banner/Slider Section */}
+            <div className="relative w-full aspect-[4/3] md:aspect-[21/9] bg-gray-100 mb-8">
+                <img
+                    src={bgImage}
+                    alt="Cover"
+                    className="w-full h-full object-cover shadow-sm"
                 />
+            </div>
 
-                {/* Hero Section */}
-                <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-6 pt-24 pb-16 z-10">
-                    {/* Hero Image Container */}
-                    <div className="relative w-full max-w-md md:max-w-lg mx-auto mb-8 animate-fade-up">
-                        <div className="relative rounded-[2rem] overflow-hidden shadow-2xl shadow-black/20 aspect-[3/4]">
-                            <img src={bgImage} alt="" className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#FBEAE3]/80 via-transparent to-transparent" />
-                        </div>
+            <div className="max-w-4xl mx-auto px-6 space-y-12">
+                {/* 3. About Section */}
+                <section className="text-center">
+                    <div className="inline-flex items-center gap-2 mb-4">
+                        <div className="h-px w-8 bg-gray-300"></div>
+                        <span className="text-sm uppercase tracking-widest text-gray-500">Hakkımızda</span>
+                        <div className="h-px w-8 bg-gray-300"></div>
+                    </div>
+                    <p className="text-lg text-gray-700 leading-relaxed font-light">
+                        {photographer.aboutText || 'Hoşgeldiniz. En özel anlarınızı ölümsüzleştirmek için buradayız.'}
+                    </p>
+                </section>
+
+                {/* 4. Contact & Social Section */}
+                <section className="text-center space-y-6">
+                    <div className="flex flex-col items-center gap-3">
+                        <span className="text-sm font-medium text-gray-400">İLETİŞİM</span>
+                        {photographer.phone && (
+                            <a href={`tel:${photographer.phone}`} className="text-2xl font-serif text-gray-900 hover:opacity-70 transition-opacity">
+                                {photographer.phone}
+                            </a>
+                        )}
                     </div>
 
-                    {/* Content */}
-                    <div className="relative z-10 text-center max-w-lg mx-auto">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm mb-6 animate-fade-up">
-                            <Sparkles className="w-4 h-4" style={{ color: primaryColor }} />
-                            <span className="text-sm font-medium text-gray-700">Profesyonel Fotoğrafçılık</span>
-                        </div>
-
-                        <h1
-                            className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-fade-up-delay"
-                            style={{ fontFamily: 'Georgia, serif' }}
-                        >
-                            {photographer.studioName}
-                        </h1>
-
-                        <p className="text-gray-600 text-base md:text-lg leading-relaxed mb-8 max-w-md mx-auto animate-fade-up-delay">
-                            {photographer.aboutText || 'Anlarınızı en güzel şekilde ölümsüzleştiriyoruz.'}
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center animate-fade-up-delay-2">
-                            <Link
-                                href={`/studio/${slug}/gallery`}
-                                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-semibold text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-                                style={{ backgroundColor: primaryColor }}
-                            >
-                                <ImageIcon className="w-5 h-5" />
-                                Portfolyo
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                            <Link
-                                href={`/studio/${slug}/packages`}
-                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all"
-                            >
-                                <Package className="w-5 h-5" />
-                                Paketler
-                            </Link>
-                        </div>
+                    <div className="flex justify-center gap-6 pt-4">
+                        {photographer.instagram && (
+                            <a href={photographer.instagram} target="_blank" rel="noopener noreferrer" className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-pink-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+                            </a>
+                        )}
+                        {photographer.facebook && (
+                            <a href={photographer.facebook} target="_blank" rel="noopener noreferrer" className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+                            </a>
+                        )}
+                        {photographer.whatsapp && (
+                            <a href={`https://wa.me/${photographer.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-green-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M16.24 14.76c-.22-.1-.95-.45-1.1-.5-.14-.06-.25-.08-.35.08-.11.16-.43.53-.52.64-.1.11-.2.13-.42.02a11.1 11.1 0 0 1-3.23-2 11.35 11.35 0 0 1-1.95-2.42c-.11-.2-.01-.3.09-.4.08-.09.19-.23.28-.35.1-.1.12-.18.18-.3.06-.12.03-.23-.01-.32-.05-.1-.45-1.09-.62-1.5-.16-.38-.33-.33-.45-.33-.12 0-.25 0-.38 0a.73.73 0 0 0-.54.26c-.19.2-.72.7-.72 1.71 0 1.01.74 2 .84 2.13.1.14 2.92 4.47 7.08 6.27.99.43 1.77.7 2.37.9.99.33 1.9.28 2.61.18.8-.12 2.48-1.02 2.83-2 .35-.99.35-1.83.25-2-.1-.18-.36-.28-.58-.39z" /></svg>
+                            </a>
+                        )}
                     </div>
                 </section>
 
-                {/* Horizontal Photo Slider */}
-                {portfolioPhotos.length > 0 && (
-                    <section className="relative z-10 py-12 bg-white/50 backdrop-blur-sm">
-                        <div className="max-w-7xl mx-auto px-6 mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
-                                    Çalışmalarımız
-                                </h2>
-                                <div className="w-12 h-1 mt-2 rounded-full" style={{ backgroundColor: primaryColor }} />
-                            </div>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => scroll('left')}
-                                    disabled={!canScrollLeft}
-                                    className="p-3 rounded-full bg-white shadow-md disabled:opacity-30 hover:shadow-lg transition-all"
-                                    style={{ borderColor: primaryColor }}
-                                >
-                                    <ChevronLeft className="w-5 h-5" style={{ color: primaryColor }} />
-                                </button>
-                                <button
-                                    onClick={() => scroll('right')}
-                                    disabled={!canScrollRight}
-                                    className="p-3 rounded-full bg-white shadow-md disabled:opacity-30 hover:shadow-lg transition-all"
-                                >
-                                    <ChevronRight className="w-5 h-5" style={{ color: primaryColor }} />
-                                </button>
-                            </div>
-                        </div>
+                {/* 5. Menu Links Grid */}
+                <section className="grid grid-cols-2 gap-4 pt-8">
+                    <Link href={`/studio/${slug}/gallery`} className="block p-6 bg-white rounded-xl shadow-sm text-center border-b-4 border-pink-100 hover:-translate-y-1 transition-transform">
+                        <ImageIcon className="w-8 h-8 text-pink-400 mx-auto mb-2" />
+                        <span className="font-semibold text-gray-700">Galeri</span>
+                    </Link>
+                    <Link href={`/studio/${slug}/packages`} className="block p-6 bg-white rounded-xl shadow-sm text-center border-b-4 border-purple-100 hover:-translate-y-1 transition-transform">
+                        <Package className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                        <span className="font-semibold text-gray-700">Paketler</span>
+                    </Link>
+                    <Link href={`/studio/${slug}/contact`} className="block p-6 bg-white rounded-xl shadow-sm text-center border-b-4 border-blue-100 hover:-translate-y-1 transition-transform">
+                        <ArrowRight className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                        <span className="font-semibold text-gray-700">İletişim</span>
+                    </Link>
+                    <Link href={`/studio/${slug}/about`} className="block p-6 bg-white rounded-xl shadow-sm text-center border-b-4 border-orange-100 hover:-translate-y-1 transition-transform">
+                        <Sparkles className="w-8 h-8 text-orange-400 mx-auto mb-2" />
+                        <span className="font-semibold text-gray-700">Hakkımızda</span>
+                    </Link>
+                </section>
+            </div>
 
-                        <div
-                            ref={sliderRef}
-                            className="flex gap-4 overflow-x-auto px-6 hide-scrollbar snap-x snap-mandatory"
-                        >
-                            {portfolioPhotos.map((photo: any, index: number) => (
-                                <Link
-                                    key={index}
-                                    href={`/studio/${slug}/gallery`}
-                                    className="flex-shrink-0 snap-start group"
-                                    style={{ width: '280px', height: '360px' }}
-                                >
-                                    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-xl">
-                                        <img
-                                            src={photo.url}
-                                            alt={photo.title || ''}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                        <div
-                                            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
-                                            style={{ background: `linear-gradient(135deg, ${primaryColor}80, ${primaryColor}40)` }}
-                                        >
-                                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl">
-                                                <ArrowRight className="w-5 h-5 text-gray-800" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
-                {/* Footer */}
-                <footer className="relative z-10 py-8 px-6 bg-white/30 backdrop-blur-sm text-center border-t border-white/50">
-                    <p className="text-gray-500 text-sm">
-                        © {new Date().getFullYear()} {photographer.studioName}
-                    </p>
-                </footer>
-            </main>
-        </>
+            {/* Footer */}
+            <footer className="py-8 text-center text-gray-400 text-sm mt-12 mb-4">
+                © {new Date().getFullYear()} {photographer.studioName}
+            </footer>
+        </main>
     );
 }

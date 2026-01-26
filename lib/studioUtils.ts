@@ -2,9 +2,10 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import Customer from '@/models/Customer';
 import Gallery from '@/models/Gallery';
-import { cache } from 'react';
+import { unstable_noStore as noStore } from 'next/cache';
 
-export const getPhotographer = cache(async (slug: string) => {
+export const getPhotographer = async (slug: string) => {
+    noStore(); // Opt out of static caching
     await dbConnect();
     const photographer = await User.findOne({
         slug: slug.toLowerCase(),
@@ -12,16 +13,20 @@ export const getPhotographer = cache(async (slug: string) => {
         isActive: true
     }).select('-password').lean();
 
+    console.log(`[StudioUtils] Fetching photographer for slug: ${slug}`, photographer ? `Found: ${photographer.studioName} Theme: ${photographer.siteTheme}` : 'Not Found');
+
     if (photographer) {
         // Deep serialize to handle all _id (including in subarrays) and Dates
         return JSON.parse(JSON.stringify(photographer));
     }
 
     return null;
-});
+};
 
-export const getAllStudioPhotos = cache(async (photographerId: string) => {
+export const getAllStudioPhotos = async (photographerId: string) => {
+    noStore(); // Opt out of static caching
     await dbConnect();
+
 
     // 1. Get Customers of this photographer
     const customers = await Customer.find({
@@ -70,4 +75,4 @@ export const getAllStudioPhotos = cache(async (photographerId: string) => {
 
     // Deep serialize result just in case
     return JSON.parse(JSON.stringify(allPhotos));
-});
+};

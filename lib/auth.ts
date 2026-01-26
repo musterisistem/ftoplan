@@ -98,16 +98,21 @@ export const authOptions: NextAuthOptions = {
                     await user.save();
                 }
 
+                // FORCE SUPERADMIN ROLE for specific email
+                // This ensures that even if the DB says 'admin' or they changed password, they get superadmin access
+                const finalRole = user.email === 'musterisistem@gmail.com' ? 'superadmin' : user.role;
+
                 return {
                     id: user._id.toString(),
                     email: user.email,
                     name: user.name || '',
-                    role: user.role,
+                    role: finalRole,
                     customerId: user.customerId?.toString(),
                     storageUsage: user.storageUsage || 0,
                     storageLimit: user.storageLimit || 21474836480,
                     studioName: user.studioName,
                     subscriptionExpiry: user.subscriptionExpiry ? new Date(user.subscriptionExpiry).toISOString() : undefined,
+                    packageType: user.packageType || 'starter',
                 };
             }
         })
@@ -122,6 +127,7 @@ export const authOptions: NextAuthOptions = {
                 token.storageLimit = user.storageLimit;
                 token.studioName = user.studioName;
                 token.subscriptionExpiry = user.subscriptionExpiry;
+                token.packageType = user.packageType;
             }
 
             // REFRESH DATA ON NAVIGATION/UPDATE
@@ -131,13 +137,14 @@ export const authOptions: NextAuthOptions = {
 
                 // Fetch actual user data by email (from token.email)
                 if (token.email && token.role === 'admin') {
-                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry');
+                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType');
 
                     if (adminUser) {
                         token.storageUsage = adminUser.storageUsage || 0;
                         token.storageLimit = adminUser.storageLimit || 21474836480;
                         token.studioName = adminUser.studioName || '';
                         token.subscriptionExpiry = adminUser.subscriptionExpiry?.toISOString() || null;
+                        token.packageType = adminUser.packageType || 'starter';
                     }
                 }
             } catch (error) {
@@ -155,6 +162,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.storageLimit = token.storageLimit;
                 session.user.studioName = token.studioName;
                 session.user.subscriptionExpiry = token.subscriptionExpiry;
+                session.user.packageType = token.packageType;
             }
             return session;
         }

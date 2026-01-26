@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
@@ -69,6 +70,17 @@ export async function PUT(req: Request) {
 
         if (!user) {
             return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
+        }
+
+        // Revalidate the studio site path to show changes immediately
+        if (user.slug) {
+            try {
+                console.log('Revalidating studio path:', `/studio/${user.slug}`);
+                revalidatePath(`/studio/${user.slug}`, 'layout');
+                revalidatePath(`/studio/${user.slug}`, 'page');
+            } catch (err) {
+                console.error('Revalidation error:', err);
+            }
         }
 
         return NextResponse.json(user);

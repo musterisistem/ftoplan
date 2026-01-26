@@ -1,59 +1,60 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
-import Customer from '@/models/Customer';
+import Analytics from '@/models/Analytics';
 
 export async function GET() {
     try {
         await dbConnect();
 
-        // Get all photographers (role = 'admin')
-        const photographers = await User.find({ role: 'admin' });
+        // 1. User Stats
+        const totalPhotographers = await User.countDocuments({ role: 'admin' });
+        const activePhotographers = await User.countDocuments({ role: 'admin', isActive: true });
 
-        // Calculate stats
-        const totalPhotographers = photographers.length;
-        const activePhotographers = photographers.filter(p => p.isActive).length;
+        // 2. Storage Stats (Option A: Aggregate from all users)
+        // Sum up 'storageUsage' of all users
+        const storageResult = await User.aggregate([
+            { $match: { role: 'admin' } },
+            { $group: { _id: null, totalUsage: { $sum: "$storageUsage" } } }
+        ]);
+        const totalStorageUsage = storageResult.length > 0 ? storageResult[0].totalUsage : 0;
 
-        // Calculate total storage
-        let totalStorage = 0;
-        let usedStorage = 0;
-        photographers.forEach(p => {
-            totalStorage += p.storageLimit || 21474836480;
-            usedStorage += p.storageUsage || 0;
-        });
+        // 3. Analytics Stats
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // Count expiring subscriptions (within 30 days)
-        const thirtyDaysFromNow = new Date();
-        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        const viewsToday = await Analytics.countDocuments({ timestamp: { $gte: startOfToday } });
+        const viewsMonth = await Analytics.countDocuments({ timestamp: { $gte: startOfMonth } });
+        const viewsTotal = await Analytics.countDocuments({});
 
-        const expiringSubscriptions = photographers.filter(p => {
-            if (!p.subscriptionExpiry) return false;
-            const expiry = new Date(p.subscriptionExpiry);
-            return expiry <= thirtyDaysFromNow && expiry > new Date();
-        }).length;
-
-        // Calculate monthly revenue (based on package types)
-        const packagePrices: Record<string, number> = {
-            starter: 999,
-            pro: 1999,
-            premium: 3499
-        };
-
-        const monthlyRevenue = photographers.reduce((total, p) => {
-            return total + (packagePrices[p.packageType || 'starter'] || 0);
-        }, 0);
+        // Optional: Get recent views for "Live Feed"
+        const recentViews = await Analytics.find({})
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .populate('targetUserId', 'studioName name') // Populate photographer info
+            .lean();
 
         return NextResponse.json({
-            totalPhotographers,
-            activePhotographers,
-            totalStorage,
-            usedStorage,
-            monthlyRevenue: Math.round(monthlyRevenue / 12), // Yearly to monthly
-            expiringSubscriptions
+            users: {
+                total: totalPhotographers,
+                active: activePhotographers
+            },
+            storage: {
+                totalBytes: totalStorageUsage,
+                // Hardcoded bunny limit reference or just total usage
+                limitBytes: 1000 * 1024 * 1024 * 1024 // e.g. 1TB hypothetical bunny limit to show %
+            },
+            analytics: {
+                today: viewsToday,
+                month: viewsMonth,
+                total: viewsTotal,
+                recent: recentViews
+            }
         });
 
     } catch (error: any) {
-        console.error('Stats error:', error);
+        console.error('Superadmin stats error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -240,19 +240,25 @@ export default function Sidebar() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="relative">
-                                        <div className="w-6 h-6 bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-lg flex items-center justify-center">
+                                        <div className={`w-6 h-6 bg-gradient-to-br ${session?.user?.packageType === 'trial' ? 'from-gray-600 to-gray-700' : 'from-[#6366F1] to-[#8B5CF6]'} rounded-lg flex items-center justify-center`}>
                                             <Crown className="w-3 h-3 text-white" />
                                         </div>
-                                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full border border-[#1A202C] animate-pulse"></div>
+                                        <div className={`absolute -top-0.5 -right-0.5 w-2 h-2 ${session?.user?.packageType === 'trial' ? 'bg-orange-500' : 'bg-green-500'} rounded-full border border-[#1A202C] animate-pulse`}></div>
                                     </div>
                                     <div>
-                                        <h4 className="text-[10px] font-bold text-white">PRO ÜYELİK</h4>
-                                        <p className="text-[8px] text-gray-400">Premium Üye</p>
+                                        <h4 className="text-[10px] font-bold text-white">
+                                            {session?.user?.packageType === 'trial' ? 'DENEME SÜRÜMÜ' : 'PRO ÜYELİK'}
+                                        </h4>
+                                        <p className="text-[8px] text-gray-400">
+                                            {session?.user?.packageType === 'trial' ? 'Kısıtlı Süre' : 'Premium Üye'}
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-0.5 bg-green-500/20 border border-green-400/40 px-1.5 py-0.5 rounded-full">
-                                    <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                                    <span className="text-[8px] font-bold text-green-300">AKTİF</span>
+                                <div className={`flex items-center gap-0.5 ${session?.user?.packageType === 'trial' ? 'bg-orange-500/20 border-orange-400/40' : 'bg-green-500/20 border-green-400/40'} border px-1.5 py-0.5 rounded-full`}>
+                                    <div className={`w-1 h-1 ${session?.user?.packageType === 'trial' ? 'bg-orange-400' : 'bg-green-400'} rounded-full animate-pulse`}></div>
+                                    <span className={`text-[8px] font-bold ${session?.user?.packageType === 'trial' ? 'text-orange-300' : 'text-green-300'}`}>
+                                        {session?.user?.packageType === 'trial' ? `${daysRemaining} GÜN` : 'AKTİF'}
+                                    </span>
                                 </div>
                             </div>
                         </div>

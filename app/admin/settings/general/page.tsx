@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Save, User, Mail, Phone, Building, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Save, User, Mail, Phone, Building, Loader2, Check, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function GeneralSettingsPage() {
     const { status } = useSession();
@@ -16,6 +16,7 @@ export default function GeneralSettingsPage() {
         email: '',
         phone: '',
         studioName: '',
+        slug: '',
     });
 
     useEffect(() => {
@@ -30,6 +31,7 @@ export default function GeneralSettingsPage() {
                             email: data.email || '',
                             phone: data.phone || '',
                             studioName: data.studioName || '',
+                            slug: data.slug || '',
                         });
                     }
                 })
@@ -76,22 +78,34 @@ export default function GeneralSettingsPage() {
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25">
-                            <User className="w-7 h-7 text-white" />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25">
+                                <User className="w-7 h-7 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900">Genel Bilgiler</h1>
+                                <p className="text-gray-500">Profil ve stüdyo bilgilerinizi düzenleyin</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Genel Bilgiler</h1>
-                            <p className="text-gray-500">Profil ve stüdyo bilgilerinizi düzenleyin</p>
-                        </div>
+                        {settings.slug && (
+                            <a
+                                href={`/studio/${settings.slug}`}
+                                target="_blank"
+                                className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 text-purple-700 rounded-xl hover:bg-purple-50 transition-colors shadow-sm font-medium"
+                            >
+                                Siteyi Görüntüle
+                                <ExternalLink className="w-4 h-4" />
+                            </a>
+                        )}
                     </div>
                 </div>
 
                 {/* Message */}
                 {message.text && (
                     <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error'
-                            ? 'bg-red-50 text-red-700 border border-red-200'
-                            : 'bg-green-50 text-green-700 border border-green-200'
+                        ? 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-green-50 text-green-700 border border-green-200'
                         }`}>
                         {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
                         {message.text}

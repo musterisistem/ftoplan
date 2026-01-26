@@ -6,6 +6,8 @@ import WarmAbout from '@/components/studio/themes/warm/WarmAbout';
 import PlayfulAbout from '@/components/studio/themes/playful/PlayfulAbout';
 import BoldAbout from '@/components/studio/themes/bold/BoldAbout';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const photographer = await getPhotographer(slug);

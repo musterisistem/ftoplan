@@ -36,8 +36,8 @@ const UserSchema = new mongoose.Schema({
     // Subscription Management
     packageType: {
         type: String,
-        enum: ['starter', 'pro', 'premium'],
-        default: 'starter',
+        enum: ['trial', 'starter', 'pro', 'premium'],
+        default: 'trial',
     },
     subscriptionExpiry: {
         type: Date,
@@ -55,6 +55,18 @@ const UserSchema = new mongoose.Schema({
     phone: {
         type: String,
         default: '',
+    },
+    // Billing Information
+    billingInfo: {
+        companyType: {
+            type: String,
+            enum: ['individual', 'corporate'],
+            default: 'individual'
+        },
+        address: { type: String, default: '' },
+        taxOffice: { type: String, default: '' },
+        taxNumber: { type: String, default: '' },
+        identityNumber: { type: String, default: '' }, // TCKN for individuals
     },
     // Studio Website Settings (Subdomain)
     slug: {
