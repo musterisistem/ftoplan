@@ -52,12 +52,11 @@ export default function StudioBottomNav({ slug, primaryColor = '#8b4d62', theme 
     const styles = getThemeStyles();
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+        <div className="fixed bottom-6 left-4 right-4 z-50 md:hidden flex justify-center pb-safe-area">
             <div
-                className={`${styles.bg} backdrop-blur-xl border-t ${styles.border} shadow-[0_-4px_20px_rgba(0,0,0,0.08)]`}
-                style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+                className="w-full max-w-sm bg-gradient-to-r from-[#111] to-[#1a1a1a] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] rounded-full px-6 py-4"
             >
-                <div className="flex justify-around items-center px-2 py-2">
+                <div className="flex justify-between items-center">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
@@ -66,32 +65,16 @@ export default function StudioBottomNav({ slug, primaryColor = '#8b4d62', theme 
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className="relative flex flex-col items-center justify-center w-16 py-2 group transition-all duration-300"
+                                className="relative flex flex-col items-center justify-center group"
                             >
-                                {isActive && (
-                                    <div
-                                        className="absolute -top-2 w-10 h-1 rounded-full transition-all duration-300"
-                                        style={{ backgroundColor: primaryColor }}
-                                    />
-                                )}
-
                                 <div
-                                    className={`p-2 rounded-xl transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}
-                                    style={isActive ? { backgroundColor: `${primaryColor}15` } : {}}
+                                    className={`p-2 rounded-full transition-all duration-300 ${isActive ? 'bg-white text-black -translate-y-2 shadow-[0_4px_12px_rgba(255,255,255,0.3)]' : 'text-gray-400 hover:text-white'}`}
                                 >
                                     <Icon
-                                        className="w-5 h-5 transition-colors duration-300"
-                                        style={{ color: isActive ? primaryColor : '#9ca3af' }}
+                                        className="w-5 h-5"
                                         strokeWidth={isActive ? 2.5 : 2}
                                     />
                                 </div>
-
-                                <span
-                                    className="text-[10px] font-medium mt-1 transition-colors duration-300"
-                                    style={{ color: isActive ? primaryColor : '#9ca3af' }}
-                                >
-                                    {item.label}
-                                </span>
                             </Link>
                         );
                     })}

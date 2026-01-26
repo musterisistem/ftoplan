@@ -31,7 +31,9 @@ export default function CustomerEditPage() {
         phone: '',
         email: '',
         notes: '',
-        status: 'active'
+        status: 'active',
+        selectionLimits: { album: 22, cover: 1, poster: 1 },
+        selectedPhotos: []
     });
 
     // Fetch customer data
@@ -47,7 +49,9 @@ export default function CustomerEditPage() {
                     phone: data.phone || '',
                     email: data.email || '',
                     notes: data.notes || '',
-                    status: data.status || 'active'
+                    status: data.status || 'active',
+                    selectionLimits: data.selectionLimits || { album: 22, cover: 1, poster: 1 },
+                    selectedPhotos: data.selectedPhotos || []
                 });
             } catch (err: any) {
                 setError(err.message);
@@ -63,7 +67,19 @@ export default function CustomerEditPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        if (name.startsWith('limit_')) {
+            const limitType = name.replace('limit_', '');
+            setFormData(prev => ({
+                ...prev,
+                selectionLimits: {
+                    ...prev.selectionLimits,
+                    [limitType]: parseInt(value) || 0
+                }
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -251,18 +267,92 @@ export default function CustomerEditPage() {
                     />
                 </div>
 
-                {/* Submit */}
-                <div className="flex justify-end">
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
-                    >
-                        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                        Kaydet
-                    </button>
-                </div>
-            </form>
         </div>
+
+                {/* Selection Limits Settings */ }
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Save className="w-5 h-5 text-indigo-500" />
+            Albüm Onay Ayarları
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Albüm Fotoğraf Sayısı
+                </label>
+                <input
+                    type="number"
+                    name="limit_album"
+                    value={formData.selectionLimits?.album}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Poster Sayısı
+                </label>
+                <input
+                    type="number"
+                    name="limit_poster"
+                    value={formData.selectionLimits?.poster}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Kapak Fotoğraf Sayısı
+                </label>
+                <input
+                    type="number"
+                    name="limit_cover"
+                    value={formData.selectionLimits?.cover}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+            </div>
+        </div>
+    </div>
+
+    {/* Approved Selections Gallery */ }
+    {
+        (formData.selectedPhotos && formData.selectedPhotos.length > 0) && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-green-500" />
+                    Onaylanan Albüm ({formData.selectedPhotos.length})
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {formData.selectedPhotos.map((photo: any, index: number) => (
+                        <div key={index} className="relative aspect-square group rounded-lg overflow-hidden border border-gray-200">
+                            <img src={photo.url} alt="Selected" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className={`absolute top-2 right-2 px-2 py-1 text-[10px] font-bold uppercase rounded text-white ${photo.type === 'cover' ? 'bg-purple-500' :
+                                    photo.type === 'poster' ? 'bg-orange-500' :
+                                        'bg-blue-500'
+                                }`}>
+                                {photo.type === 'cover' ? 'KAPAK' : photo.type === 'poster' ? 'POSTER' : 'ALBÜM'}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    {/* Submit */ }
+    <div className="flex justify-end">
+        <button
+            type="submit"
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+        >
+            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            Kaydet
+        </button>
+    </div>
+            </form >
+        </div >
     );
 }

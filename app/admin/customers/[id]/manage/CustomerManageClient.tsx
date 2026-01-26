@@ -28,7 +28,10 @@ import {
     History,
     Download,
     CheckCircle2,
-    FileImage
+    FileImage,
+    Layout,
+    Image as ImageIcon,
+    Info
 } from 'lucide-react';
 import PhotoUpload from '@/components/admin/PhotoUpload';
 
@@ -55,6 +58,15 @@ interface Customer {
         filename: string;
         size: number;
         uploadedAt: string;
+    }[];
+    selectionLimits?: {
+        album: number;
+        cover: number;
+        poster: number;
+    };
+    selectedPhotos?: {
+        url: string;
+        type: 'album' | 'cover' | 'poster';
     }[];
 }
 
@@ -511,16 +523,193 @@ export default function CustomerManageClient({ customerId }: { customerId: strin
                 {activeTab === 'appointments' && <AppointmentsTab customerId={customerId} />}
                 {activeTab === 'payments' && <PaymentsTab customerId={customerId} />}
                 {activeTab === 'contract' && <ContractTab customerId={customerId} />}
-                {activeTab === 'album-settings' && <AlbumSettingsTab photos={customer.photos || []} />}
-                {activeTab === 'album-settings' && <AlbumSettingsTab photos={customer.photos || []} />}
+                {activeTab === 'album-settings' && <AlbumSettingsTab customer={customer} onUpdate={fetchCustomer} />}
                 {activeTab === 'send-album' && <SendAlbumTab customerId={customerId} initialPhotos={customer.photos || []} onPhotosUpdated={fetchCustomer} />}
-                {activeTab === 'approved-album' && <ApprovedAlbumTab />}
-                {activeTab === 'approved-album' && <ApprovedAlbumTab />}
+                {activeTab === 'approved-album' && <ApprovedAlbumTab customer={customer} />}
                 {activeTab === 'account' && <AccountTab />}
             </div>
-        </div >
+        </div>
     );
 }
+function AlbumSettingsTab({ customer, onUpdate }: { customer: Customer; onUpdate: () => void }) {
+    const [limits, setLimits] = useState(customer.selectionLimits || { album: 22, cover: 1, poster: 1 });
+    const [saving, setSaving] = useState(false);
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch(`/api/customers/${customer._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ selectionLimits: limits })
+            });
+
+            if (res.ok) {
+                alert('Limitler güncellendi!');
+                onUpdate();
+            } else {
+                alert('Güncelleme başarısız.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Hata oluştu.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-indigo-500" />
+                Albüm Onay Ayarları
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Albüm Fotoğraf Sayısı</label>
+                    <input
+                        type="number"
+                        value={limits.album}
+                        onChange={(e) => setLimits({ ...limits, album: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Kapak Fotoğraf Sayısı</label>
+                    <input
+                        type="number"
+                        value={limits.cover}
+                        onChange={(e) => setLimits({ ...limits, cover: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Poster Sayısı</label>
+                    <input
+                        type="number"
+                        value={limits.poster}
+                        onChange={(e) => setLimits({ ...limits, poster: parseInt(e.target.value) || 0 })}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                </div>
+            </div>
+            <div className="flex justify-end">
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+                >
+                    {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check className="w-5 h-5" />}
+                    Ayarları Kaydet
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// Update ApprovedAlbumTab Component
+// Update ApprovedAlbumTab Component
+// Update ApprovedAlbumTab Component
+function ApprovedAlbumTab({ customer }: { customer: Customer }) {
+    if (!customer.selectedPhotos || customer.selectedPhotos.length === 0) {
+        return (
+            <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileImage className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Henüz Seçim Yapılmadı</h3>
+                <p className="text-gray-500">Müşteri henüz fotoğraf seçimi yapmamış veya onaylamamış.</p>
+            </div>
+        );
+    }
+
+    // Group photos by type
+    const grouped = {
+        album: customer.selectedPhotos.filter(p => p.type === 'album'),
+        cover: customer.selectedPhotos.filter(p => p.type === 'cover'),
+        poster: customer.selectedPhotos.filter(p => p.type === 'poster'),
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        alert('Dosya isimleri kopyalandı!');
+    };
+
+    const renderGroup = (title: string, photos: typeof customer.selectedPhotos, colorClass: string, icon: any) => {
+        if (!photos || photos.length === 0) return null;
+
+        // Generate the search string: "filename1 OR filename2 OR ..."
+        // Fallback to extraction from URL if filename is missing
+        const searchString = photos.map(p => {
+            const name = p.filename || p.url.split('/').pop() || 'bilinmeyen-dosya';
+            // Decode URI component just in case URL encoded
+            try {
+                return decodeURIComponent(name);
+            } catch {
+                return name;
+            }
+        }).join(' OR ');
+
+        const Icon = icon;
+
+        return (
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 mb-6 last:mb-0">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass.replace('text-', 'bg-').replace('600', '100')}`}>
+                            <Icon className={`w-5 h-5 ${colorClass}`} />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-gray-900">{title} ({photos.length})</h4>
+                            <p className="text-xs text-gray-500">Windows Arama uyumlu format</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => copyToClipboard(searchString)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95"
+                    >
+                        <Copy className="w-4 h-4" />
+                        Kopyala
+                    </button>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg border border-gray-200 font-mono text-sm text-gray-600 break-all leading-relaxed relative group max-h-40 overflow-y-auto">
+                    {searchString}
+                    <div className="absolute inset-0 bg-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center select-none pointer-events-none sticky top-0 h-full">
+                        <span className="bg-black/75 text-white text-xs px-2 py-1 rounded">Kopyalamak için butona basın</span>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                Onaylanan Albüm Seçimleri
+            </h3>
+
+            <div className="space-y-6">
+                {renderGroup('Albüm Fotoğrafları', grouped.album, 'text-green-600', Album)}
+                {renderGroup('Kapak Fotoğrafları', grouped.cover, 'text-purple-600', Layout)}
+                {renderGroup('Poster Fotoğrafları', grouped.poster, 'text-orange-600', ImageIcon)}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-gray-100">
+                <div className="bg-blue-50 text-blue-800 p-4 rounded-xl flex items-start gap-3">
+                    <Info className="w-5 h-5 mt-0.5 shrink-0" />
+                    <div className="text-sm">
+                        <p className="font-bold mb-1">Nasıl Kullanılır?</p>
+                        <p>Yukarıdaki metni kopyalayın ve bilgisayarınızdaki fotoğraf klasörüne gidin. Sağ üstteki arama kutucuğuna yapıştırın. Windows otomatik olarak sadece seçilen bu fotoğrafları filtreleyecektir.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ... other existing exports ...
 
 // Tab Components
 function SummaryTab({ customer, appointmentStatus, albumStatus }: { customer: Customer; appointmentStatus: any; albumStatus: any }) {
@@ -1497,49 +1686,7 @@ function ContractTab({ customerId }: { customerId: string }) {
         </div>
     );
 }
-function AlbumSettingsTab({ photos }: { photos: any[] }) {
-    if (!photos || photos.length === 0) {
-        return (
-            <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FileImage className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Henüz Fotoğraf Yok</h3>
-                <p className="text-gray-500 text-sm">Bu müşteri için henüz albüm fotoğrafı yüklenmemiş.</p>
-            </div>
-        );
-    }
 
-    return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                Albüm Onay Ayarları
-                <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-full font-medium">
-                    {photos.length} Fotoğraf
-                </span>
-            </h2>
-
-            <div className="grid grid-cols-4 md:grid-cols-8 lg:grid-cols-10 gap-2">
-                {photos.map((photo, index) => (
-                    <div key={index} className="aspect-square relative group overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                        <img
-                            src={photo.url}
-                            alt={photo.filename}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                            loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                    </div>
-                ))}
-            </div>
-
-            <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-2">Seçim Ayarları</h3>
-                <p className="text-sm text-gray-500">Müşterinin fotoğraf seçimi ile ilgili ayarlar burada yer alacak.</p>
-            </div>
-        </div>
-    );
-}
 function SendAlbumTab({ customerId, initialPhotos, onPhotosUpdated }: { customerId: string, initialPhotos: any[], onPhotosUpdated: () => void }) {
     return (
         <div className="space-y-6">
@@ -1562,9 +1709,7 @@ function SendAlbumTab({ customerId, initialPhotos, onPhotosUpdated }: { customer
         </div>
     );
 }
-function ApprovedAlbumTab() {
-    return <div className="bg-white rounded-2xl border border-gray-100 p-6"><h2 className="text-xl font-bold text-gray-900 mb-4">Onaylanan Albüm</h2><p className="text-gray-500">Yakında eklenecek.</p></div>;
-}
+
 function AccountTab() {
     return <div className="bg-white rounded-2xl border border-gray-100 p-6"><h2 className="text-xl font-bold text-gray-900 mb-4">Üye Hesap Ayarları</h2><p className="text-gray-500">Yakında eklenecek.</p></div>;
 }

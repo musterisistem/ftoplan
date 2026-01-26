@@ -1,6 +1,7 @@
 import { getPhotographer } from '@/lib/studioUtils';
 import StudioBottomNav from '@/components/studio/StudioBottomNav';
 import WhatsAppButton from '@/components/studio/WhatsAppButton';
+import StudioTopNav from '@/components/studio/StudioTopNav';
 import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -45,19 +46,6 @@ export default async function StudioLayout({
         );
     }
 
-    // Theme-specific background colors
-    const getThemeBg = () => {
-        switch (theme) {
-            case 'playful':
-                return 'linear-gradient(180deg, #E8F4FC 0%, #FDF6F0 50%, #FEF7F0 100%)';
-            case 'bold':
-                return '#FDF8F5';
-            case 'warm':
-            default:
-                return 'linear-gradient(180deg, #87CEEB 0%, #F5D5C8 30%, #FBEAE3 60%, #FDF8F5 100%)';
-        }
-    };
-
     return (
         <div className="min-h-screen font-sans antialiased">
             {/* Trial Warning Banner for Clients */}
@@ -66,6 +54,9 @@ export default async function StudioLayout({
                     <p>⚠️ Bu web sitesi <strong>Deneme Sürümü</strong> modundadır ve geçici olarak yayındadır.</p>
                 </div>
             )}
+
+            {/* Global Top Navigation */}
+            <StudioTopNav studioName={photographer.studioName} logo={photographer.logo} />
 
             {/* Main Content */}
             <div className="pt-0 pb-20">
@@ -85,14 +76,14 @@ export default async function StudioLayout({
                     width: 8px;
                 }
                 ::-webkit-scrollbar-track {
-                    background: #FDF8F5; 
+                    background: #1a1a1a; 
                 }
                 ::-webkit-scrollbar-thumb {
-                    background: #E8D5CE; 
+                    background: #333; 
                     border-radius: 4px;
                 }
                 ::-webkit-scrollbar-thumb:hover {
-                    background: #D4C0B8; 
+                    background: #444; 
                 }
                 
                 /* Safe area for bottom nav */

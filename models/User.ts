@@ -56,6 +56,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    address: {
+        type: String,
+        default: '',
+    },
     // Billing Information
     billingInfo: {
         companyType: {
@@ -96,6 +100,14 @@ const UserSchema = new mongoose.Schema({
     aboutText: {
         type: String,
         default: '',
+    },
+    heroTitle: {
+        type: String,
+        default: 'Catch Your Life Moment',
+    },
+    heroSubtitle: {
+        type: String,
+        default: 'Photography & Cinema',
     },
     instagram: {
         type: String,

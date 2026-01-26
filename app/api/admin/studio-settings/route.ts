@@ -19,7 +19,7 @@ export async function GET() {
         await dbConnect();
 
         const user = await User.findOne({ email: session.user.email, role: 'admin' })
-            .select('name email studioName slug logo bannerImage primaryColor siteTheme aboutText phone instagram facebook whatsapp portfolioPhotos');
+            .select('name email studioName slug logo bannerImage primaryColor siteTheme aboutText phone address instagram facebook whatsapp portfolioPhotos heroTitle heroSubtitle');
 
         console.log('Studio Settings - User found:', user ? { email: user.email, slug: user.slug } : 'NOT FOUND');
 
@@ -44,7 +44,8 @@ export async function PUT(req: Request) {
         }
 
         const body = await req.json();
-        const { studioName, logo, bannerImage, primaryColor, siteTheme, aboutText, phone, instagram, facebook, whatsapp, portfolioPhotos } = body;
+        console.log('Studio Settings PUT Body:', JSON.stringify(body, null, 2));
+        const { studioName, logo, bannerImage, primaryColor, siteTheme, aboutText, phone, address, instagram, facebook, whatsapp, portfolioPhotos, slug, heroTitle, heroSubtitle } = body;
 
         await dbConnect();
 
@@ -53,20 +54,26 @@ export async function PUT(req: Request) {
             {
                 $set: {
                     studioName,
+                    slug,
                     logo,
                     bannerImage,
                     primaryColor,
                     siteTheme,
                     aboutText,
                     phone,
+                    address,
                     instagram,
                     facebook,
                     whatsapp,
-                    portfolioPhotos
+                    portfolioPhotos,
+                    heroTitle,
+                    heroSubtitle
                 }
             },
             { new: true }
         ).select('-password');
+
+        console.log('Updated User in DB:', user ? { email: user.email, logo: user.logo, theme: user.siteTheme } : 'UPDATE FAILED');
 
         if (!user) {
             return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });

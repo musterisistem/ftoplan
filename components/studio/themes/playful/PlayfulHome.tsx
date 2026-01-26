@@ -42,9 +42,9 @@ export default function PlayfulHome({ photographer, slug }: PlayfulHomeProps) {
     };
 
     return (
-        <main className="min-h-screen relative pb-24 bg-[#E8F4FC]">
+        <main className="min-h-screen relative pb-24" style={{ background: 'linear-gradient(180deg, #E8F4FC 0%, #FDF6F0 50%, #FEF7F0 100%)' }}>
             {/* 1. Logo Section */}
-            <div className="pt-8 pb-6 bg-[#E8F4FC] text-center">
+            <div className="pt-8 pb-6 text-center" style={{ background: 'transparent' }}>
                 {photographer.logo ? (
                     <img src={photographer.logo} alt={photographer.studioName} className="h-16 md:h-20 w-auto mx-auto object-contain" />
                 ) : (

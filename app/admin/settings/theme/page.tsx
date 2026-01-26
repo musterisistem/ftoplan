@@ -16,6 +16,9 @@ export default function ThemeSettingsPage() {
         primaryColor: '#ec4899',
         logo: '',
         bannerImage: '',
+        slug: '',
+        heroTitle: '',
+        heroSubtitle: '',
     });
 
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -35,6 +38,9 @@ export default function ThemeSettingsPage() {
                             primaryColor: data.primaryColor || '#ec4899',
                             logo: data.logo || '',
                             bannerImage: data.bannerImage || '',
+                            slug: data.slug || '',
+                            heroTitle: data.heroTitle || '',
+                            heroSubtitle: data.heroSubtitle || '',
                         });
                         if (data.logo) setLogoPreview(data.logo);
                         if (data.bannerImage) setBannerPreview(data.bannerImage);
@@ -84,13 +90,19 @@ export default function ThemeSettingsPage() {
             let currentBanner = settings.bannerImage;
 
             if (logoFile) {
+                console.log('Uploading logo file:', logoFile.name);
                 const url = await uploadFileToApi(logoFile, 'studio/logos');
+                console.log('Logo uploaded, returned URL:', url);
                 if (url) currentLogo = url;
             }
             if (bannerFile) {
+                console.log('Uploading banner file:', bannerFile.name);
                 const url = await uploadFileToApi(bannerFile, 'studio/banners');
+                console.log('Banner uploaded, returned URL:', url);
                 if (url) currentBanner = url;
             }
+
+            console.log('Saving settings to API:', { ...settings, logo: currentLogo, bannerImage: currentBanner });
 
             const res = await fetch('/api/admin/studio-settings', {
                 method: 'PUT',
@@ -140,6 +152,16 @@ export default function ThemeSettingsPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Tema & Görünüm</h1>
                             <p className="text-gray-500">Sitenizin görsel kimliğini özelleştirin</p>
+                            {settings.slug && (
+                                <a
+                                    href={`/studio/${settings.slug}`}
+                                    target="_blank"
+                                    className="text-violet-600 hover:underline text-sm font-medium flex items-center gap-1 mt-1"
+                                >
+                                    Sitenizi Görüntüleyin: /studio/{settings.slug}
+                                    <Sparkles className="w-3 h-3" />
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -164,8 +186,8 @@ export default function ThemeSettingsPage() {
                                 key={theme.id}
                                 onClick={() => setSettings({ ...settings, siteTheme: theme.id, primaryColor: theme.accent })}
                                 className={`relative p-5 rounded-2xl border-2 text-left transition-all group hover:scale-[1.02] ${settings.siteTheme === theme.id
-                                        ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-500/10'
-                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-500/10'
+                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                     }`}
                             >
                                 <div className={`w-full h-28 rounded-xl bg-gradient-to-br ${theme.color} mb-4 shadow-inner`} />
@@ -233,20 +255,51 @@ export default function ThemeSettingsPage() {
                             <p className="mt-2 text-xs text-gray-500">1920x600 önerilir</p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Save Button */}
-                    <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50"
-                        >
-                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                        </button>
+                {/* Hero Text Settings */}
+                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mt-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <Palette className="w-5 h-5 text-violet-500" />
+                        Ana Sayfa Yazıları
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Büyük Başlık (Title)</label>
+                            <input
+                                type="text"
+                                value={settings.heroTitle}
+                                onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all"
+                                placeholder="Örn: Catch Your Life Moment"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Alt Başlık (Subtitle)</label>
+                            <input
+                                type="text"
+                                value={settings.heroSubtitle}
+                                onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all"
+                                placeholder="Örn: Photography & Cinema"
+                            />
+                        </div>
                     </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50"
+                    >
+                        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                        {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                    </button>
                 </div>
             </div>
         </div>
+
     );
 }

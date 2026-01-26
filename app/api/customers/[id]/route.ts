@@ -100,7 +100,14 @@ export async function PUT(
         if (notes !== undefined) updateData.notes = notes;
         if (status !== undefined) updateData.status = status;
         if (appointmentStatus !== undefined) updateData.appointmentStatus = appointmentStatus;
+        if (status !== undefined) updateData.status = status;
+        if (appointmentStatus !== undefined) updateData.appointmentStatus = appointmentStatus;
         if (albumStatus !== undefined) updateData.albumStatus = albumStatus;
+
+        // Selection Logic Updates
+        if (body.selectionLimits !== undefined) updateData.selectionLimits = body.selectionLimits;
+        if (body.selectedPhotos !== undefined) updateData.selectedPhotos = body.selectedPhotos;
+        if (body.selectionCompleted !== undefined) updateData.selectionCompleted = body.selectionCompleted;
 
         // Use findByIdAndUpdate to skip validation on missing fields
         const updatedCustomer = await Customer.findByIdAndUpdate(

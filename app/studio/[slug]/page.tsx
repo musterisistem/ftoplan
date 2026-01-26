@@ -32,13 +32,24 @@ export default async function StudioPage({ params }: { params: Promise<{ slug: s
     const theme = photographer.siteTheme || 'warm';
 
     // Render theme based on selection
+    // Determine content based on theme
+    let content;
     switch (theme) {
         case 'playful':
-            return <PlayfulHome photographer={photographer} slug={slug} />;
+            content = <PlayfulHome photographer={photographer} slug={slug} />;
+            break;
         case 'bold':
-            return <BoldHome photographer={photographer} slug={slug} />;
+            content = <BoldHome photographer={photographer} slug={slug} />;
+            break;
         case 'warm':
         default:
-            return <WarmHome photographer={photographer} slug={slug} />;
+            content = <WarmHome photographer={photographer} slug={slug} />;
+            break;
     }
+
+    return (
+        <>
+            {content}
+        </>
+    );
 }

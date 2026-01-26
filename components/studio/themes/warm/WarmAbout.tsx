@@ -1,36 +1,43 @@
 'use client';
 import { Sparkles, Heart, Camera, Award } from 'lucide-react';
 
+import { motion } from 'framer-motion';
+
 export default function WarmAbout({ photographer, slug }: { photographer: any; slug: string }) {
-    const primaryColor = photographer.primaryColor || '#8b4d62';
 
     return (
-        <main style={{ background: 'linear-gradient(180deg, #87CEEB 0%, #F5D5C8 25%, #FBEAE3 50%, #FDF8F5 100%)' }} className="min-h-screen pt-24 pb-32 px-6">
-            <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm mb-6">
-                        <Heart className="w-4 h-4" style={{ color: primaryColor }} />
-                        <span className="text-sm font-medium text-gray-700">Hakkımızda</span>
+        <main className="min-h-screen bg-[#0a0a0a] text-white pt-32 pb-32 px-6 font-sans relative overflow-hidden flex items-center justify-center">
+            <style dangerouslySetInnerHTML={{ __html: `.font-syne { font-family: 'Syne', sans-serif; }` }} />
+
+            {/* Ambient Background Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/5 rounded-full blur-[100px] pointer-events-none" />
+
+            <div className="max-w-3xl mx-auto relative z-10 text-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                    {/* Decorative Line */}
+                    <div className="w-[1px] h-24 bg-gradient-to-b from-transparent via-white/50 to-transparent mx-auto mb-12" />
+
+                    <h1 className="text-5xl md:text-7xl font-bold font-syne mb-12 tracking-tighter leading-tight">
+                        {photographer.studioName}
+                    </h1>
+
+                    <div className="space-y-8">
+                        <p className="text-xl md:text-3xl text-gray-300 font-light leading-relaxed font-syne antialiased">
+                            "{photographer.aboutText || "Biz, anları sadece kaydetmez, onları sonsuz birer sanat eserine dönüştürürüz. Işığın ve gölgenin dansıyla hikayenizi anlatmak için buradayız."}"
+                        </p>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>{photographer.studioName}</h1>
-                    <div className="w-16 h-1 mx-auto rounded-full" style={{ backgroundColor: primaryColor }} />
-                </div>
 
-                <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl p-8 md:p-12 mb-8">
-                    <p className="text-gray-700 text-lg leading-relaxed text-center">
-                        {photographer.aboutText || "Fotoğrafçılık bizim için sadece bir iş değil, anları ölümsüzleştirme sanatıdır."}
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[{ icon: Camera, label: 'Yıl', value: '10+' }, { icon: Heart, label: 'Çift', value: '500+' }, { icon: Award, label: 'Ödül', value: '15+' }, { icon: Sparkles, label: 'Proje', value: '1000+' }].map((stat, i) => (
-                        <div key={i} className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg">
-                            <stat.icon className="w-6 h-6 mx-auto mb-3" style={{ color: primaryColor }} />
-                            <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                            <div className="text-xs text-gray-500 uppercase tracking-wider">{stat.label}</div>
-                        </div>
-                    ))}
-                </div>
+                    {/* Decorative Signature/Element */}
+                    <div className="mt-16 pt-16 border-t border-white/5">
+                        <span className="text-xs font-bold tracking-[0.3em] text-white/40 uppercase">
+                            EST. 2024
+                        </span>
+                    </div>
+                </motion.div>
             </div>
         </main>
     );

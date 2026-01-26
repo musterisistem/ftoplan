@@ -67,6 +67,20 @@ const CustomerSchema = new mongoose.Schema({
         size: { type: Number, default: 0 },
         uploadedAt: { type: Date, default: Date.now }
     }],
+    // Photo Selection Logic
+    selectionLimits: {
+        album: { type: Number, default: 22 },
+        cover: { type: Number, default: 1 },
+        poster: { type: Number, default: 1 },
+    },
+    selectedPhotos: [{
+        url: { type: String, required: true },
+        type: { type: String, enum: ['album', 'cover', 'poster'], required: true },
+    }],
+    selectionCompleted: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
 // Delete cached model to force fresh schema in development

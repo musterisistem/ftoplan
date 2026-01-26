@@ -17,6 +17,7 @@ export default function GeneralSettingsPage() {
         phone: '',
         studioName: '',
         slug: '',
+        address: '',
     });
 
     useEffect(() => {
@@ -32,6 +33,7 @@ export default function GeneralSettingsPage() {
                             phone: data.phone || '',
                             studioName: data.studioName || '',
                             slug: data.slug || '',
+                            address: data.address || '',
                         });
                     }
                 })
@@ -130,6 +132,10 @@ export default function GeneralSettingsPage() {
                                     placeholder="Örn: Ahmet Yılmaz"
                                 />
                             </div>
+                        </div>
+
+                        {/* Domain & Slug Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                                     <Building className="w-4 h-4 text-purple-500" />
@@ -142,6 +148,25 @@ export default function GeneralSettingsPage() {
                                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                                     placeholder="Örn: Ahmet Photo Art"
                                 />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <ExternalLink className="w-4 h-4 text-purple-500" />
+                                    Kullanıcı Adı (Link)
+                                </label>
+                                <div className="flex">
+                                    <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 text-gray-500 text-sm">
+                                        /studio/
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={settings.slug}
+                                        onChange={e => setSettings({ ...settings, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-r-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
+                                        placeholder="ahmet-yilmaz"
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 pl-1">Sitenizin adresi: fotoplan.com/studio/<b>{settings.slug || '...'}</b></p>
                             </div>
                         </div>
 
@@ -171,6 +196,22 @@ export default function GeneralSettingsPage() {
                                     onChange={e => setSettings({ ...settings, phone: e.target.value })}
                                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                                     placeholder="+90 555 123 4567"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Address Row */}
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <Building className="w-4 h-4 text-purple-500" />
+                                    Adres
+                                </label>
+                                <textarea
+                                    value={settings.address}
+                                    onChange={e => setSettings({ ...settings, address: e.target.value })}
+                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400 min-h-[100px]"
+                                    placeholder="Stüdyo açık adresi..."
                                 />
                             </div>
                         </div>

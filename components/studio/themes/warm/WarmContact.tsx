@@ -1,44 +1,93 @@
 'use client';
-import { Phone, Instagram, MessageCircle, Mail, Sparkles, ArrowRight } from 'lucide-react';
+import { Phone, Instagram, MessageCircle, Mail, Sparkles, ArrowRight, MapPin } from 'lucide-react';
+
+import { motion } from 'framer-motion';
 
 export default function WarmContact({ photographer, slug }: { photographer: any; slug: string }) {
-    const primaryColor = photographer.primaryColor || '#8b4d62';
+    // Define contact items with proper labeling
     const contacts = [
-        { icon: Phone, label: 'Telefon', value: photographer.phone || '-', href: `tel:${photographer.phone}`, color: primaryColor },
-        { icon: MessageCircle, label: 'WhatsApp', value: photographer.whatsapp || '-', href: `https://wa.me/${photographer.whatsapp?.replace(/\D/g, '')}`, color: '#25D366' },
-        { icon: Instagram, label: 'Instagram', value: photographer.instagram || '-', href: `https://instagram.com/${photographer.instagram?.replace('@', '')}`, color: '#E4405F' },
-        { icon: Mail, label: 'E-posta', value: photographer.email || '-', href: `mailto:${photographer.email}`, color: '#EA4335' }
+        {
+            id: 'address',
+            icon: MapPin,
+            title: 'ADRES',
+            value: photographer.address || null,
+            href: photographer.address ? `https://maps.google.com/?q=${photographer.address}` : null,
+            visible: !!photographer.address
+        },
+        {
+            id: 'phone',
+            icon: Phone,
+            title: 'TELEFON',
+            value: photographer.phone || '+90 555 000 0000',
+            href: `tel:${photographer.phone}`,
+            visible: true
+        },
+        {
+            id: 'whatsapp',
+            icon: MessageCircle,
+            title: 'WHATSAPP',
+            value: photographer.whatsapp || 'Mesaj Gönder',
+            href: `https://wa.me/${photographer.whatsapp?.replace(/\D/g, '')}`,
+            visible: true
+        },
+        {
+            id: 'email',
+            icon: Mail,
+            title: 'E-POSTA',
+            value: photographer.email || 'hello@studio.com',
+            href: `mailto:${photographer.email}`,
+            visible: true
+        }
     ];
 
     return (
-        <main style={{ background: 'linear-gradient(180deg, #87CEEB 0%, #F5D5C8 25%, #FBEAE3 50%, #FDF8F5 100%)' }} className="min-h-screen pt-24 pb-32 px-6">
-            <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm mb-6">
-                        <Sparkles className="w-4 h-4" style={{ color: primaryColor }} />
-                        <span className="text-sm font-medium text-gray-700">Bize Ulaşın</span>
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>İletişim</h1>
-                    <div className="w-16 h-1 mx-auto rounded-full mb-6" style={{ backgroundColor: primaryColor }} />
-                    <p className="text-gray-600 max-w-md mx-auto">Hayalinizdeki çekim için bizimle iletişime geçin.</p>
-                </div>
+        <main className="min-h-screen bg-[#0a0a0a] text-white pt-32 pb-32 px-6 font-sans flex flex-col justify-center">
+            <style dangerouslySetInnerHTML={{ __html: `.font-syne { font-family: 'Syne', sans-serif; }` }} />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
-                    {contacts.map((c, i) => (
-                        <a key={i} href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} className="flex items-center gap-4 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all group">
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${c.color}15` }}><c.icon className="w-6 h-6" style={{ color: c.color }} /></div>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">{c.label}</div>
-                                <div className="text-gray-900 font-medium truncate">{c.value}</div>
+            <div className="max-w-6xl mx-auto w-full">
+                {/* Header Title */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="mb-24 text-center md:text-left"
+                >
+                    <h1 className="text-7xl md:text-9xl font-bold font-syne tracking-tighter mb-8 bg-gradient-to-br from-white via-white to-white/40 bg-clip-text text-transparent">
+                        İLETİŞİM
+                    </h1>
+                    <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl leading-relaxed">
+                        Hayalinizdeki projeyi gerçeğe dönüştürmek için buradayız. Aşağıdaki kanallardan bize ulaşabilirsiniz.
+                    </p>
+                </motion.div>
+
+                {/* INFO TEXT GRID (No Boxes) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8">
+                    {contacts.filter(c => c.visible).map((c, i) => (
+                        <motion.a
+                            key={i}
+                            href={c.href || '#'}
+                            target="_blank"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.15, duration: 0.6 }}
+                            className="group block"
+                        >
+                            <div className="flex items-center gap-3 mb-4 text-gray-500 group-hover:text-purple-400 transition-colors">
+                                <c.icon className="w-5 h-5" />
+                                <span className="text-xs font-bold tracking-[0.2em] uppercase font-syne">{c.title}</span>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
-                        </a>
-                    ))}
-                </div>
 
-                <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 text-center shadow-lg">
-                    <p className="text-xl text-gray-700 italic mb-4" style={{ fontFamily: 'Georgia, serif' }}>"En güzel hikayeler, doğru zamanda doğru yerde olmakla başlar."</p>
-                    <span className="font-medium text-sm" style={{ color: primaryColor }}>— {photographer.studioName}</span>
+                            <div className="relative overflow-hidden">
+                                <h3 className="text-xl md:text-2xl font-medium text-white leading-snug group-hover:text-gray-200 transition-colors">
+                                    {c.value}
+                                </h3>
+                                {/* Hover Line Animation */}
+                                <div className="h-[1px] w-full bg-white/20 mt-6 relative overflow-hidden">
+                                    <div className="absolute inset-0 bg-white w-full -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out" />
+                                </div>
+                            </div>
+                        </motion.a>
+                    ))}
                 </div>
             </div>
         </main>
