@@ -127,9 +127,8 @@ export default function ThemeSettingsPage() {
     };
 
     const themes = [
-        { id: 'warm', name: 'Warm', color: 'from-pink-500 to-rose-500', desc: 'Sıcak ve Romantik', accent: '#ec4899' },
-        { id: 'playful', name: 'Playful', color: 'from-orange-400 to-amber-500', desc: 'Canlı ve Enerjik', accent: '#f97316' },
-        { id: 'bold', name: 'Bold', color: 'from-rose-900 to-red-800', desc: 'Modern ve Cesur', accent: '#7c2d3e' },
+        { id: 'warm', name: 'Dark Theme', color: 'from-slate-700 to-slate-900', desc: 'Şık ve modern karanlık görünüm', accent: '#ec4899' },
+        { id: 'light', name: 'Light Theme', color: 'from-slate-100 to-white', desc: 'Aydınlık ve ferah görünüm', accent: '#ec4899' },
     ];
 
     if (status === 'loading' || loading) {

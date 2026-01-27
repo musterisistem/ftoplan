@@ -3,8 +3,6 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
 import WarmAbout from '@/components/studio/themes/warm/WarmAbout';
-import PlayfulAbout from '@/components/studio/themes/playful/PlayfulAbout';
-import BoldAbout from '@/components/studio/themes/bold/BoldAbout';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,16 +19,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
 
     if (!photographer) return notFound();
 
-    const theme = photographer.siteTheme || 'warm';
     const props = { photographer, slug };
 
-    switch (theme) {
-        case 'playful':
-            return <PlayfulAbout {...props} />;
-        case 'bold':
-            return <BoldAbout {...props} />;
-        case 'warm':
-        default:
-            return <WarmAbout {...props} />;
-    }
+    return <WarmAbout {...props} />;
 }

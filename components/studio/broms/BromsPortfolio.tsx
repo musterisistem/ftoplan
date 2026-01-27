@@ -1,55 +1,59 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { User, Image as ImageIcon, Play } from 'lucide-react';
 
 interface BromsPortfolioProps {
     photos: any[];
+    isLight?: boolean;
 }
 
-export default function BromsPortfolio({ photos }: BromsPortfolioProps) {
-    // Duplicate photos to create infinite scroll effect if few exist
-    const marqueePhotos = photos.length > 0
-        ? [...photos, ...photos, ...photos, ...photos].slice(0, 12)
-        : Array(8).fill({ url: 'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=500&auto=format&fit=crop' });
+export default function BromsPortfolio({ photos, isLight = false }: BromsPortfolioProps) {
+    // Determine photos to show (limit to 12 for home)
+    const displayPhotos = photos.slice(0, 12);
+
+    if (displayPhotos.length === 0) return null;
+
+    // Palette: Cream (#FFFBF0), Pink (#FCE7F3), Dark Pink (#831843)
+    const bgColor = isLight ? 'bg-[#FFFBF0]' : 'bg-[#0a0a0a]';
+    const overlayBg = isLight ? 'bg-[#FFFBF0]/80' : 'bg-black/60';
+    const overlayText = isLight ? 'text-[#831843]' : 'text-white';
+
+    // Button
+    const btnClass = isLight
+        ? 'border-[#831843] text-[#831843] hover:bg-[#831843] hover:text-white'
+        : 'border-white/20 text-white/60 hover:border-white hover:text-white hover:bg-white/5';
 
     return (
-        <section className="bg-[#050505] text-white py-24 relative overflow-hidden">
-
-            {/* Header */}
-            <div className="max-w-7xl mx-auto px-6 md:px-12 mb-8 flex justify-between items-end">
-                <div>
-                    <h2 className="text-3xl md:text-4xl font-bold font-syne">Galeri</h2>
-                </div>
+        <section className={`py-2 px-2 md:px-4 ${bgColor}`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {displayPhotos.map((photo, index) => (
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.05 }}
+                        className="group relative aspect-[4/5] overflow-hidden rounded-sm cursor-pointer"
+                    >
+                        <img
+                            src={photo.url}
+                            alt={photo.title || 'Portfolio'}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center ${overlayBg}`}>
+                            <h3 className={`text-xl font-light tracking-widest uppercase translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ${overlayText}`}>
+                                {photo.category || 'Gözat'}
+                            </h3>
+                        </div>
+                    </motion.div>
+                ))}
             </div>
 
-            {/* INFINITE MARQUEE SLIDER */}
-            <div className="relative w-full overflow-hidden mb-12">
-                <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#050505] to-transparent z-10" />
-                <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#050505] to-transparent z-10" />
-
-                <motion.div
-                    className="flex gap-6 w-max"
-                    animate={{ x: [0, -1000] }}
-                    transition={{
-                        repeat: Infinity,
-                        ease: "linear",
-                        duration: 30, // Slow scroll
-                        repeatType: "loop"
-                    }}
-                >
-                    {marqueePhotos.map((photo, i) => (
-                        <div key={i} className="relative w-[300px] aspect-[3/4] rounded-lg overflow-hidden shrink-0 group border border-white/5">
-                            <img
-                                src={photo.url || `https://images.unsplash.com/photo-1534008897995-27a23e859048?q=80&w=500&auto=format&fit=crop`}
-                                className="w-full h-full object-cover transition-all duration-500 scale-100 group-hover:scale-110"
-                                alt="Portfolio"
-                            />
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                        </div>
-                    ))}
-                    {/* Repeat for smoothness if needed, but array duplication above handles it mostly */}
-                </motion.div>
+            <div className="text-center mt-12 mb-12">
+                <a href="gallery" className={`inline-block border px-8 py-3 text-sm tracking-[0.2em] transition-colors ${btnClass}`}>
+                    TÜM GALERİYİ GÖR
+                </a>
             </div>
         </section>
     );

@@ -31,7 +31,8 @@ import {
     FileImage,
     Layout,
     Image as ImageIcon,
-    Info
+    Info,
+    Clock
 } from 'lucide-react';
 import PhotoUpload from '@/components/admin/PhotoUpload';
 
@@ -517,7 +518,7 @@ export default function CustomerManageClient({ customerId }: { customerId: strin
             }
 
             {/* Tab Content */}
-            <div className="max-w-[1920px] mx-auto px-6 py-8">
+            <div className="max-w-[1920px] mx-auto px-6 py-8 overflow-x-hidden">
                 {activeTab === 'summary' && <SummaryTab customer={customer} appointmentStatus={getAppointmentStatusInfo()} albumStatus={getAlbumStatusInfo()} />}
                 {activeTab === 'package' && <PackageTab customerId={customerId} />}
                 {activeTab === 'appointments' && <AppointmentsTab customerId={customerId} />}
@@ -611,6 +612,8 @@ function AlbumSettingsTab({ customer, onUpdate }: { customer: Customer; onUpdate
 // Update ApprovedAlbumTab Component
 // Update ApprovedAlbumTab Component
 function ApprovedAlbumTab({ customer }: { customer: Customer }) {
+    const [copyFeedback, setCopyFeedback] = useState('');
+
     if (!customer.selectedPhotos || customer.selectedPhotos.length === 0) {
         return (
             <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
@@ -630,79 +633,163 @@ function ApprovedAlbumTab({ customer }: { customer: Customer }) {
         poster: customer.selectedPhotos.filter(p => p.type === 'poster'),
     };
 
-    const copyToClipboard = (text: string) => {
+    const copyToClipboard = (text: string, platform: 'Windows' | 'Mac') => {
         navigator.clipboard.writeText(text);
-        alert('Dosya isimleri kopyalandı!');
+        setCopyFeedback(`${platform} formatında kopyalandı!`);
+        setTimeout(() => setCopyFeedback(''), 3000);
     };
 
     const renderGroup = (title: string, photos: typeof customer.selectedPhotos, colorClass: string, icon: any) => {
         if (!photos || photos.length === 0) return null;
 
-        // Generate the search string: "filename1 OR filename2 OR ..."
-        // Fallback to extraction from URL if filename is missing
-        const searchString = photos.map(p => {
-            const name = p.filename || p.url.split('/').pop() || 'bilinmeyen-dosya';
-            // Decode URI component just in case URL encoded
-            try {
-                return decodeURIComponent(name);
-            } catch {
-                return name;
-            }
-        }).join(' OR ');
+        const distinctFilenames = photos.map(p => {
+            const name = (p as any).filename || p.url.split('/').pop() || 'bilinmeyen-dosya';
+            try { return decodeURIComponent(name); } catch { return name; }
+        });
+
+        // Generate Strings
+        const winString = distinctFilenames.map(f => `"${f}"`).join(' OR ');
+        const macString = distinctFilenames.join(' OR ');
 
         const Icon = icon;
+        const bgColor = colorClass.replace('text-', 'bg-').replace('600', '100');
 
         return (
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 mb-6 last:mb-0">
-                <div className="flex items-center justify-between mb-4">
+            <div className="border border-gray-200 rounded-xl overflow-hidden mb-4">
+                {/* Header */}
+                <div className={`${bgColor} border-b border-gray-200 p-4`}>
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClass.replace('text-', 'bg-').replace('600', '100')}`}>
+                        <div className={`w-10 h-10 rounded-lg bg-white flex items-center justify-center flex-shrink-0`}>
                             <Icon className={`w-5 h-5 ${colorClass}`} />
                         </div>
                         <div>
-                            <h4 className="font-bold text-gray-900">{title} ({photos.length})</h4>
-                            <p className="text-xs text-gray-500">Windows Arama uyumlu format</p>
+                            <h4 className="font-bold text-gray-900">{title}</h4>
+                            <p className="text-xs text-gray-600">{photos.length} fotoğraf seçildi</p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => copyToClipboard(searchString)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-sm font-medium transition-all shadow-sm active:scale-95"
-                    >
-                        <Copy className="w-4 h-4" />
-                        Kopyala
-                    </button>
                 </div>
 
-                <div className="bg-white p-4 rounded-lg border border-gray-200 font-mono text-sm text-gray-600 break-all leading-relaxed relative group max-h-40 overflow-y-auto">
-                    {searchString}
-                    <div className="absolute inset-0 bg-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center select-none pointer-events-none sticky top-0 h-full">
-                        <span className="bg-black/75 text-white text-xs px-2 py-1 rounded">Kopyalamak için butona basın</span>
+                {/* Content */}
+                <div className="bg-white p-4 space-y-3">
+                    {/* Copy Buttons */}
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => copyToClipboard(winString, 'Windows')}
+                            className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
+                        >
+                            <Copy className="w-4 h-4" />
+                            Windows Kopyala
+                        </button>
+                        <button
+                            onClick={() => copyToClipboard(macString, 'Mac')}
+                            className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
+                        >
+                            <Copy className="w-4 h-4" />
+                            Mac Kopyala
+                        </button>
                     </div>
+
+                    {/* Photo Gallery */}
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                        {photos.slice(0, 12).map((photo, idx) => (
+                            <div key={idx} className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
+                                <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                        ))}
+                        {photos.length > 12 && (
+                            <div className="w-20 h-20 flex-shrink-0 rounded-lg bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
+                                <span className="text-xs font-bold text-gray-600">+{photos.length - 12}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Filename Preview - Collapsible */}
+                    <details className="group">
+                        <summary className="cursor-pointer text-xs font-medium text-gray-600 hover:text-gray-900 flex items-center gap-2 py-2 select-none">
+                            <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
+                            Dosya İsimlerini Göster ({distinctFilenames.length} dosya)
+                        </summary>
+                        <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+                            <code className="text-[10px] text-gray-700 break-all leading-relaxed">
+                                {winString}
+                            </code>
+                        </div>
+                    </details>
                 </div>
             </div>
         );
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                Onaylanan Albüm Seçimleri
-            </h3>
-
-            <div className="space-y-6">
-                {renderGroup('Albüm Fotoğrafları', grouped.album, 'text-green-600', Album)}
-                {renderGroup('Kapak Fotoğrafları', grouped.cover, 'text-purple-600', Layout)}
-                {renderGroup('Poster Fotoğrafları', grouped.poster, 'text-orange-600', ImageIcon)}
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-gray-100">
-                <div className="bg-blue-50 text-blue-800 p-4 rounded-xl flex items-start gap-3">
-                    <Info className="w-5 h-5 mt-0.5 shrink-0" />
-                    <div className="text-sm">
-                        <p className="font-bold mb-1">Nasıl Kullanılır?</p>
-                        <p>Yukarıdaki metni kopyalayın ve bilgisayarınızdaki fotoğraf klasörüne gidin. Sağ üstteki arama kutucuğuna yapıştırın. Windows otomatik olarak sadece seçilen bu fotoğrafları filtreleyecektir.</p>
+        <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-100 p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900">Onaylanan Seçimler</h3>
+                            <p className="text-sm text-gray-500">Fotoğraf dosyalarını kopyala</p>
+                        </div>
                     </div>
+                    {copyFeedback && (
+                        <span className="text-sm text-green-600 font-semibold animate-in fade-in flex items-center gap-2 bg-green-50 px-3 py-2 rounded-lg">
+                            <Check className="w-4 h-4" />
+                            {copyFeedback}
+                        </span>
+                    )}
+                </div>
+
+                {/* Help - Moved to top */}
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900">
+                        <p className="font-semibold mb-1">Nasıl Kullanılır?</p>
+                        <p className="text-blue-800">İşletim sisteminize uygun butona tıklayın. Bilgisayarınızdaki fotoğraf klasöründe arama kutusuna yapıştırarak sadece seçilen fotoğrafları görüntüleyebilirsiniz.</p>
+                    </div>
+                </div>
+
+                {/* Approval Timestamp Info - Always visible */}
+                <div className="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-4 flex items-start gap-3">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <History className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-indigo-900 mb-1">Seçim Onay Zamanı</h4>
+                        {(customer as any).selectionApprovedAt ? (
+                            <p className="text-sm text-indigo-700">
+                                Müşteri fotoğraf seçimini{' '}
+                                <span className="font-bold">
+                                    {new Date((customer as any).selectionApprovedAt).toLocaleDateString('tr-TR', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    })}
+                                </span>
+                                {' '}tarihinde, saat{' '}
+                                <span className="font-bold">
+                                    {new Date((customer as any).selectionApprovedAt).toLocaleTimeString('tr-TR', {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                                {' '}olarak onayladı.
+                            </p>
+                        ) : (
+                            <p className="text-sm text-indigo-700">
+                                Seçim onay tarihi henüz kaydedilmedi. Müşteri yeni bir seçim yaptığında tarih otomatik olarak kaydedilecektir.
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Groups */}
+                <div className="space-y-4">
+                    {renderGroup('Albüm Fotoğrafları', grouped.album, 'text-emerald-600', Album)}
+                    {renderGroup('Kapak Fotoğrafları', grouped.cover, 'text-violet-600', Layout)}
+                    {renderGroup('Poster Fotoğrafları', grouped.poster, 'text-amber-600', ImageIcon)}
                 </div>
             </div>
         </div>

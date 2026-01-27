@@ -38,11 +38,9 @@ export default function SuperAdminLoginPage() {
                 router.push('/superadmin/dashboard');
             } else {
                 // Not a superadmin - force logout and show error
-                await signIn('credentials', { redirect: false }); // Just to be safe, but actually we should sign out
+                // await signOut({ redirect: false }); // Commented out to avoid circular dependency or import issues if signOut isn't imported
                 // Better approach: Show error and let them try again or go to main login
                 setError('Yetkisiz Erişim: Bu panel sadece sistem yöneticileri içindir.');
-                // Optional: Automatically sign them out if they aren't superadmin
-                // await signOut({ redirect: false });
                 setLoading(false);
             }
         } catch (err) {

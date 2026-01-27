@@ -75,11 +75,16 @@ const CustomerSchema = new mongoose.Schema({
     },
     selectedPhotos: [{
         url: { type: String, required: true },
+        filename: { type: String },
         type: { type: String, enum: ['album', 'cover', 'poster'], required: true },
     }],
     selectionCompleted: {
         type: Boolean,
         default: false,
+    },
+    selectionApprovedAt: {
+        type: Date,
+        default: null,
     },
 }, { timestamps: true });
 

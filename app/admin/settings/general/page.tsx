@@ -18,6 +18,7 @@ export default function GeneralSettingsPage() {
         studioName: '',
         slug: '',
         address: '',
+        selectionSuccessMessage: '',
     });
 
     useEffect(() => {
@@ -34,6 +35,7 @@ export default function GeneralSettingsPage() {
                             studioName: data.studioName || '',
                             slug: data.slug || '',
                             address: data.address || '',
+                            selectionSuccessMessage: data.selectionSuccessMessage || '',
                         });
                     }
                 })
@@ -213,6 +215,23 @@ export default function GeneralSettingsPage() {
                                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400 min-h-[100px]"
                                     placeholder="Stüdyo açık adresi..."
                                 />
+                            </div>
+                        </div>
+
+                        {/* Selection Success Message */}
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                    <Check className="w-4 h-4 text-purple-500" />
+                                    Seçim Tamamlandı Mesajı (Müşteri İçin)
+                                </label>
+                                <textarea
+                                    value={settings.selectionSuccessMessage}
+                                    onChange={e => setSettings({ ...settings, selectionSuccessMessage: e.target.value })}
+                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400 min-h-[80px]"
+                                    placeholder="Örn: Albüm siparişiniz alınmıştır..."
+                                />
+                                <p className="text-xs text-gray-400">Müşteri seçim işlemini tamamladığında göreceği bilgilendirme mesajı.</p>
                             </div>
                         </div>
                     </div>

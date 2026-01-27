@@ -19,7 +19,7 @@ export async function GET() {
         await dbConnect();
 
         const user = await User.findOne({ email: session.user.email, role: 'admin' })
-            .select('name email studioName slug logo bannerImage primaryColor siteTheme aboutText phone address instagram facebook whatsapp portfolioPhotos heroTitle heroSubtitle');
+            .select('name email studioName slug logo bannerImage primaryColor siteTheme aboutText phone address instagram facebook whatsapp portfolioPhotos heroTitle heroSubtitle selectionSuccessMessage');
 
         console.log('Studio Settings - User found:', user ? { email: user.email, slug: user.slug } : 'NOT FOUND');
 
@@ -45,7 +45,7 @@ export async function PUT(req: Request) {
 
         const body = await req.json();
         console.log('Studio Settings PUT Body:', JSON.stringify(body, null, 2));
-        const { studioName, logo, bannerImage, primaryColor, siteTheme, aboutText, phone, address, instagram, facebook, whatsapp, portfolioPhotos, slug, heroTitle, heroSubtitle } = body;
+        const { studioName, logo, bannerImage, primaryColor, siteTheme, aboutText, phone, address, instagram, facebook, whatsapp, portfolioPhotos, slug, heroTitle, heroSubtitle, selectionSuccessMessage } = body;
 
         await dbConnect();
 
@@ -67,7 +67,8 @@ export async function PUT(req: Request) {
                     whatsapp,
                     portfolioPhotos,
                     heroTitle,
-                    heroSubtitle
+                    heroSubtitle,
+                    selectionSuccessMessage
                 }
             },
             { new: true }

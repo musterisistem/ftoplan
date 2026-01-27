@@ -3,6 +3,7 @@ import StudioBottomNav from '@/components/studio/StudioBottomNav';
 import WhatsAppButton from '@/components/studio/WhatsAppButton';
 import StudioTopNav from '@/components/studio/StudioTopNav';
 import { notFound } from 'next/navigation';
+import { CustomerAuthProvider } from '@/contexts/CustomerAuthContext';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -47,30 +48,31 @@ export default async function StudioLayout({
     }
 
     return (
-        <div className="min-h-screen font-sans antialiased">
-            {/* Trial Warning Banner for Clients */}
-            {photographer.packageType === 'trial' && (
-                <div className="bg-orange-600 text-white text-xs font-medium py-1.5 text-center px-4 shadow-md relative z-50">
-                    <p>⚠️ Bu web sitesi <strong>Deneme Sürümü</strong> modundadır ve geçici olarak yayındadır.</p>
+        <CustomerAuthProvider>
+            <div className="min-h-screen font-sans antialiased">
+                {/* Trial Warning Banner for Clients */}
+                {photographer.packageType === 'trial' && (
+                    <div className="bg-orange-600 text-white text-xs font-medium py-1.5 text-center px-4 shadow-md relative z-50">
+                        <p>⚠️ Bu web sitesi <strong>Deneme Sürümü</strong> modundadır ve geçici olarak yayındadır.</p>
+                    </div>
+                )}
+
+                {/* Global Top Navigation */}
+                <StudioTopNav studioName={photographer.studioName} logo={photographer.logo} theme={theme} slug={slug} />
+
+                {/* Main Content */}
+                <div className="pt-0 pb-20">
+                    {children}
                 </div>
-            )}
 
-            {/* Global Top Navigation */}
-            <StudioTopNav studioName={photographer.studioName} logo={photographer.logo} />
+                {/* Mobile Bottom Navigation */}
+                <StudioBottomNav slug={slug} primaryColor={primaryColor} theme={theme} />
 
-            {/* Main Content */}
-            <div className="pt-0 pb-20">
-                {children}
-            </div>
+                {/* WhatsApp Floating Button */}
+                <WhatsAppButton phoneNumber={photographer.whatsapp || photographer.phone || ''} />
 
-            {/* Mobile Bottom Navigation */}
-            <StudioBottomNav slug={slug} primaryColor={primaryColor} theme={theme} />
-
-            {/* WhatsApp Floating Button */}
-            <WhatsAppButton phoneNumber={photographer.whatsapp || photographer.phone || ''} />
-
-            <style dangerouslySetInnerHTML={{
-                __html: `
+                <style dangerouslySetInnerHTML={{
+                    __html: `
                 /* Modern scrollbar */
                 ::-webkit-scrollbar {
                     width: 8px;
@@ -96,7 +98,14 @@ export default async function StudioLayout({
                     background: ${primaryColor}40;
                     color: inherit;
                 }
+
+                /* Global Background Color based on Theme */
+                body, html {
+                    background-color: ${theme === 'playful' || theme === 'bold' ? '#ffffff' : '#0a0a0a'};
+                    color: ${theme === 'playful' || theme === 'bold' ? '#111' : '#fff'};
+                }
             ` }} />
-        </div>
+            </div>
+        </CustomerAuthProvider>
     );
 }

@@ -109,6 +109,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: 'Photography & Cinema',
     },
+    selectionSuccessMessage: {
+        type: String,
+        default: 'Albüm siparişiniz alınmıştır. Albüm Teslim süresi seçimlerinizden 15 iş günüdür. Ekiplerimiz sizi arayarak bilgilendirecektir.',
+    },
     instagram: {
         type: String,
         default: '',

@@ -2,12 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import BromsHero from '@/components/studio/broms/BromsHero';
-import BromsPortfolio from '@/components/studio/broms/BromsPortfolio';
+// import BromsPortfolio from '@/components/studio/broms/BromsPortfolio';
 import BromsContact from '@/components/studio/broms/BromsContact';
+import MarqueePortfolio from './MarqueePortfolio';
+import WarmContact from './WarmContact';
+// import WarmPackages from './WarmPackages';
+// import WarmAbout from './WarmAbout';
 
 export default function WarmHome({ photographer, slug }: { photographer: any; slug: string }) {
     const primaryColor = photographer.primaryColor || '#ec4899';
     const [photos, setPhotos] = useState<any[]>([]);
+
+    // Determine Theme Mode
+    const isLight = photographer.siteTheme === 'light';
+    const modeBg = isLight ? '#FFFBF0' : '#0a0a0a';
+    const modeText = isLight ? '#831843' : 'white';
 
     useEffect(() => {
         if (photographer.portfolioPhotos && photographer.portfolioPhotos.length > 0) {
@@ -20,12 +29,14 @@ export default function WarmHome({ photographer, slug }: { photographer: any; sl
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap');
-                body, html { background-color: #0a0a0a; color: white; }
+                body, html { background-color: ${modeBg}; color: ${modeText}; }
                 .font-syne { font-family: 'Syne', sans-serif; }
                 .font-sans { font-family: 'Plus Jakarta Sans', sans-serif; }
             ` }} />
 
-            <main className="min-h-screen bg-[#0a0a0a] font-sans selection:bg-white selection:text-black">
+            <main className={`min-h-screen font-sans ${isLight ? 'selection:bg-pink-200 selection:text-pink-900' : 'selection:bg-white selection:text-black'}`} style={{ backgroundColor: modeBg }}>
+
+                {/* 1. SLIDER (Hero) */}
                 <BromsHero
                     studioName={photographer.studioName}
                     bannerImage={photographer.bannerImage}
@@ -34,21 +45,18 @@ export default function WarmHome({ photographer, slug }: { photographer: any; sl
                     logo={photographer.logo}
                     heroTitle={photographer.heroTitle}
                     heroSubtitle={photographer.heroSubtitle}
+                    // @ts-ignore
+                    isLight={isLight}
+                    slug={slug} // Added slug prop
                 />
 
-                <BromsPortfolio photos={photos} />
+                {/* 2. MARQUEE GALLERY (Kayan Galeri) */}
+                <MarqueePortfolio photos={photos} isLight={isLight} />
 
-                {/* Simple About Section */}
-                <section className="bg-[#050505] text-white py-16 px-6 text-center">
-                    <div className="max-w-3xl mx-auto">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-500 mb-6">Hakkımızda</h3>
-                        <p className="text-xl md:text-2xl font-light leading-relaxed text-gray-300 font-syne">
-                            {photographer.aboutText || "Anları durdurup sonsuzluğa hapsetme sanatıyla, en özel günlerinizde yanınızdayız. Işık ve gölgeyle hikayenizi yazıyoruz."}
-                        </p>
-                    </div>
-                </section>
+                {/* 3. CONTACT INFO */}
+                <WarmContact photographer={photographer} slug={slug} />
 
-                <BromsContact photographer={photographer} />
+
             </main>
         </>
     );
