@@ -49,6 +49,8 @@ export async function PUT(
             body.slug = body.slug.toLowerCase();
         }
 
+        const oldPhotographer = await User.findById(id).select('packageType storageLimit name email subscriptionExpiry');
+
         console.log('PUT Photographer - Updating with:', body);
 
         const photographer = await User.findByIdAndUpdate(
@@ -61,6 +63,46 @@ export async function PUT(
 
         if (!photographer) {
             return NextResponse.json({ error: 'Fotoğrafçı bulunamadı' }, { status: 404 });
+        }
+
+        // Send Plan Updated Email if package or storage changed
+        const isPlanChanged =
+            (body.packageType !== undefined && body.packageType !== oldPhotographer?.packageType) ||
+            (body.storageLimit !== undefined && body.storageLimit !== oldPhotographer?.storageLimit);
+
+        if (isPlanChanged && photographer.email) {
+            try {
+                const { sendEmail } = await import('@/lib/resend');
+                const { PlanUpdated } = await import('@/lib/emails/PlanUpdated');
+
+                const packageNames: any = {
+                    'trial': '7 Günlük Deneme',
+                    'starter': 'Starter Paket',
+                    'pro': 'Pro Paket',
+                    'premium': 'Premium Paket'
+                };
+
+                const formatBytes = (bytes: number) => {
+                    if (bytes === 0) return '0 Bytes';
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                };
+
+                await sendEmail({
+                    to: photographer.email,
+                    subject: 'FotoPlan - Üyelik Planınız Güncellendi',
+                    react: PlanUpdated({
+                        photographerName: photographer.name || 'Fotoğrafçı',
+                        newPlanName: packageNames[photographer.packageType] || photographer.packageType,
+                        expiryDate: photographer.subscriptionExpiry ? new Date(photographer.subscriptionExpiry).toLocaleDateString('tr-TR') : 'Belirtilmedi',
+                        storageLimit: formatBytes(photographer.storageLimit)
+                    })
+                });
+            } catch (err) {
+                console.error('Failed to send plan update email:', err);
+            }
         }
 
         return NextResponse.json(photographer);

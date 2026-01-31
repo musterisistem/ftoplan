@@ -29,6 +29,35 @@ export default function EditPhotographerPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    const formatPhoneNumber = (value: string) => {
+        const cleaned = value.replace(/[^\d+]/g, '');
+        const hasPlus = cleaned.startsWith('+');
+        const digits = cleaned.replace(/\D/g, '');
+        let formatted = hasPlus ? '+' : '';
+        if (digits.length > 0) {
+            if (digits.startsWith('90')) {
+                formatted += '90 ';
+                const rest = digits.substring(2);
+                if (rest.length > 0) formatted += '(' + rest.substring(0, 3) + ') ';
+                if (rest.length > 3) formatted += rest.substring(3, 6) + ' ';
+                if (rest.length > 6) formatted += rest.substring(6, 8) + ' ';
+                if (rest.length > 8) formatted += rest.substring(8, 10);
+            } else if (digits.startsWith('0')) {
+                formatted += '0 ';
+                if (digits.length > 1) formatted += '(' + digits.substring(1, 4) + ') ';
+                if (digits.length > 4) formatted += digits.substring(4, 7) + ' ';
+                if (digits.length > 7) formatted += digits.substring(7, 9) + ' ';
+                if (digits.length > 9) formatted += digits.substring(9, 11);
+            } else {
+                if (digits.length > 0) formatted += '(' + digits.substring(0, 3) + ') ';
+                if (digits.length > 3) formatted += digits.substring(3, 6) + ' ';
+                if (digits.length > 6) formatted += digits.substring(6, 8) + ' ';
+                if (digits.length > 8) formatted += digits.substring(8, 10);
+            }
+        }
+        return formatted.trim();
+    };
+
     useEffect(() => {
         fetchPhotographer();
     }, [id]);
@@ -223,8 +252,9 @@ export default function EditPhotographerPage() {
                         <input
                             type="tel"
                             value={photographer.phone || ''}
-                            onChange={(e) => setPhotographer({ ...photographer, phone: e.target.value })}
+                            onChange={(e) => setPhotographer({ ...photographer, phone: formatPhoneNumber(e.target.value) })}
                             className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="+90 (555) 123 45 67"
                         />
                     </div>
                 </div>

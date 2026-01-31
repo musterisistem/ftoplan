@@ -14,13 +14,17 @@ import {
     X,
     Crown,
     Server,
-    TrendingUp
+    TrendingUp,
+    Mail,
+    MessageSquare
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 const menuItems = [
     { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
     { name: 'Fotoğrafçılar', href: '/superadmin/photographers', icon: Users },
+    { name: 'Toplu Email', href: '/superadmin/communications/email', icon: Mail },
+    { name: 'Toplu SMS', href: '/superadmin/communications/sms', icon: MessageSquare },
     { name: 'Paketler', href: '/superadmin/packages', icon: Package },
     { name: 'Ayarlar', href: '/superadmin/settings', icon: Settings },
 ];
@@ -79,7 +83,7 @@ export default function SuperAdminLayout({
                             <Crown className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">FotoPlan</h1>
+                            <h1 className="text-xl font-bold text-white">Kadraj Panel</h1>
                             <p className="text-xs text-purple-300">Süper Admin</p>
                         </div>
                     </div>

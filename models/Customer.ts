@@ -18,6 +18,10 @@ const CustomerSchema = new mongoose.Schema({
         unique: true,
         sparse: true,
     },
+    tcId: {
+        type: String,
+        default: '',
+    },
     weddingDate: {
         type: Date,
     },
@@ -84,6 +88,28 @@ const CustomerSchema = new mongoose.Schema({
     },
     selectionApprovedAt: {
         type: Date,
+        default: null,
+    },
+    // Professional Settings
+    canDownload: {
+        type: Boolean,
+        default: true,
+    },
+    lastLoginAt: {
+        type: Date,
+        default: null,
+    },
+    lastLoginIp: {
+        type: String,
+        default: '',
+    },
+    lastLoginPlatform: {
+        type: String,
+        default: '',
+    },
+    contractId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Contract',
         default: null,
     },
 }, { timestamps: true });

@@ -154,7 +154,7 @@ export default function ClientLoginPage() {
 
                 {/* Footer */}
                 <p className="text-center text-gray-500 text-sm mt-6">
-                    © 2024 FotoPlan. Tüm hakları saklıdır.
+                    © 2024 Kadraj Panel. Tüm hakları saklıdır.
                 </p>
             </div>
         </div>

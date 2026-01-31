@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import { AlertProvider } from '@/context/AlertContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -9,7 +10,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             refetchInterval={0}
             refetchWhenOffline={false}
         >
-            {children}
+            <AlertProvider>
+                {children}
+            </AlertProvider>
         </SessionProvider>
     );
 }

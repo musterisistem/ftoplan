@@ -11,6 +11,7 @@ export default function ContentSettingsPage() {
     const [message, setMessage] = useState({ type: '', text: '' });
     const isFetched = useRef(false);
 
+    const [settings, setSettings] = useState<any>(null);
     const [aboutText, setAboutText] = useState('');
 
     useEffect(() => {
@@ -20,6 +21,7 @@ export default function ContentSettingsPage() {
                 .then(r => r.json())
                 .then(data => {
                     if (!data.error) {
+                        setSettings(data);
                         setAboutText(data.aboutText || '');
                     }
                 })
@@ -37,7 +39,10 @@ export default function ContentSettingsPage() {
             const res = await fetch('/api/admin/studio-settings', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ aboutText })
+                body: JSON.stringify({
+                    ...settings,
+                    aboutText
+                })
             });
 
             if (res.ok) {

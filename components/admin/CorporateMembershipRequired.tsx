@@ -132,8 +132,8 @@ export default function CorporateMembershipRequired() {
                             <div className="mt-8 text-center">
                                 <p className="text-gray-500 text-sm">
                                     Sorularınız için:{' '}
-                                    <a href="mailto:info@fotoplan.com" className="text-purple-400 hover:text-purple-300 transition-colors">
-                                        info@fotoplan.com
+                                    <a href="mailto:info@Kadraj Panel.com" className="text-purple-400 hover:text-purple-300 transition-colors">
+                                        info@Kadraj Panel.com
                                     </a>
                                 </p>
                             </div>

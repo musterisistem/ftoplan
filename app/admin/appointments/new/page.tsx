@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAlert } from '@/context/AlertContext';
 
 // Mock Data (In a real app, these would come from APIs)
 const PACKAGES = [
@@ -36,11 +37,13 @@ const CONTRACTS = [
 export default function NewAppointmentPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { showAlert } = useAlert();
 
     // Form States
     const [customerType, setCustomerType] = useState<'new' | 'existing'>('new');
     const [pricingType, setPricingType] = useState<'package' | 'custom'>('package');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [noAppointment, setNoAppointment] = useState(false);
     const [contracts, setContracts] = useState<any[]>([]);
 
     useEffect(() => {
@@ -202,23 +205,25 @@ export default function NewAppointmentPage() {
         setErrors({});
     };
 
-    const validateForm = () => {
+    const validateForm = (checkShoot = true) => {
         const newErrors: { [key: string]: string } = {};
 
         // Date/Time Check
-        if (!formData.shootDate) newErrors.shootDate = 'Çekim tarihi zorunludur.';
-        if (!formData.shootTime) newErrors.shootTime = 'Çekim saati zorunludur.';
+        if (checkShoot) {
+            if (!formData.shootDate) newErrors.shootDate = 'Çekim tarihi zorunludur.';
+            if (!formData.shootTime) newErrors.shootTime = 'Çekim saati zorunludur.';
+        }
 
         // Customer Logic
         if (customerType === 'new') {
             if (!formData.brideName || formData.brideName.length < 2) newErrors.brideName = 'Gelin adı gereklidir.';
-            // Damat adı opsiyonel olabilir veya zorunlu kılabiliriz. Kullanıcı "ayrı ayrı yazsın" dedi.
-            // Genelde ikisi de olur ama kişisel çekimde olmaz.
             if (formData.shootType === 'wedding' || formData.shootType === 'engagement') {
                 if (!formData.groomName || formData.groomName.length < 2) newErrors.groomName = 'Damat adı gereklidir.';
             }
             if (!formData.phone1) newErrors.phone1 = 'Telefon numarası zorunludur.';
-            if (formData.phone1.length < 14) newErrors.phone1 = 'Geçerli bir telefon numarası giriniz.';
+            // The mask includes spaces/parens, so it's longer than 11. 
+            // formatPhoneNumber makes it (0XXX) XXX XX XX -> roughly 14-16 chars.
+            if (formData.phone1.replace(/\D/g, '').length < 10) newErrors.phone1 = 'Geçerli bir telefon numarası giriniz.';
         } else {
             if (!selectedCustomer) newErrors.customer = 'Lütfen bir müşteri seçiniz.';
         }
@@ -227,9 +232,10 @@ export default function NewAppointmentPage() {
         return Object.keys(newErrors).length === 0;
     };
 
+
     const handleSubmit = async () => {
-        if (!validateForm()) {
-            alert('Lütfen formdaki hataları gideriniz.');
+        if (!validateForm(!noAppointment)) {
+            showAlert('Lütfen formdaki hataları gideriniz.', 'warning');
             return;
         }
 
@@ -239,8 +245,8 @@ export default function NewAppointmentPage() {
             let newCustomerData = null;
 
             if (customerType === 'existing') {
-                if (!selectedCustomer) { // Double check
-                    alert('Lütfen bir müşteri seçiniz.');
+                if (!selectedCustomer) {
+                    showAlert('Lütfen bir müşteri seçiniz.', 'warning');
                     setIsSubmitting(false);
                     return;
                 }
@@ -254,8 +260,8 @@ export default function NewAppointmentPage() {
                         groomName: formData.groomName,
                         phone: formData.phone1,
                         email: formData.email,
-                        weddingDate: formData.shootDate,
-                        notes: `Created from appointment: ${formData.notes}`,
+                        weddingDate: formData.shootDate || null,
+                        notes: `Müşteri Kaydı: ${formData.notes}`,
                         tcId: formData.tcId
                     })
                 });
@@ -272,37 +278,40 @@ export default function NewAppointmentPage() {
                 }
             }
 
-            const shootRes = await fetch('/api/shoots', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    customerId,
-                    date: new Date(`${formData.shootDate}T${formData.shootTime}`),
-                    type: formData.shootType,
-                    location: formData.location,
-                    city: formData.city,
-                    packageId: formData.packageId,
-                    contractId: formData.contractId,
-                    agreedPrice: formData.agreedPrice,
-                    deposit: formData.deposit,
-                    notes: formData.notes
-                })
-            });
+            // Only create appointment/shoot if noAppointment is false
+            if (!noAppointment) {
+                const shootRes = await fetch('/api/shoots', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customerId,
+                        date: new Date(`${formData.shootDate}T${formData.shootTime}`),
+                        type: formData.shootType,
+                        location: formData.location,
+                        city: formData.city,
+                        packageId: formData.packageId,
+                        contractId: formData.contractId,
+                        agreedPrice: formData.agreedPrice,
+                        deposit: formData.deposit,
+                        notes: formData.notes
+                    })
+                });
 
-            if (!shootRes.ok) {
-                const errorData = await shootRes.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Randevu oluşturulamadı');
+                if (!shootRes.ok) {
+                    const errorData = await shootRes.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Randevu oluşturulamadı');
+                }
             }
 
             if (customerType === 'new') {
                 setShowCredentialsModal(true);
             } else {
-                alert('Randevu başarıyla oluşturuldu!');
+                showAlert(noAppointment ? 'Müşteri başarıyla kaydedildi!' : 'Randevu başarıyla oluşturuldu!', 'success');
                 router.push('/admin/appointments');
             }
         } catch (error: any) {
             console.error('Submit error:', error);
-            alert(`Bir hata oluştu: ${error.message || 'Lütfen tekrar deneyiniz.'}`);
+            showAlert(`Bir hata oluştu: ${error.message || 'Lütfen tekrar deneyiniz.'}`, 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -339,7 +348,7 @@ export default function NewAppointmentPage() {
                         </h3>
                         <div className="flex bg-gray-200/50 p-0.5 rounded-md">
                             <button onClick={() => setCustomerType('new')} className={`px-2 py-1 text-xs font-medium rounded ${customerType === 'new' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}>Yeni</button>
-                            <button onClick={() => setCustomerType('existing')} className={`px-2 py-1 text-xs font-medium rounded ${customerType === 'existing' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}>Mevcut</button>
+                            <button onClick={() => { setCustomerType('existing'); setNoAppointment(false); }} className={`px-2 py-1 text-xs font-medium rounded ${customerType === 'existing' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}>Mevcut</button>
                         </div>
                     </div>
                     <div className="p-4 space-y-3">
@@ -460,13 +469,33 @@ export default function NewAppointmentPage() {
 
                 {/* Column 2: Shoot Details */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
                         <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
                             <Camera className="w-4 h-4 text-indigo-500" />
                             Çekim Detayları
                         </h3>
+                        {/* No Appointment Toggle */}
+                        <div className="flex items-center gap-2">
+                            {customerType === 'existing' && (
+                                <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-amber-50 text-amber-600 rounded text-[9px] font-bold border border-amber-100 animate-in fade-in slide-in-from-right-2">
+                                    <AlertCircle className="w-2.5 h-2.5" />
+                                    MEVCUT MÜŞTERİYE RANDEVU ŞARTTIR
+                                </div>
+                            )}
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${customerType === 'existing' ? 'text-gray-300' : 'text-gray-400'}`}>Randevu Yok</span>
+                            <button
+                                onClick={() => customerType === 'new' && setNoAppointment(!noAppointment)}
+                                disabled={customerType === 'existing'}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${noAppointment ? 'bg-indigo-600' : 'bg-gray-200'} ${customerType === 'existing' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                title={customerType === 'existing' ? 'Mevcut müşteriler için randevu oluşturulmalıdır' : ''}
+                            >
+                                <span
+                                    className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${noAppointment ? 'translate-x-4.5' : 'translate-x-1'}`}
+                                />
+                            </button>
+                        </div>
                     </div>
-                    <div className="p-4 space-y-3">
+                    <div className={`p-4 space-y-3 transition-opacity duration-300 ${noAppointment ? 'opacity-40 pointer-events-none grayscale-[0.5]' : 'opacity-100'}`}>
                         <div>
                             <label className="text-xs font-medium text-gray-500 mb-1.5 block">Çekim Türü</label>
                             <div className="grid grid-cols-2 gap-2">

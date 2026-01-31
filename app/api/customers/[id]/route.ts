@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Customer from '@/models/Customer';
 import User from '@/models/User';
+import bcrypt from 'bcryptjs';
 
 export async function GET(
     req: Request,
@@ -23,7 +24,7 @@ export async function GET(
         // Get user info if exists
         let userInfo = null;
         if (customer.userId) {
-            const user = await User.findById(customer.userId).select('email');
+            const user = await User.findById(customer.userId).select('email isActive');
             if (user) {
                 // Extract simple username from email if plainUsername doesn't exist
                 const simpleUsername = customer.plainUsername || (user.email ? user.email.split('@')[0] : null);
@@ -32,23 +33,31 @@ export async function GET(
                     email: user.email,
                     plainPassword: customer.plainPassword || null,
                     plainUsername: simpleUsername, // Use stored or extract from email
+                    isActive: user.isActive !== undefined ? user.isActive : true
                 };
             }
         }
 
-        // Get photographer info for studio slug
+        // Get photographer info for studio slug and trial status
         let photographerSlug = null;
+        let photographerPackageType = 'trial';
+        let photographerSubscriptionExpiry = null;
+
         if (customer.photographerId) {
-            const photographer = await User.findById(customer.photographerId).select('slug');
-            if (photographer?.slug) {
+            const photographer = await User.findById(customer.photographerId).select('slug packageType subscriptionExpiry');
+            if (photographer) {
                 photographerSlug = photographer.slug;
+                photographerPackageType = photographer.packageType || 'trial';
+                photographerSubscriptionExpiry = photographer.subscriptionExpiry;
             }
         }
 
         return NextResponse.json({
             ...customer.toObject(),
             user: userInfo,
-            photographerSlug
+            photographerSlug,
+            photographerPackageType,
+            photographerSubscriptionExpiry
         });
     } catch (error: any) {
         console.error('Error fetching customer:', error);
@@ -65,7 +74,7 @@ export async function PUT(
 
     try {
         const body = await req.json();
-        const { brideName, groomName, phone, email, notes, status, appointmentStatus, albumStatus } = body;
+        const { brideName, groomName, phone, email, notes, status, appointmentStatus, albumStatus, tcId } = body;
 
         const customer = await Customer.findById(id);
         if (!customer) {
@@ -103,11 +112,45 @@ export async function PUT(
         if (status !== undefined) updateData.status = status;
         if (appointmentStatus !== undefined) updateData.appointmentStatus = appointmentStatus;
         if (albumStatus !== undefined) updateData.albumStatus = albumStatus;
+        if (tcId !== undefined) updateData.tcId = tcId;
+        if (body.contractId !== undefined) updateData.contractId = body.contractId;
 
         // Selection Logic Updates
         if (body.selectionLimits !== undefined) updateData.selectionLimits = body.selectionLimits;
         if (body.selectedPhotos !== undefined) updateData.selectedPhotos = body.selectedPhotos;
         if (body.selectionCompleted !== undefined) updateData.selectionCompleted = body.selectionCompleted;
+        if (body.canDownload !== undefined) updateData.canDownload = body.canDownload;
+
+        // Sync with User Model if credentials or status changed
+        if (customer.userId) {
+            const userUpdate: any = {};
+            if (email && email !== customer.email) userUpdate.email = email;
+            if (body.isActive !== undefined) userUpdate.isActive = body.isActive;
+
+            // Handle Password Change
+            if (body.plainPassword && body.plainPassword !== customer.plainPassword) {
+                userUpdate.password = await bcrypt.hash(body.plainPassword, 10);
+                updateData.plainPassword = body.plainPassword;
+            }
+
+            // Handle Username Change (mapped to email for login mostly)
+            if (body.plainUsername && body.plainUsername !== customer.plainUsername) {
+                updateData.plainUsername = body.plainUsername;
+                // If we use email-based login, and generate email from username:
+                const newUserEmail = `${body.plainUsername}@fotopanel.com`;
+                userUpdate.email = newUserEmail;
+                updateData.email = newUserEmail; // Also update customer email to match
+            }
+
+            if (Object.keys(userUpdate).length > 0) {
+                await User.findByIdAndUpdate(customer.userId, { $set: userUpdate });
+            }
+        }
+
+        // Detect Status Changes for Email Notification
+        const isStatusChanged =
+            (appointmentStatus !== undefined && appointmentStatus !== customer.appointmentStatus) ||
+            (albumStatus !== undefined && albumStatus !== customer.albumStatus);
 
         // Use findByIdAndUpdate to skip validation on missing fields
         const updatedCustomer = await Customer.findByIdAndUpdate(
@@ -115,6 +158,55 @@ export async function PUT(
             { $set: updateData },
             { new: true, runValidators: false } // Skip validators for backward compatibility
         );
+
+        // Send Email Notification if Status Changed and Email exists
+        if (isStatusChanged && updatedCustomer?.email) {
+            try {
+                const { sendEmail } = await import('@/lib/resend');
+                const { CustomerStatusUpdate } = await import('@/lib/emails/CustomerStatusUpdate');
+
+                // Get Photographer Studio Name
+                const photographer = await User.findById(updatedCustomer.photographerId).select('studioName');
+
+                // Map Enum to User Friendly Turkish Titles
+                const statusMap: any = {
+                    'cekim_yapilmadi': 'Çekim Henüz Yapılmadı',
+                    'cekim_yapildi': 'Çekim Tamamlandı',
+                    'fotograflar_yuklendi': 'Fotoğraflar Panele Yüklendi',
+                    'fotograflar_secildi': 'Fotoğraflar Müşteri Tarafından Seçildi',
+                    'album_bekleniyor': 'Albüm Onayı Bekleniyor',
+                    'teslim_edildi': 'Süreç Tamamlandı / Teslim Edildi',
+                    // Album Status
+                    'islem_yapilmadi': 'İşlem Sırasında',
+                    'tasarim_asamasinda': 'Albüm Tasarımı Aşamasında',
+                    'baskida': 'Baskı Merkezinde',
+                    'paketlemede': 'Paketleme Aşamasında',
+                    'kargoda': 'Kargoya Verildi',
+                    'teslimata_hazir': 'Teslimata Hazır',
+                };
+
+                const changedStatus = appointmentStatus !== undefined && appointmentStatus !== customer.appointmentStatus
+                    ? { title: 'Randevu Durumu', value: statusMap[appointmentStatus] || appointmentStatus }
+                    : { title: 'Albüm Durumu', value: statusMap[albumStatus] || albumStatus };
+
+                await sendEmail({
+                    to: updatedCustomer.email,
+                    subject: `FotoPlan - ${changedStatus.title} Güncellendi`,
+                    react: CustomerStatusUpdate({
+                        customerName: `${updatedCustomer.brideName} & ${updatedCustomer.groomName}`,
+                        statusTitle: changedStatus.title,
+                        statusValue: changedStatus.value,
+                        studioName: photographer?.studioName || 'Fotoğraf Stüdyonuz'
+                    })
+                });
+            } catch (err) {
+                console.error('Failed to send status update email:', err);
+            }
+        }
+
+        if (!updatedCustomer) {
+            return NextResponse.json({ error: 'Güncelleme sonrası müşteri bulunamadı' }, { status: 404 });
+        }
 
         return NextResponse.json(updatedCustomer);
     } catch (error: any) {

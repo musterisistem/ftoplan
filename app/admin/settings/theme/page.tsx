@@ -209,7 +209,7 @@ export default function ThemeSettingsPage() {
                         Logo ve Banner
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 gap-8">
                         {/* Logo */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3">Logo</label>
@@ -230,28 +230,6 @@ export default function ThemeSettingsPage() {
                                 />
                             </div>
                             <p className="mt-2 text-xs text-gray-500">PNG veya JPG, transparan önerilir</p>
-                        </div>
-
-                        {/* Banner */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">Banner</label>
-                            <div className="relative w-full aspect-[21/9] bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center overflow-hidden group hover:border-violet-400 transition-all">
-                                {bannerPreview ? (
-                                    <img src={bannerPreview} className="w-full h-full object-cover" alt="Banner" />
-                                ) : (
-                                    <div className="text-center text-gray-400">
-                                        <Upload className="w-10 h-10 mx-auto mb-2" />
-                                        <span className="text-sm">Banner Yükle</span>
-                                    </div>
-                                )}
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleFileSelect(e, 'banner')}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                />
-                            </div>
-                            <p className="mt-2 text-xs text-gray-500">1920x600 önerilir</p>
                         </div>
                     </div>
                 </div>

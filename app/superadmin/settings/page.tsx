@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { Settings, Globe, Mail, Bell, Shield, Database } from 'lucide-react';
+import { useAlert } from '@/context/AlertContext';
 
 export default function SuperAdminSettingsPage() {
+    const { showAlert } = useAlert();
     const [settings, setSettings] = useState({
-        siteName: 'FotoPlan',
-        siteUrl: 'https://fotoplan.app',
-        supportEmail: 'destek@fotoplan.app',
+        siteName: 'Kadraj Panel',
+        siteUrl: 'https://Kadraj Panel.app',
+        supportEmail: 'destek@Kadraj Panel.app',
         defaultQuota: 20,
         trialDays: 14,
         enableRegistration: true,
@@ -15,7 +17,7 @@ export default function SuperAdminSettingsPage() {
     });
 
     const handleSave = async () => {
-        alert('Ayarlar kaydedildi! (Henüz API bağlantısı yok)');
+        showAlert('Ayarlar kaydedildi! (Henüz API bağlantısı yok)', 'success');
     };
 
     return (

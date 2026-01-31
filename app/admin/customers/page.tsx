@@ -16,6 +16,7 @@ import {
     XCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAlert } from '@/context/AlertContext';
 
 interface Customer {
     _id: string;
@@ -29,6 +30,7 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+    const { showAlert } = useAlert();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -57,8 +59,9 @@ export default function CustomersPage() {
             const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setCustomers(prev => prev.filter(c => c._id !== id));
+                showAlert('Müşteri başarıyla silindi', 'success');
             } else {
-                alert('Silme işlemi başarısız');
+                showAlert('Silme işlemi başarısız', 'error');
             }
         } catch (error) {
             console.error('Delete error:', error);
@@ -117,8 +120,8 @@ export default function CustomersPage() {
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${filterStatus === status
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {status === 'all' ? 'Tümü' : status === 'active' ? 'Aktif' : 'Arşiv'} ({statusCounts[status]})
@@ -192,10 +195,10 @@ export default function CustomersPage() {
                                 {/* Status */}
                                 <div className="col-span-1 md:col-span-2">
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${customer.status === 'active'
-                                            ? 'bg-green-50 text-green-700'
-                                            : customer.status === 'completed'
-                                                ? 'bg-blue-50 text-blue-700'
-                                                : 'bg-gray-100 text-gray-600'
+                                        ? 'bg-green-50 text-green-700'
+                                        : customer.status === 'completed'
+                                            ? 'bg-blue-50 text-blue-700'
+                                            : 'bg-gray-100 text-gray-600'
                                         }`}>
                                         {customer.status === 'active' ? (
                                             <><CheckCircle2 className="w-3 h-3" /> Aktif</>

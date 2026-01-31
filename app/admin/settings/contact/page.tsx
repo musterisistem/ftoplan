@@ -18,6 +18,59 @@ export default function ContactSettingsPage() {
         facebook: '',
     });
 
+    const formatPhoneNumber = (value: string) => {
+        // Only allow digits and +
+        const cleaned = value.replace(/[^\d+]/g, '');
+
+        // If it starts with +, keep it. Otherwise work with digits.
+        const hasPlus = cleaned.startsWith('+');
+        const digits = cleaned.replace(/\D/g, '');
+
+        let formatted = hasPlus ? '+' : '';
+
+        if (digits.length > 0) {
+            if (digits.startsWith('90')) {
+                formatted += '90 ';
+                const rest = digits.substring(2);
+                if (rest.length > 0) formatted += '(' + rest.substring(0, 3) + ') ';
+                if (rest.length > 3) formatted += rest.substring(3, 6) + ' ';
+                if (rest.length > 6) formatted += rest.substring(6, 8) + ' ';
+                if (rest.length > 8) formatted += rest.substring(8, 10);
+            } else if (digits.startsWith('0')) {
+                formatted += '0 ';
+                if (digits.length > 1) formatted += '(' + digits.substring(1, 4) + ') ';
+                if (digits.length > 4) formatted += digits.substring(4, 7) + ' ';
+                if (digits.length > 7) formatted += digits.substring(7, 9) + ' ';
+                if (digits.length > 9) formatted += digits.substring(9, 11);
+            } else {
+                if (digits.length > 0) formatted += '(' + digits.substring(0, 3) + ') ';
+                if (digits.length > 3) formatted += digits.substring(3, 6) + ' ';
+                if (digits.length > 6) formatted += digits.substring(6, 8) + ' ';
+                if (digits.length > 8) formatted += digits.substring(8, 10);
+            }
+        }
+
+        return formatted.trim();
+    };
+
+    const formatWhatsApp = (value: string) => {
+        const cleaned = value.replace(/[^\d+]/g, '');
+        const digits = cleaned.replace(/\D/g, '');
+
+        if (digits.length === 0) return cleaned.startsWith('+') ? '+' : '';
+
+        let result = '';
+        if (digits.startsWith('90')) {
+            result = digits.substring(0, 12);
+        } else if (digits.startsWith('0')) {
+            result = '90' + digits.substring(1, 11);
+        } else {
+            result = '90' + digits.substring(0, 10);
+        }
+
+        return '+' + result;
+    };
+
     useEffect(() => {
         if (status === 'authenticated' && !isFetched.current) {
             isFetched.current = true;
@@ -119,9 +172,9 @@ export default function ContactSettingsPage() {
                                 <input
                                     type="tel"
                                     value={settings.phone}
-                                    onChange={e => setSettings({ ...settings, phone: e.target.value })}
+                                    onChange={e => setSettings({ ...settings, phone: formatPhoneNumber(e.target.value) })}
                                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    placeholder="+90 555 123 4567"
+                                    placeholder="+90 (555) 123 45 67"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -132,7 +185,7 @@ export default function ContactSettingsPage() {
                                 <input
                                     type="tel"
                                     value={settings.whatsapp}
-                                    onChange={e => setSettings({ ...settings, whatsapp: e.target.value })}
+                                    onChange={e => setSettings({ ...settings, whatsapp: formatWhatsApp(e.target.value) })}
                                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                     placeholder="+905551234567"
                                 />

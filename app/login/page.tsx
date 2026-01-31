@@ -4,7 +4,16 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function LoginPage() {
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Mail, CheckCircle, AlertCircle } from 'lucide-react';
+
+function LoginContent() {
+    const searchParams = useSearchParams();
+    const registered = searchParams.get('registered');
+    const verified = searchParams.get('verified');
+    const errorParam = searchParams.get('error');
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -55,6 +64,36 @@ export default function LoginPage() {
                     <p className="text-gray-300">Yönetim paneline giriş yapın</p>
                 </div>
 
+                {registered && (
+                    <div className="mb-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-xl text-blue-100 text-sm flex items-start gap-3">
+                        <Mail className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold">Kayıt Başarılı!</p>
+                            <p className="mt-1 opacity-90">Lütfen e-posta adresinizi doğrulayın. Doğrulama linki mail adresinize gönderildi.</p>
+                        </div>
+                    </div>
+                )}
+
+                {verified && (
+                    <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-100 text-sm flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold">E-posta Doğrulandı!</p>
+                            <p className="mt-1 opacity-90">Hesabınız başarıyla aktif edildi. Şimdi giriş yapabilirsiniz.</p>
+                        </div>
+                    </div>
+                )}
+
+                {errorParam === 'invalid_token' && (
+                    <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-100 text-sm flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold">Hatalı Link!</p>
+                            <p className="mt-1 opacity-90">Doğrulama linki geçersiz veya süresi dolmuş. Lütfen tekrar kayıt olmayı deneyin.</p>
+                        </div>
+                    </div>
+                )}
+
                 {error && (
                     <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
                         {error}
@@ -100,5 +139,17 @@ export default function LoginPage() {
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }

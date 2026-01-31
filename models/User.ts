@@ -45,7 +45,19 @@ const UserSchema = new mongoose.Schema({
     },
     isActive: {
         type: Boolean,
-        default: true,
+        default: false, // Default to inactive until verified
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationToken: {
+        type: String,
+        default: null,
+    },
+    verificationTokenExpiry: {
+        type: Date,
+        default: null,
     },
     // Studio Info (for photographers)
     studioName: {

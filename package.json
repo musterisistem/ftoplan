@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-email/components": "^1.0.6",
+    "@react-email/render": "^2.0.4",
     "bcryptjs": "^3.0.3",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
@@ -23,6 +25,7 @@
     "react-dom": "19.2.3",
     "react-dropzone": "^14.3.8",
     "react-zoom-pan-pinch": "^3.7.0",
+    "resend": "^6.9.1",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

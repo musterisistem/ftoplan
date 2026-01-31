@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         console.log('Customer creation request body:', body);
 
-        const { brideName, groomName, phone, email, weddingDate, notes } = body;
+        const { brideName, groomName, phone, email, weddingDate, notes, tcId } = body;
 
         // Validate required fields
         if (!brideName) {
@@ -115,6 +115,7 @@ export async function POST(req: Request) {
             photographerId: photographerId, // Associate with photographer
             status: 'active',
             notes,
+            tcId,
             plainPassword: tempPassword,
             plainUsername: username,
         });

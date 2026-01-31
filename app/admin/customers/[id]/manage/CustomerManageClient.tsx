@@ -13,7 +13,6 @@ import {
     CreditCard,
     FileText,
     Settings,
-    CheckCircle,
     User,
     Upload,
     ChevronDown,
@@ -32,43 +31,66 @@ import {
     Layout,
     Image as ImageIcon,
     Info,
-    Clock
+    Clock,
+    Lock,
+    Unlock,
+    Activity,
+    Globe,
+    ShieldCheck,
+    ShieldX,
+    User as UserIcon,
+    MessageCircle,
+    Save,
+    AlertCircle
 } from 'lucide-react';
 import PhotoUpload from '@/components/admin/PhotoUpload';
+import { useAlert } from '@/context/AlertContext';
 
 interface Customer {
     _id: string;
     brideName: string;
-    groomName?: string;
+    groomName: string;
     phone: string;
     email?: string;
-    address?: string;
-    city?: string;
-    district?: string;
-    status: 'active' | 'completed' | 'archived';
+    tcId?: string;
+    weddingDate?: string;
+    status: string;
+    appointmentStatus: string;
+    albumStatus: string;
     createdAt: string;
-    appointmentStatus?: string;
-    albumStatus?: string;
+    userId?: string;
+    plainPassword?: string;
+    plainUsername?: string;
     user?: {
         email: string;
         plainPassword?: string;
         plainUsername?: string;
+        isActive?: boolean;
     };
-    photos?: {
-        url: string;
-        filename: string;
-        size: number;
-        uploadedAt: string;
-    }[];
-    selectionLimits?: {
+    selectionLimits: {
         album: number;
         cover: number;
         poster: number;
     };
+    selectionCompleted?: boolean;
+    canDownload?: boolean;
+    lastLoginAt?: string;
+    lastLoginIp?: string;
+    lastLoginPlatform?: string;
+    photographerSlug?: string;
+    photos: Array<{
+        url: string;
+        filename: string;
+        size: number;
+        uploadedAt: string;
+    }>;
     selectedPhotos?: {
         url: string;
         type: 'album' | 'cover' | 'poster';
     }[];
+    contractId?: string;
+    photographerPackageType?: string;
+    photographerSubscriptionExpiry?: string;
 }
 
 type TabType = 'summary' | 'package' | 'appointments' | 'payments' | 'contract' | 'album-settings' | 'send-album' | 'approved-album' | 'account';
@@ -81,7 +103,7 @@ const TABS = [
     { id: 'contract', label: 'Sözleşme', icon: FileText },
     { id: 'album-settings', label: 'Albüm Onay Ayarları', icon: Settings },
     { id: 'send-album', label: 'Albüm Gönder', icon: Upload },
-    { id: 'approved-album', label: 'Onaylanan Albüm', icon: CheckCircle },
+    { id: 'approved-album', label: 'Onaylanan Albüm', icon: CheckCircle2 },
     { id: 'account', label: 'Üye Hesap Ayarları', icon: User },
 ] as const;
 
@@ -105,6 +127,7 @@ const ALBUM_STATUSES = [
 ];
 
 export default function CustomerManageClient({ customerId }: { customerId: string }) {
+    const { showAlert } = useAlert();
     const [customer, setCustomer] = useState<Customer | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -184,11 +207,11 @@ export default function CustomerManageClient({ customerId }: { customerId: strin
                 setSavedStatusType(type);
                 setShowSuccessModal(true);
             } else {
-                alert('Durum güncellenirken hata oluştu');
+                showAlert('Durum güncellenirken hata oluştu', 'error');
             }
         } catch (error) {
             console.error('Status update error:', error);
-            alert('Durum güncellenirken hata oluştu');
+            showAlert('Durum güncellenirken hata oluştu', 'error');
         }
     };
 
@@ -345,7 +368,7 @@ export default function CustomerManageClient({ customerId }: { customerId: strin
                                         const password = customer.user?.plainPassword || 'Şifre kaydedilmemiş';
                                         const text = `Kullanıcı adı: ${username}\nŞifre: ${password}`;
                                         navigator.clipboard.writeText(text);
-                                        alert('Giriş bilgileri kopyalandı!');
+                                        showAlert('Giriş bilgileri kopyalandı!', 'success');
                                     }}
                                     className="flex items-center gap-1 px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium transition-all ml-2"
                                     title="Kopyala"
@@ -523,16 +546,17 @@ export default function CustomerManageClient({ customerId }: { customerId: strin
                 {activeTab === 'package' && <PackageTab customerId={customerId} />}
                 {activeTab === 'appointments' && <AppointmentsTab customerId={customerId} />}
                 {activeTab === 'payments' && <PaymentsTab customerId={customerId} />}
-                {activeTab === 'contract' && <ContractTab customerId={customerId} />}
+                {activeTab === 'contract' && <ContractTab customerId={customerId} onTabChange={(tab) => setActiveTab(tab)} />}
                 {activeTab === 'album-settings' && <AlbumSettingsTab customer={customer} onUpdate={fetchCustomer} />}
                 {activeTab === 'send-album' && <SendAlbumTab customerId={customerId} initialPhotos={customer.photos || []} onPhotosUpdated={fetchCustomer} />}
                 {activeTab === 'approved-album' && <ApprovedAlbumTab customer={customer} />}
-                {activeTab === 'account' && <AccountTab />}
+                {activeTab === 'account' && <AccountTab customer={customer} onUpdate={fetchCustomer} onTabChange={(tab) => setActiveTab(tab)} />}
             </div>
         </div>
     );
 }
 function AlbumSettingsTab({ customer, onUpdate }: { customer: Customer; onUpdate: () => void }) {
+    const { showAlert } = useAlert();
     const [limits, setLimits] = useState(customer.selectionLimits || { album: 22, cover: 1, poster: 1 });
     const [saving, setSaving] = useState(false);
 
@@ -546,14 +570,14 @@ function AlbumSettingsTab({ customer, onUpdate }: { customer: Customer; onUpdate
             });
 
             if (res.ok) {
-                alert('Limitler güncellendi!');
+                showAlert('Limitler güncellendi!', 'success');
                 onUpdate();
             } else {
-                alert('Güncelleme başarısız.');
+                showAlert('Güncelleme başarısız.', 'error');
             }
         } catch (error) {
             console.error(error);
-            alert('Hata oluştu.');
+            showAlert('Hata oluştu.', 'error');
         } finally {
             setSaving(false);
         }
@@ -727,7 +751,7 @@ function ApprovedAlbumTab({ customer }: { customer: Customer }) {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <CheckCircle2 className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-gray-900">Onaylanan Seçimler</h3>
@@ -1246,6 +1270,7 @@ function AppointmentsTab({ customerId }: { customerId: string }) {
     );
 }
 function PaymentsTab({ customerId }: { customerId: string }) {
+    const { showAlert } = useAlert();
     const [shoots, setShoots] = useState<any[]>([]);
     const [payments, setPayments] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -1285,7 +1310,7 @@ function PaymentsTab({ customerId }: { customerId: string }) {
                 body: JSON.stringify({ customerId, actionType: 'payment', amount: Number(paymentAmount), type: paymentType, description: paymentDesc })
             });
             if (res.ok) { setShowPaymentModal(false); setPaymentAmount(''); setPaymentDesc(''); fetchData(); }
-        } catch (error) { alert('Ödeme eklenirken hata oluştu'); }
+        } catch (error) { showAlert('Ödeme eklenirken hata oluştu', 'error'); }
         finally { setSaving(false); }
     };
 
@@ -1299,7 +1324,7 @@ function PaymentsTab({ customerId }: { customerId: string }) {
                 body: JSON.stringify({ customerId, actionType: 'extra', name: extraName, amount: Number(extraAmount), isDebit, description: extraDesc })
             });
             if (res.ok) { setShowExtraModal(false); setExtraName(''); setExtraAmount(''); setExtraDesc(''); fetchData(); }
-        } catch (error) { alert('Ekstra eklenirken hata oluştu'); }
+        } catch (error) { showAlert('Ekstra eklenirken hata oluştu', 'error'); }
         finally { setSaving(false); }
     };
 
@@ -1381,7 +1406,7 @@ function PaymentsTab({ customerId }: { customerId: string }) {
                 </div>
                 <div className="bg-gradient-to-br from-emerald-50 to-white hover:from-emerald-100/50 transition-all duration-300 rounded-2xl p-5 border border-emerald-100/50 shadow-sm group">
                     <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                        <CheckCircle className="w-6 h-6 text-emerald-500" />
+                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                     </div>
                     <p className="text-gray-500 text-xs font-medium">Toplam Ödenen</p>
                     <p className="text-2xl font-bold text-gray-900">{totalPaid.toLocaleString('tr-TR')} ₺</p>
@@ -1489,7 +1514,7 @@ function PaymentsTab({ customerId }: { customerId: string }) {
                         <div key={index} className="flex items-center justify-between p-4 bg-emerald-50/30 rounded-xl border border-emerald-100 hover:bg-emerald-50/50 transition-colors">
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div>
                                     <p className="font-semibold text-gray-900">
@@ -1521,7 +1546,8 @@ function PaymentsTab({ customerId }: { customerId: string }) {
     );
 }
 
-function ContractTab({ customerId }: { customerId: string }) {
+function ContractTab({ customerId, onTabChange }: { customerId: string; onTabChange?: (tab: TabType) => void }) {
+    const { showAlert } = useAlert();
     const [contract, setContract] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [customer, setCustomer] = useState<any>(null);
@@ -1544,21 +1570,33 @@ function ContractTab({ customerId }: { customerId: string }) {
                 const shootsData = await shootsRes.json();
                 const contractsData = await contractsRes.json();
 
-                // Find a shoot that has a contractId THAT EXISTS in the contracts list
-                const validShoot = shootsData.find((s: any) =>
-                    s.contractId && contractsData.some((c: any) => c._id === s.contractId)
-                );
+                // Priority: Use the direct contractId on the customer model if it exists
+                let effectiveContractId = custData.contractId;
+                let isDirectLink = !!custData.contractId;
 
-                if (validShoot) {
-                    const msgContract = contractsData.find((c: any) => c._id === validShoot.contractId);
+                // Fallback: Check shoots if no direct contract is linked
+                if (!effectiveContractId) {
+                    const shootsRes = await fetch(`/api/shoots?customerId=${customerId}`);
+                    const shootsData = await shootsRes.json();
+                    const validShoot = shootsData.find((s: any) =>
+                        s.contractId && contractsData.some((c: any) => c._id === s.contractId)
+                    );
+                    if (validShoot) {
+                        effectiveContractId = validShoot.contractId;
+                    }
+                }
+
+                if (effectiveContractId) {
+                    const msgContract = contractsData.find((c: any) => c._id === effectiveContractId);
 
                     if (msgContract) {
                         setContract({
                             ...msgContract,
-                            approved: validShoot.contractStatus === 'approved',
-                            date: validShoot.date
+                            // If it's a shoot-based contract, we might have an approval status there
+                            // For direct links, we'll assume pending unless we add a status field to Customer later
+                            approved: false,
+                            date: new Date().toISOString()
                         });
-                        setApproved(validShoot.contractStatus === 'approved');
                     }
                 }
             } catch (error) {
@@ -1572,7 +1610,7 @@ function ContractTab({ customerId }: { customerId: string }) {
 
     const handleApprove = () => {
         if (confirm("Müşteriye onay SMS'i gönderilecek ve sözleşme 'Onay Bekliyor' durumuna geçecek. Devam edilsin mi?")) {
-            alert("Onay talebi gönderildi!");
+            showAlert("Onay talebi gönderildi!", 'success');
         }
     };
 
@@ -1797,6 +1835,310 @@ function SendAlbumTab({ customerId, initialPhotos, onPhotosUpdated }: { customer
     );
 }
 
-function AccountTab() {
-    return <div className="bg-white rounded-2xl border border-gray-100 p-6"><h2 className="text-xl font-bold text-gray-900 mb-4">Üye Hesap Ayarları</h2><p className="text-gray-500">Yakında eklenecek.</p></div>;
+function AccountTab({ customer, onUpdate, onTabChange }: { customer: Customer; onUpdate: () => void; onTabChange: (tab: TabType) => void }) {
+    const { showAlert } = useAlert();
+    const [saving, setSaving] = useState(false);
+    const [contractTemplates, setContractTemplates] = useState<any[]>([]);
+    const [formData, setFormData] = useState({
+        plainUsername: customer.user?.plainUsername || customer.plainUsername || '',
+        plainPassword: customer.user?.plainPassword || customer.plainPassword || '',
+        isActive: customer.user?.isActive !== undefined ? customer.user.isActive : true,
+        canDownload: customer.canDownload !== undefined ? customer.canDownload : true,
+        selectionCompleted: customer.selectionCompleted || false,
+        albumLimit: customer.selectionLimits?.album || 22,
+        coverLimit: customer.selectionLimits?.cover || 1,
+        posterLimit: customer.selectionLimits?.poster || 1,
+        contractId: customer.contractId || '',
+    });
+
+    const isTrial = customer.photographerPackageType === 'trial';
+    const trialExpiry = customer.photographerSubscriptionExpiry ? new Date(customer.photographerSubscriptionExpiry) : null;
+    const daysLeft = trialExpiry ? Math.max(0, Math.ceil((trialExpiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
+
+    useEffect(() => {
+        const fetchTemplates = async () => {
+            try {
+                const res = await fetch('/api/contracts');
+                if (res.ok) {
+                    const data = await res.json();
+                    setContractTemplates(data);
+                }
+            } catch (error) {
+                console.error("Contract templates fetch error", error);
+            }
+        };
+        fetchTemplates();
+    }, []);
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch(`/api/customers/${customer._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    plainUsername: formData.plainUsername,
+                    plainPassword: formData.plainPassword,
+                    isActive: formData.isActive,
+                    canDownload: formData.canDownload,
+                    selectionCompleted: formData.selectionCompleted,
+                    selectionLimits: {
+                        album: formData.albumLimit,
+                        cover: formData.coverLimit,
+                        poster: formData.posterLimit,
+                    },
+                    contractId: formData.contractId || null
+                })
+            });
+
+            if (res.ok) {
+                showAlert('Ayarlar başarıyla kaydedildi!', 'success');
+                onUpdate();
+            } else {
+                const data = await res.json();
+                showAlert(data.error || 'Kaydedilemedi', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showAlert('Bir hata oluştu', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const shareOnWhatsApp = () => {
+        const baseUrl = window.location.origin;
+        const selectionUrl = isTrial
+            ? `${baseUrl}/selection/trial/${customer._id}`
+            : `${baseUrl}/studio/${customer.photographerSlug}/selection`;
+
+        const text = `Merhaba! Fotoğraf seçimleriniz için giriş bilgileriniz:\n\nPanel: ${selectionUrl}\nKullanıcı Adı: ${formData.plainUsername}\nŞifre: ${formData.plainPassword}\n\nKeyifli seçimler dileriz!`;
+        const url = `https://wa.me/${customer.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column: Identity & Access */}
+                <div className="space-y-6">
+                    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5 text-indigo-500" />
+                            Kimlik & Erişim Kontrolü
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 tracking-wider">Kullanıcı Adı</label>
+                                <div className="relative">
+                                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={formData.plainUsername}
+                                        onChange={(e) => setFormData({ ...formData, plainUsername: e.target.value })}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 tracking-wider">Giriş Şifresi</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={formData.plainPassword}
+                                        onChange={(e) => setFormData({ ...formData, plainPassword: e.target.value })}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none font-mono"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-50">
+                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer group hover:bg-gray-100 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${formData.isActive ? 'bg-green-100' : 'bg-red-100'}`}>
+                                            {formData.isActive ? <Globe className="w-5 h-5 text-green-600" /> : <ShieldX className="w-5 h-5 text-red-600" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-900">Hesap Durumu</p>
+                                            <p className="text-xs text-gray-500">{formData.isActive ? 'Müşteri sisteme giriş yapabilir' : 'Müşterinin girişi engellendi'}</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-12 h-6 rounded-full relative transition-colors ${formData.isActive ? 'bg-green-500' : 'bg-gray-300'}`}>
+                                        <input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} className="hidden" />
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.isActive ? 'right-1' : 'left-1'}`} />
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-indigo-500" />
+                            Aktivite Kayıtları
+                        </h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <Clock className="w-4 h-4 text-gray-400" />
+                                    <span className="text-sm text-gray-600">Son Giriş:</span>
+                                </div>
+                                <span className="text-sm font-bold text-gray-900">
+                                    {customer.lastLoginAt ? new Date(customer.lastLoginAt).toLocaleString('tr-TR') : 'Hiç giriş yapmadı'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <MapPin className="w-4 h-4 text-gray-400" />
+                                    <span className="text-sm text-gray-600">Son IP:</span>
+                                </div>
+                                <span className="text-sm font-mono text-gray-900">{customer.lastLoginIp || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Gallery & Permissions */}
+                <div className="space-y-6">
+                    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm h-full">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <Package className="w-5 h-5 text-indigo-500" />
+                            Galeri & Yetkiler
+                        </h3>
+                        <div className="space-y-6">
+                            <label className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-xl cursor-pointer group hover:bg-indigo-50 transition-colors border border-indigo-100/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                                        <Download className="w-5 h-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900">İndirme İzni</p>
+                                        <p className="text-xs text-gray-500">Orijinal fotoğrafları indirebilme</p>
+                                    </div>
+                                </div>
+                                <div className={`w-12 h-6 rounded-full relative transition-colors ${formData.canDownload ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+                                    <input type="checkbox" checked={formData.canDownload} onChange={(e) => setFormData({ ...formData, canDownload: e.target.checked })} className="hidden" />
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.canDownload ? 'right-1' : 'left-1'}`} />
+                                </div>
+                            </label>
+
+                            <label className="flex items-center justify-between p-4 bg-amber-50/50 rounded-xl cursor-pointer group hover:bg-amber-50 transition-colors border border-amber-100/50">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${formData.selectionCompleted ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
+                                        {formData.selectionCompleted ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900">Seçim Kilidi</p>
+                                        <p className="text-xs text-gray-500">{formData.selectionCompleted ? 'Seçimler tamamlandı ve kilitlendi' : 'Müşteri seçim yapabilir'}</p>
+                                    </div>
+                                </div>
+                                <div className={`w-12 h-6 rounded-full relative transition-colors ${formData.selectionCompleted ? 'bg-amber-500' : 'bg-gray-300'}`}>
+                                    <input type="checkbox" checked={formData.selectionCompleted} onChange={(e) => setFormData({ ...formData, selectionCompleted: e.target.checked })} className="hidden" />
+                                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.selectionCompleted ? 'right-1' : 'left-1'}`} />
+                                </div>
+                            </label>
+
+                            <div className="pt-4 border-t border-gray-50 space-y-4">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Seçim Limitlerini Güncelle</p>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 block mb-1">Albüm</label>
+                                        <input type="number" value={formData.albumLimit} onChange={(e) => setFormData({ ...formData, albumLimit: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 block mb-1">Kapak</label>
+                                        <input type="number" value={formData.coverLimit} onChange={(e) => setFormData({ ...formData, coverLimit: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-gray-400 block mb-1">Poster</label>
+                                        <input type="number" value={formData.posterLimit} onChange={(e) => setFormData({ ...formData, posterLimit: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-indigo-500" />
+                        Sözleşme Bilgileri
+                    </h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 tracking-wider">Atanan Sözleşme</label>
+                            <select
+                                value={formData.contractId}
+                                onChange={(e) => setFormData({ ...formData, contractId: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm"
+                            >
+                                <option value="">Sözleşme Seçilmemiş</option>
+                                {contractTemplates.map((template) => (
+                                    <option key={template._id} value={template._id}>
+                                        {template.name} ({template.type})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {!formData.contractId && (
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-amber-800">Sözleşme Atanmamış</p>
+                                    <p className="text-xs text-amber-600/80">Bu müşteriye henüz bir sözleşme atanmadı. Lütfen yukarıdan bir şablon seçin.</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {formData.contractId && (
+                            <button
+                                onClick={() => onTabChange('contract')}
+                                className="w-full flex items-center justify-between p-4 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-100 transition-all group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <FileText className="w-5 h-5 text-indigo-600" />
+                                    <div className="text-left">
+                                        <p className="text-sm font-bold text-indigo-900">Sözleşmeyi İncele</p>
+                                        <p className="text-xs text-indigo-600">Sözleşme detaylarına git</p>
+                                    </div>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <button
+                    onClick={shareOnWhatsApp}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-500/20 active:scale-95"
+                >
+                    <MessageCircle className="w-5 h-5" />
+                    Bilgileri WhatsApp ile Gönder
+                </button>
+                <div className="flex flex-col items-end">
+                    {isTrial && (
+                        <p className="text-[10px] text-amber-600 font-bold mb-1 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Deneme Sürümü: {daysLeft} gün kaldı
+                        </p>
+                    )}
+                    <div className="flex gap-3 w-full sm:w-auto">
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-10 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 active:scale-95"
+                        >
+                            {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-5 h-5" />}
+                            Ayarları Kaydet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }

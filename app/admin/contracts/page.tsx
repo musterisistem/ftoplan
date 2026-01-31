@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAlert } from '@/context/AlertContext';
 import {
     FileText,
     Save,
@@ -16,7 +17,7 @@ import {
 
 // Default Formal Contracts (Fallback)
 const OUTDOOR_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
-İşbu sözleşme, FotoPlan (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen dış mekan fotoğraf çekimi hizmeti hususunda akdedilmiştir.
+İşbu sözleşme, Kadraj Panel (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen dış mekan fotoğraf çekimi hizmeti hususunda akdedilmiştir.
 
 2. ÖDEME KOŞULLARI
 • Paket dahilinde kalan ödeme miktarı, fotoğraf çekiminin gerçekleştirileceği gün, çekim başlamadan önce nakit olarak elden teslim edilecektir.
@@ -45,7 +46,7 @@ const OUTDOOR_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
 İşbu sözleşmeden doğabilecek uyuşmazlıklarda yerel mahkemeler ve icra daireleri yetkilidir.`;
 
 const VIDEO_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
-İşbu sözleşme, FotoPlan (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen video prodüksiyon ve klip çekimi hizmeti hususunda akdedilmiştir.
+İşbu sözleşme, Kadraj Panel (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen video prodüksiyon ve klip çekimi hizmeti hususunda akdedilmiştir.
 
 2. HİZMET KAPSAMI
 • Hizmet Sağlayıcı, anlaşılan paket içeriğine uygun olarak (Drone çekimi, 4K/1080p çözünürlük, aktüel kamera vb.) video çekim hizmetini gerçekleştirecektir.
@@ -71,6 +72,7 @@ const VIDEO_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
 İşbu sözleşmeden doğabilecek uyuşmazlıklarda yerel mahkemeler ve icra daireleri yetkilidir.`;
 
 export default function ContractsPage() {
+    const { showAlert } = useAlert();
     const [activeTab, setActiveTab] = useState<'outdoor' | 'video'>('outdoor');
     const [outdoorText, setOutdoorText] = useState(OUTDOOR_CONTRACT_DEFAULT);
     const [videoText, setVideoText] = useState(VIDEO_CONTRACT_DEFAULT);
@@ -132,10 +134,10 @@ export default function ContractsPage() {
                 setLastSaved(new Date());
                 fetchContracts(); // refresh to get IDs if needed
             } else {
-                alert('Kaydedilemedi!');
+                showAlert('Kaydedilemedi!', 'error');
             }
         } catch (error) {
-            alert('Hata oluştu');
+            showAlert('Hata oluştu', 'error');
         } finally {
             setIsSaving(false);
         }

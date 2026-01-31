@@ -79,7 +79,30 @@ export async function POST(req: Request) {
 
         console.log('Saving photographer with slug:', photographerData.slug);
 
-        const photographer = await User.create(photographerData);
+        const photographer = await User.create({
+            ...photographerData,
+            isEmailVerified: true // Pre-verified if created by SuperAdmin
+        });
+
+        // Send Welcome Email
+        try {
+            const { sendEmail } = await import('@/lib/resend');
+            const { WelcomePhotographer } = await import('@/lib/emails/WelcomePhotographer');
+
+            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
+            await sendEmail({
+                to: email,
+                subject: 'Kadraj Panel - Aramıza Hoş Geldiniz!',
+                react: WelcomePhotographer({
+                    photographerName: name,
+                    studioName: studioName,
+                    loginUrl: `${baseUrl}/login`
+                })
+            });
+        } catch (err) {
+            console.error('Failed to send welcome email:', err);
+        }
 
         console.log('Photographer created - actual slug in DB:', photographer.slug);
 

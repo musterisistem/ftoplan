@@ -19,6 +19,7 @@ import {
     Trash2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAlert } from '@/context/AlertContext';
 import { useRouter, useParams } from 'next/navigation';
 
 // Mock Data (In a real app, these would come from APIs)
@@ -31,6 +32,7 @@ const PACKAGES = [
 export default function EditAppointmentPage() {
     const router = useRouter();
     const params = useParams();
+    const { showAlert } = useAlert();
     const shootId = params.id;
 
     // Form States
@@ -115,11 +117,12 @@ export default function EditAppointmentPage() {
                         setPricingType('custom');
                     }
                 } else {
-                    alert('Randevu bulunamadı!');
+                    showAlert('Randevu bulunamadı!', 'error');
                     router.push('/admin/appointments');
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
+                showAlert('Randevu bilgileri yüklenirken bir hata oluştu.', 'error');
             } finally {
                 setLoading(false);
             }
@@ -164,7 +167,7 @@ export default function EditAppointmentPage() {
 
     const handleSubmit = async () => {
         if (!validateForm()) {
-            alert('Lütfen formdaki hataları gideriniz.');
+            showAlert('Lütfen formdaki hataları gideriniz.', 'warning');
             return;
         }
 
@@ -195,14 +198,14 @@ export default function EditAppointmentPage() {
             });
 
             if (res.ok) {
-                alert('Randevu başarıyla güncellendi!');
+                showAlert('Randevu başarıyla güncellendi!', 'success');
                 router.push('/admin/calendar'); // Go back to calendar or list
             } else {
                 throw new Error('Güncelleme başarısız');
             }
         } catch (error) {
             console.error('Update error:', error);
-            alert('Bir hata oluştu.');
+            showAlert('Bir hata oluştu.', 'error');
         } finally {
             setIsSubmitting(false);
         }

@@ -38,6 +38,7 @@ export default function RegisterPage() {
         taxNumber: '',
         identityNumber: '',
     });
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const generateSlug = (text: string) => {
         return text.toLowerCase()
@@ -118,18 +119,7 @@ export default function RegisterPage() {
             const data = await res.json();
 
             if (res.ok) {
-                // Auto login after registration
-                const result = await signIn('credentials', {
-                    email: formData.email,
-                    password: formData.password,
-                    redirect: false,
-                });
-
-                if (result?.error) {
-                    router.push('/login?registered=true');
-                } else {
-                    router.push('/admin/dashboard');
-                }
+                setIsSuccess(true);
             } else {
                 setError(data.error || 'Kayıt başarısız oldu.');
             }
@@ -139,6 +129,30 @@ export default function RegisterPage() {
             setLoading(false);
         }
     };
+
+    if (isSuccess) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+                <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Mail className="w-10 h-10 text-green-600 animate-bounce" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Harika! Kaydınız Alındı</h2>
+                    <p className="text-gray-600 mb-8 leading-relaxed">
+                        Sayın **{formData.name}**, Kadraj Panel dünyasına hoş geldiniz! <br /><br />
+                        Hesabınızı aktifleştirmek ve 7 günlük ücretsiz denemenizi başlatmak için **{formData.email}** adresine bir doğrulama e-postası gönderdik. <br /><br />
+                        <span className="text-sm italic">Not: E-posta ulaşmadıysa Spam/Gereksiz kutusunu kontrol etmeyi unutmayın.</span>
+                    </p>
+                    <button
+                        onClick={() => router.push('/login')}
+                        className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-[1.02]"
+                    >
+                        Giriş Sayfasına Git
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex bg-gray-50">
@@ -156,7 +170,7 @@ export default function RegisterPage() {
                             <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
                                 <Camera className="w-6 h-6 text-purple-400" />
                             </div>
-                            <span className="text-2xl font-bold">FotoPlan</span>
+                            <span className="text-2xl font-bold">Kadraj Panel</span>
                         </div>
 
                         <h1 className="text-4xl font-bold leading-tight mb-6">
@@ -188,7 +202,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="text-sm text-gray-400">
-                        © 2026 FotoPlan. Tüm hakları saklıdır.
+                        © 2026 Kadraj Panel. Tüm hakları saklıdır.
                     </div>
                 </div>
             </div>
@@ -301,7 +315,7 @@ export default function RegisterPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Web Adresi (Link)</label>
                                 <div className="flex items-center">
                                     <span className="px-3 py-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg text-gray-500 text-sm whitespace-nowrap">
-                                        fotoplan.com/studio/
+                                        Kadraj Panel.com/studio/
                                     </span>
                                     <input
                                         name="slug"
@@ -436,7 +450,7 @@ export default function RegisterPage() {
 
             {/* Mobile Footer/Disclaimer */}
             <div className="lg:hidden absolute bottom-4 w-full text-center text-[10px] text-gray-400">
-                © 2026 FotoPlan
+                © 2026 Kadraj Panel
             </div>
         </div>
     );

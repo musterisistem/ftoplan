@@ -82,6 +82,11 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Kullanıcı bulunamadı');
                 }
 
+                // Check Email Verification (Only for Admin/Photographers)
+                if (user.role === 'admin' && !user.isEmailVerified) {
+                    throw new Error('Lütfen e-posta adresinizi doğrulayın. Doğrulama linki mail adresinize gönderildi.');
+                }
+
                 // Standard password check with bcrypt for admin/superadmin users
                 const isPasswordMatch = await bcrypt.compare(credentials.password, user.password);
 

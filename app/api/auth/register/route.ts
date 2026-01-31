@@ -56,6 +56,10 @@ export async function POST(req: Request) {
         const subscriptionExpiry = new Date();
         subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 7);
 
+        // Generate Verification Token
+        const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
         // Create User
         await User.create({
             name,
@@ -69,10 +73,29 @@ export async function POST(req: Request) {
             storageLimit: 3221225472, // 3GB
             subscriptionExpiry,
             billingInfo: billingInfo || {}, // Save billing info
-            isActive: true
+            isActive: false, // Inactive until verified
+            verificationToken,
+            verificationTokenExpiry
         });
 
-        return NextResponse.json({ success: true, slug }, { status: 201 });
+        // Send Verification Email
+        const { sendEmail } = await import('@/lib/resend');
+        const { VerifyEmail } = await import('@/lib/emails/VerifyEmail');
+
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        const verifyUrl = `${baseUrl}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+
+        await sendEmail({
+            to: email,
+            subject: 'Kadraj Panel - E-posta Adresinizi Doğrulayın',
+            react: VerifyEmail({ photographerName: name, verifyUrl })
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: 'Kayıt başarılı. Lütfen e-posta adresinizi doğrulayın.',
+            slug
+        }, { status: 201 });
 
     } catch (error: any) {
         console.error('Registration error:', error);

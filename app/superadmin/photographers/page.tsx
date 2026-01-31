@@ -37,6 +37,7 @@ interface Photographer {
 export default function PhotographersPage() {
     const [photographers, setPhotographers] = useState<Photographer[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
 
@@ -46,13 +47,23 @@ export default function PhotographersPage() {
 
     const fetchPhotographers = async () => {
         try {
-            const res = await fetch('/api/superadmin/photographers');
+            setLoading(true);
+            setError('');
+            const res = await fetch('/api/superadmin/photographers', {
+                cache: 'no-store',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setPhotographers(data);
+            } else {
+                setError('Fotoğrafçılar yüklenirken hata oluştu. Lütfen tekrar deneyin.');
             }
         } catch (error) {
             console.error('Error fetching photographers:', error);
+            setError('Sunucuya bağlanırken hata oluştu. Lütfen sayfayı yenileyin.');
         } finally {
             setLoading(false);
         }
@@ -113,7 +124,19 @@ export default function PhotographersPage() {
 
             {/* Table */}
             <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
-                {loading ? (
+                {error ? (
+                    <div className="text-center py-20">
+                        <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-white mb-2">Bir Hata Oluştu</h3>
+                        <p className="text-gray-400 mb-6">{error}</p>
+                        <button
+                            onClick={fetchPhotographers}
+                            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        >
+                            Tekrar Dene
+                        </button>
+                    </div>
+                ) : loading ? (
                     <div className="flex items-center justify-center py-20">
                         <div className="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full"></div>
                     </div>
@@ -243,6 +266,35 @@ function AddPhotographerModal({ onClose, onSuccess }: { onClose: () => void; onS
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const formatPhoneNumber = (value: string) => {
+        const cleaned = value.replace(/[^\d+]/g, '');
+        const hasPlus = cleaned.startsWith('+');
+        const digits = cleaned.replace(/\D/g, '');
+        let formatted = hasPlus ? '+' : '';
+        if (digits.length > 0) {
+            if (digits.startsWith('90')) {
+                formatted += '90 ';
+                const rest = digits.substring(2);
+                if (rest.length > 0) formatted += '(' + rest.substring(0, 3) + ') ';
+                if (rest.length > 3) formatted += rest.substring(3, 6) + ' ';
+                if (rest.length > 6) formatted += rest.substring(6, 8) + ' ';
+                if (rest.length > 8) formatted += rest.substring(8, 10);
+            } else if (digits.startsWith('0')) {
+                formatted += '0 ';
+                if (digits.length > 1) formatted += '(' + digits.substring(1, 4) + ') ';
+                if (digits.length > 4) formatted += digits.substring(4, 7) + ' ';
+                if (digits.length > 7) formatted += digits.substring(7, 9) + ' ';
+                if (digits.length > 9) formatted += digits.substring(9, 11);
+            } else {
+                if (digits.length > 0) formatted += '(' + digits.substring(0, 3) + ') ';
+                if (digits.length > 3) formatted += digits.substring(3, 6) + ' ';
+                if (digits.length > 6) formatted += digits.substring(6, 8) + ' ';
+                if (digits.length > 8) formatted += digits.substring(8, 10);
+            }
+        }
+        return formatted.trim();
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -354,8 +406,9 @@ function AddPhotographerModal({ onClose, onSuccess }: { onClose: () => void; onS
                         <input
                             type="tel"
                             value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
                             className="w-full px-4 py-2 bg-gray-800 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="+90 (555) 123 45 67"
                         />
                     </div>
 

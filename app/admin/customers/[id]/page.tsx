@@ -16,10 +16,12 @@ import {
     Check
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAlert } from '@/context/AlertContext';
 
 export default function CustomerEditPage() {
     const router = useRouter();
     const params = useParams();
+    const { showAlert } = useAlert();
     const customerId = params.id as string;
 
     const [loading, setLoading] = useState(true);
@@ -27,6 +29,18 @@ export default function CustomerEditPage() {
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState('');
     const [copyFeedback, setCopyFeedback] = useState('');
+
+    const formatPhoneNumber = (value: string) => {
+        const numbers = value.replace(/\D/g, '');
+        const clean = numbers.startsWith('0') ? numbers : '0' + numbers;
+        const capped = clean.substring(0, 11);
+        let result = '';
+        if (capped.length > 0) result += '(' + capped.substring(0, 4);
+        if (capped.length > 4) result += ') ' + capped.substring(4, 7);
+        if (capped.length > 7) result += ' ' + capped.substring(7, 9);
+        if (capped.length > 9) result += ' ' + capped.substring(9, 11);
+        return result;
+    };
 
 
 
@@ -37,6 +51,7 @@ export default function CustomerEditPage() {
         email: '',
         notes: '',
         status: 'active',
+        tcId: '',
         selectionLimits: { album: 22, cover: 1, poster: 1 },
         selectedPhotos: []
     });
@@ -55,6 +70,7 @@ export default function CustomerEditPage() {
                     email: data.email || '',
                     notes: data.notes || '',
                     status: data.status || 'active',
+                    tcId: data.tcId || '',
                     selectionLimits: data.selectionLimits || { album: 22, cover: 1, poster: 1 },
                     selectedPhotos: data.selectedPhotos || []
                 });
@@ -108,6 +124,7 @@ export default function CustomerEditPage() {
                 throw new Error(data.error || 'Güncelleme başarısız');
             }
 
+            showAlert('Müşteri bilgileri başarıyla güncellendi', 'success');
             router.push('/admin/customers');
         } catch (err: any) {
             setError(err.message);
@@ -132,6 +149,7 @@ export default function CustomerEditPage() {
                 throw new Error(data.error || 'Silme işlemi başarısız');
             }
 
+            showAlert('Müşteri başarıyla silindi', 'success');
             router.push('/admin/customers');
         } catch (err: any) {
             setError(err.message);
@@ -225,7 +243,7 @@ export default function CustomerEditPage() {
                                 type="tel"
                                 name="phone"
                                 value={formData.phone}
-                                onChange={handleChange}
+                                onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
                                 required
                                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                             />
@@ -245,21 +263,37 @@ export default function CustomerEditPage() {
                         </div>
                     </div>
 
-                    {/* Status */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Durum
-                        </label>
-                        <select
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                        >
-                            <option value="active">Aktif</option>
-                            <option value="completed">Tamamlandı</option>
-                            <option value="archived">Arşivlendi</option>
-                        </select>
+                    {/* Additional Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                TC / Pasaport (11 Haneli)
+                            </label>
+                            <input
+                                type="text"
+                                name="tcId"
+                                value={formData.tcId}
+                                onChange={(e) => setFormData({ ...formData, tcId: e.target.value.replace(/\D/g, '').substring(0, 11) })}
+                                maxLength={11}
+                                placeholder="Kimlik No"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Durum
+                            </label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            >
+                                <option value="active">Aktif</option>
+                                <option value="completed">Tamamlandı</option>
+                                <option value="archived">Arşivlendi</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Notes */}

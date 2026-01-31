@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Grid, Heart, Check, Image as ImageIcon, Layout, BookOpen, AlertCircle, Loader2, ArrowRight, X, ZoomIn, Info, Lock } from 'lucide-react';
+import { Grid, Heart, Check, Image as ImageIcon, Layout, BookOpen, AlertCircle, Loader2, ArrowRight, X, ZoomIn, Info, Lock, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
@@ -367,6 +367,61 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                                 )}
                             </div>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Lightbox Implementation */}
+            <AnimatePresence>
+                {lightboxPhoto && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[2000] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4"
+                    >
+                        <button
+                            onClick={() => setLightboxPhoto(null)}
+                            className="absolute top-6 right-6 p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all backdrop-blur-md z-10"
+                        >
+                            <X className="w-8 h-8" />
+                        </button>
+
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative max-w-5xl w-full max-h-[75vh] flex items-center justify-center"
+                        >
+                            <img
+                                src={lightboxPhoto.url}
+                                alt="Seçim"
+                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10"
+                            />
+                        </motion.div>
+
+                        <div className="mt-12 flex flex-col sm:flex-row gap-4 items-center">
+                            {customer.canDownload && (
+                                <a
+                                    href={lightboxPhoto.url}
+                                    download={lightboxPhoto.filename || "foto-plan.jpg"}
+                                    onClick={(e) => {
+                                        // Stop propagation to prevent closing lightbox
+                                        e.stopPropagation();
+                                    }}
+                                    className="flex items-center gap-3 px-10 py-4 bg-white text-black font-black rounded-2xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/10 active:scale-95 uppercase tracking-widest text-sm"
+                                >
+                                    <Download className="w-5 h-5" />
+                                    Fotoğrafı İndir
+                                </a>
+                            )}
+                            <button
+                                onClick={() => setLightboxPhoto(null)}
+                                className="px-10 py-4 bg-white/5 text-white/70 font-bold rounded-2xl hover:bg-white/10 hover:text-white transition-all border border-white/10 backdrop-blur-md"
+                            >
+                                Pencereyi Kapat
+                            </button>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
