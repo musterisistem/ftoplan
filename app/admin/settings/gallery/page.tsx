@@ -104,7 +104,7 @@ export default function GallerySettingsPage() {
     if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
             </div>
         );
     }
@@ -112,107 +112,100 @@ export default function GallerySettingsPage() {
     const totalPhotos = portfolioPhotos.length + newFiles.length;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/25">
-                            <ImageIcon className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Galeri Yönetimi</h1>
-                            <p className="text-gray-500">Portfolyo fotoğraflarınızı yönetin</p>
-                        </div>
+        <div className="p-6 max-w-6xl mx-auto space-y-6 pb-20">
+            {/* Header */}
+            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-lg font-bold text-gray-900">Galeri Yönetimi</h1>
+                    <p className="text-xs text-gray-500 font-medium">Portfolyo fotoğraflarınızı buradan yönetin</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 flex items-center gap-2">
+                        <Grid className="w-3.5 h-3.5" />
+                        {totalPhotos} Fotoğraf
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="px-4 py-2 bg-white rounded-xl border border-gray-200 text-sm font-medium text-gray-600">
-                            <Grid className="w-4 h-4 inline mr-2" />
-                            {totalPhotos} Fotoğraf
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                    >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                    </button>
+                </div>
+            </div>
+
+            {message.text && (
+                <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'
+                    }`}>
+                    {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                    <span className="text-sm font-medium">{message.text}</span>
+                </div>
+            )}
+
+            {/* Gallery Grid */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {/* Add Button */}
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="aspect-[3/4] bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-indigo-400 hover:bg-indigo-50 transition-all group"
+                    >
+                        <div className="w-10 h-10 bg-white rounded-lg shadow-sm border border-gray-100 flex items-center justify-center group-hover:border-indigo-200">
+                            <Plus className="w-5 h-5 text-gray-400 group-hover:text-indigo-500" />
                         </div>
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg shadow-amber-500/25 disabled:opacity-50"
-                        >
-                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            {saving ? 'Kaydediliyor...' : 'Kaydet'}
-                        </button>
-                    </div>
+                        <span className="text-xs font-medium text-gray-500 group-hover:text-indigo-600">Fotoğraf Ekle</span>
+                    </button>
+                    <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileSelect}
+                    />
+
+                    {/* Existing Photos */}
+                    {portfolioPhotos.map((photo, index) => (
+                        <div key={`existing-${index}`} className="relative group aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                            <img src={photo.url} className="w-full h-full object-cover" alt="" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                                onClick={() => removeExisting(index)}
+                                className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 shadow-sm"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    ))}
+
+                    {/* New Photos */}
+                    {newPreviews.map((preview, index) => (
+                        <div key={`new-${index}`} className="relative group aspect-[3/4] rounded-xl overflow-hidden shadow-sm ring-2 ring-green-500 ring-offset-2">
+                            <div className="absolute top-2 left-2 z-10 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                                YENİ
+                            </div>
+                            <img src={preview} className="w-full h-full object-cover" alt="" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <button
+                                onClick={() => removeNew(index)}
+                                className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 shadow-sm"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
-                        }`}>
-                        {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                        {message.text}
+                {totalPhotos === 0 && (
+                    <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
+                            <ImageIcon className="w-8 h-8 text-gray-300" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900 mb-1">Henüz fotoğraf yok</h3>
+                        <p className="text-xs text-gray-500">Portfolyonuza fotoğraf eklemek için yukarıdaki butonu kullanın</p>
                     </div>
                 )}
-
-                {/* Gallery Grid */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {/* Add Button */}
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-amber-400 hover:bg-amber-50 transition-all group"
-                        >
-                            <div className="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
-                                <Plus className="w-7 h-7 text-gray-400 group-hover:text-white" />
-                            </div>
-                            <span className="text-sm font-medium text-gray-500 group-hover:text-amber-600">Fotoğraf Ekle</span>
-                        </button>
-                        <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileSelect}
-                        />
-
-                        {/* Existing Photos */}
-                        {portfolioPhotos.map((photo, index) => (
-                            <div key={`existing-${index}`} className="relative group aspect-[3/4] rounded-2xl overflow-hidden shadow-lg">
-                                <img src={photo.url} className="w-full h-full object-cover" alt="" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all" />
-                                <button
-                                    onClick={() => removeExisting(index)}
-                                    className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 shadow-lg"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
-
-                        {/* New Photos */}
-                        {newPreviews.map((preview, index) => (
-                            <div key={`new-${index}`} className="relative group aspect-[3/4] rounded-2xl overflow-hidden shadow-lg ring-2 ring-green-500">
-                                <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                    YENİ
-                                </div>
-                                <img src={preview} className="w-full h-full object-cover" alt="" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all" />
-                                <button
-                                    onClick={() => removeNew(index)}
-                                    className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 shadow-lg"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    {totalPhotos === 0 && (
-                        <div className="text-center py-16">
-                            <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <ImageIcon className="w-10 h-10 text-gray-400" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Henüz fotoğraf yok</h3>
-                            <p className="text-gray-500">Portfolyonuza fotoğraf eklemek için yukarıdaki butonu kullanın</p>
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

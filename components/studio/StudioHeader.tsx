@@ -9,7 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 interface StudioHeaderProps {
     photographer: any;
     primaryColor?: string;
-    theme?: 'warm' | 'playful' | 'bold';
+    theme?: 'warm' | 'playful' | 'bold' | 'light';
 }
 
 export default function StudioHeader({ photographer, primaryColor = '#8b4d62', theme = 'warm' }: StudioHeaderProps) {
@@ -23,6 +23,27 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
+
+    // LOGO SELECTION LOGIC
+    // Theme 'warm' = Dark mode essentially (defaults to dark theme appearance) -> needs Light/White logo (siteLogoDark)
+    // Theme 'playful'/'light' = Light mode essentially -> needs Dark/Black logo (siteLogoLight)
+    // Theme 'bold' = Dark mode -> needs Light/White logo (siteLogoDark)
+
+    // Default fallback: photographer.logo
+
+    let activeLogo = photographer.logo;
+
+    if (theme === 'warm' || theme === 'bold') {
+        // Dark Themes -> Prefer siteLogoDark (White Logo)
+        if (photographer.siteLogoDark) {
+            activeLogo = photographer.siteLogoDark;
+        }
+    } else if (theme === 'playful' || theme === 'light') {
+        // Light Theme -> Prefer siteLogoLight (Black Logo)
+        if (photographer.siteLogoLight) {
+            activeLogo = photographer.siteLogoLight;
+        }
+    }
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -76,6 +97,7 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
     const getThemeStyles = () => {
         switch (theme) {
             case 'playful':
+            case 'light':
                 return {
                     headerClass: scrolled
                         ? 'bg-white/95 backdrop-blur-xl shadow-sm'
@@ -149,8 +171,8 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
 
                     {/* Center: Logo - Visible on all screens, centered on desktop */}
                     <Link href={`/studio/${photographer.slug}`} className="flex items-center gap-2 lg:absolute lg:left-1/2 lg:-translate-x-1/2">
-                        {photographer.logo ? (
-                            <img src={photographer.logo} alt="" className="h-8 sm:h-10 w-auto" />
+                        {activeLogo ? (
+                            <img src={activeLogo} alt="" className="h-8 sm:h-10 w-auto" />
                         ) : (
                             <div className="flex items-center gap-2">
                                 <Camera className={`w-5 h-5 sm:w-6 sm:h-6 ${styles.textClass}`} />
@@ -216,10 +238,10 @@ export default function StudioHeader({ photographer, primaryColor = '#8b4d62', t
                     <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl animate-slide-in">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-8">
-                                {/* Logo in menu */}
+                                {/* Logo in menu - use same logic or main logo? Using activeLogo for consistency */}
                                 <Link href={`/studio/${photographer.slug}`} onClick={() => setShowMenu(false)} className="flex items-center gap-2">
-                                    {photographer.logo ? (
-                                        <img src={photographer.logo} alt="" className="h-10 w-auto" />
+                                    {activeLogo ? (
+                                        <img src={activeLogo} alt="" className="h-10 w-auto" />
                                     ) : (
                                         <div className="flex items-center gap-2">
                                             <Camera className="w-6 h-6" style={{ color: primaryColor }} />

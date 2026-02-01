@@ -119,134 +119,125 @@ export default function ContactSettingsPage() {
     if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-            <div className="max-w-3xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                            <Globe className="w-7 h-7 text-white" />
-                        </div>
+        <div className="p-6 max-w-5xl mx-auto space-y-6 pb-20">
+            {/* Header */}
+            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-lg font-bold text-gray-900">İletişim & Sosyal Medya</h1>
+                    <p className="text-xs text-gray-500 font-medium">İletişim kanallarınızı ve sosyal medya hesaplarınızı buradan yönetin</p>
+                </div>
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+            </div>
+
+            {message.text && (
+                <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'
+                    }`}>
+                    {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                    <span className="text-sm font-medium">{message.text}</span>
+                </div>
+            )}
+
+            {/* Info Alert */}
+            <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-4 h-4 text-green-600" />
+                </div>
+                <div>
+                    <h3 className="text-sm font-semibold text-gray-900">WhatsApp Butonu</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Aşağıya girdiğiniz WhatsApp numarası, müşteri sitesindeki sabit WhatsApp butonunda kullanılır.</p>
+                </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-indigo-500" />
+                        Bağlantılar
+                    </h2>
+                </div>
+                <div className="p-6 space-y-8">
+                    {/* Phone & WhatsApp */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">İletişim & Sosyal Medya</h1>
-                            <p className="text-gray-500">İletişim ve sosyal medya bağlantılarınızı yönetin</p>
-                        </div>
-                    </div>
-                </div>
-
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
-                        }`}>
-                        {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                        {message.text}
-                    </div>
-                )}
-
-                {/* WhatsApp Alert */}
-                <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl flex items-start gap-3">
-                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <MessageCircle className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-green-800">WhatsApp Butonu</h3>
-                        <p className="text-sm text-green-700">Aşağıya girdiğiniz WhatsApp numarası, müşteri sitesindeki sabit WhatsApp butonunda kullanılır.</p>
-                    </div>
-                </div>
-
-                {/* Form Card */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                    <div className="p-8 space-y-6">
-                        {/* Phone & WhatsApp */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Phone className="w-4 h-4 text-blue-500" />
-                                    Telefon Numarası
-                                </label>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">Telefon Numarası</label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="tel"
                                     value={settings.phone}
                                     onChange={e => setSettings({ ...settings, phone: formatPhoneNumber(e.target.value) })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
                                     placeholder="+90 (555) 123 45 67"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <MessageCircle className="w-4 h-4 text-green-500" />
-                                    WhatsApp Numarası
-                                </label>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">WhatsApp Numarası</label>
+                            <div className="relative">
+                                <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="tel"
                                     value={settings.whatsapp}
                                     onChange={e => setSettings({ ...settings, whatsapp: formatWhatsApp(e.target.value) })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
                                     placeholder="+905551234567"
                                 />
-                                <p className="text-xs text-gray-500 flex items-center gap-1">
-                                    <Info className="w-3 h-3" />
-                                    Ülke kodu ile birlikte yazın
-                                </p>
                             </div>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="relative py-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-200"></div>
-                            </div>
-                            <div className="relative flex justify-center">
-                                <span className="px-4 bg-white text-sm text-gray-500">Sosyal Medya</span>
-                            </div>
-                        </div>
-
-                        {/* Social Media */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Instagram className="w-4 h-4 text-pink-500" />
-                                    Instagram
-                                </label>
-                                <input
-                                    type="url"
-                                    value={settings.instagram}
-                                    onChange={e => setSettings({ ...settings, instagram: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
-                                    placeholder="https://instagram.com/kullaniciadi"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Facebook className="w-4 h-4 text-blue-600" />
-                                    Facebook
-                                </label>
-                                <input
-                                    type="url"
-                                    value={settings.facebook}
-                                    onChange={e => setSettings({ ...settings, facebook: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    placeholder="https://facebook.com/sayfaadi"
-                                />
-                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                                <Info className="w-3 h-3" />
+                                Ülke kodu ile birlikte yazın
+                            </p>
                         </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50"
-                        >
-                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                        </button>
+                    {/* Divider */}
+                    <div className="border-t border-gray-100"></div>
+
+                    {/* Social Media */}
+                    <div>
+                        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Sosyal Medya Hesapları</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1.5">Instagram</label>
+                                <div className="relative">
+                                    <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="url"
+                                        value={settings.instagram}
+                                        onChange={e => setSettings({ ...settings, instagram: e.target.value })}
+                                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                        placeholder="https://instagram.com/kullaniciadi"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1.5">Facebook</label>
+                                <div className="relative">
+                                    <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="url"
+                                        value={settings.facebook}
+                                        onChange={e => setSettings({ ...settings, facebook: e.target.value })}
+                                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                        placeholder="https://facebook.com/sayfaadi"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

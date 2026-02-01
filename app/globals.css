@@ -1,16 +1,38 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --color-sidebar: #1e1e2d;
+    /* Dark Deep Purple/Blue */
+    --color-sidebar-text: #9899ac;
+    /* Muted Text */
+    --color-sidebar-active: #ffffff;
+    /* Active Text */
+    --color-primary: #ff4081;
+    /* Pink/Red Accent */
+    --color-secondary: #673ab7;
+    /* Purple Accent */
+    --color-bg-body: #F3F6FD;
+    /* Light Blue-Gray Background */
+    --color-card-bg: #ffffff;
+    --color-text-main: #1F2937;
+    --radius-main: 1rem;
+    /* Rounded-2xl usually */
+  }
+
   body {
-    background-color: #F5F7FA;
-    color: #1F2937;
-    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--color-bg-body);
+    color: var(--color-text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
 @layer components {
+
+  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -18,11 +40,65 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background-color: #D1D5DB;
+    background-color: #d1d5db;
     border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: #9CA3AF;
+    background-color: #9ca3af;
+  }
+
+  /* Celestial Clean Card Style - Standardized for Inner Pages */
+  .clean-card {
+    background-color: var(--color-card-bg);
+    border-radius: var(--radius-main);
+    /* No border, just subtle shadow */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(229, 231, 235, 0.5);
+    /* Subtle border */
+  }
+
+  .clean-header {
+    background-color: transparent;
+    border-bottom: none;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover {
+    background-color: #f50057;
+    /* Darker pink */
+    box-shadow: 0 4px 12px rgba(255, 64, 129, 0.2);
+  }
+
+  /* Text styles */
+  .text-muted {
+    color: #9ca3af;
+  }
+
+  .sidebar-gradient {
+    background: linear-gradient(180deg, #1e1e2d 0%, #1a1a29 100%);
+  }
+
+  /* Shimmer Animation */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(200%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2.5s infinite;
   }
 }

@@ -101,186 +101,171 @@ export default function GeneralSettingsPage() {
     if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-            <div className="max-w-3xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25">
-                                <User className="w-7 h-7 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900">Genel Bilgiler</h1>
-                                <p className="text-gray-500">Profil ve stüdyo bilgilerinizi düzenleyin</p>
-                            </div>
-                        </div>
-                        {settings.slug && (
-                            <a
-                                href={`/studio/${settings.slug}`}
-                                target="_blank"
-                                className="flex items-center gap-2 px-4 py-2 bg-white border border-purple-200 text-purple-700 rounded-xl hover:bg-purple-50 transition-colors shadow-sm font-medium"
-                            >
-                                Siteyi Görüntüle
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        )}
-                    </div>
+        <div className="p-6 max-w-5xl mx-auto space-y-6 pb-20">
+            {/* Header */}
+            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-lg font-bold text-gray-900">Genel Bilgiler</h1>
+                    <p className="text-xs text-gray-500 font-medium">Profil ve işletme bilgilerinizi buradan yönetin</p>
                 </div>
+                <div className="flex items-center gap-3">
+                    {settings.slug && (
+                        <a
+                            href={`/studio/${settings.slug}`}
+                            target="_blank"
+                            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                            <span>Siteye Git</span>
+                        </a>
+                    )}
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                    >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                    </button>
+                </div>
+            </div>
 
-                {/* Message */}
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error'
-                        ? 'bg-red-50 text-red-700 border border-red-200'
-                        : 'bg-green-50 text-green-700 border border-green-200'
-                        }`}>
-                        {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                        {message.text}
-                    </div>
-                )}
+            {/* Message */}
+            {message.text && (
+                <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error'
+                    ? 'bg-red-50 text-red-700 border-red-100'
+                    : 'bg-green-50 text-green-700 border-green-100'
+                    }`}>
+                    {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                    <span className="text-sm font-medium">{message.text}</span>
+                </div>
+            )}
 
-                {/* Form Card */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                    <div className="p-8 space-y-6">
-                        {/* Name & Studio Name Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <User className="w-4 h-4 text-purple-500" />
-                                    Ad Soyad
-                                </label>
+            {/* Form Card */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <User className="w-4 h-4 text-indigo-500" />
+                        Temel Bilgiler
+                    </h2>
+                </div>
+                <div className="p-6 space-y-6">
+                    {/* Name & Studio Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">Ad Soyad</label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="text"
                                     value={settings.name}
                                     onChange={e => setSettings({ ...settings, name: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
-                                    placeholder="Örn: Ahmet Yılmaz"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                    placeholder="Adınız Soyadınız"
                                 />
                             </div>
                         </div>
-
-                        {/* Domain & Slug Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Building className="w-4 h-4 text-purple-500" />
-                                    Stüdyo Adı
-                                </label>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">Stüdyo Adı</label>
+                            <div className="relative">
+                                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="text"
                                     value={settings.studioName}
                                     onChange={e => setSettings({ ...settings, studioName: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
-                                    placeholder="Örn: Ahmet Photo Art"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                    placeholder="Stüdyo İsmi"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <ExternalLink className="w-4 h-4 text-purple-500" />
-                                    Kullanıcı Adı (Link)
-                                </label>
-                                <div className="flex">
-                                    <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 text-gray-500 text-sm">
-                                        /studio/
-                                    </span>
-                                    <input
-                                        type="text"
-                                        value={settings.slug}
-                                        readOnly
-                                        className="w-full px-4 py-3.5 bg-gray-100 border border-gray-200 rounded-r-xl cursor-not-allowed text-gray-500 outline-none transition-all"
-                                        placeholder="stüdyo-adi"
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-400 mt-1 pl-1">
-                                    <span className="font-semibold text-purple-600">⚠ Not:</span> Bu alan sadece yönetici tarafından değiştirilebilir.
-                                </p>
-                                <p className="text-xs text-gray-500 pl-1">Sitenizin adresi: Kadraj Panel.com/studio/<b>{settings.slug || '...'}</b></p>
-                            </div>
                         </div>
+                    </div>
 
-                        {/* Email & Phone Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Mail className="w-4 h-4 text-purple-500" />
-                                    E-posta Adresi
-                                </label>
+                    {/* Contact Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">E-posta Adresi</label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="email"
                                     value={settings.email}
                                     onChange={e => setSettings({ ...settings, email: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
-                                    placeholder="iletisim@domain.com"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                    placeholder="ornek@email.com"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Phone className="w-4 h-4 text-purple-500" />
-                                    Telefon Numarası
-                                </label>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1.5">Telefon Numarası</label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="tel"
                                     value={settings.phone}
                                     onChange={e => setSettings({ ...settings, phone: formatPhoneNumber(e.target.value) })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
-                                    placeholder="+90 (555) 123 45 67"
+                                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                    placeholder="(555) 555 55 55"
                                 />
-                            </div>
-                        </div>
-
-                        {/* Address Row */}
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Building className="w-4 h-4 text-purple-500" />
-                                    Adres
-                                </label>
-                                <textarea
-                                    value={settings.address}
-                                    onChange={e => setSettings({ ...settings, address: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400 min-h-[100px]"
-                                    placeholder="Stüdyo açık adresi..."
-                                />
-                            </div>
-                        </div>
-
-                        {/* Selection Success Message */}
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Check className="w-4 h-4 text-purple-500" />
-                                    Seçim Tamamlandı Mesajı (Müşteri İçin)
-                                </label>
-                                <textarea
-                                    value={settings.selectionSuccessMessage}
-                                    onChange={e => setSettings({ ...settings, selectionSuccessMessage: e.target.value })}
-                                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400 min-h-[80px]"
-                                    placeholder="Örn: Albüm siparişiniz alınmıştır..."
-                                />
-                                <p className="text-xs text-gray-400">Müşteri seçim işlemini tamamladığında göreceği bilgilendirme mesajı.</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                        </button>
+                    {/* Slug */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Stüdyo Linki (Kullanıcı Adı)</label>
+                        <div className="flex">
+                            <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-200 bg-gray-50 text-gray-500 text-xs font-medium">
+                                .com/studio/
+                            </span>
+                            <input
+                                type="text"
+                                value={settings.slug}
+                                readOnly
+                                className="w-full px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-r-lg cursor-not-allowed text-gray-500 outline-none"
+                            />
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">Bu alan sistemseldir ve sadece yönetici tarafından değiştirilebilir.</p>
                     </div>
                 </div>
             </div>
+
+            {/* Address & Message Card */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <Building className="w-4 h-4 text-indigo-500" />
+                        Adres ve İletişim Detayları
+                    </h2>
+                </div>
+                <div className="p-6 space-y-6">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Açık Adres</label>
+                        <textarea
+                            value={settings.address}
+                            onChange={e => setSettings({ ...settings, address: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400 min-h-[80px]"
+                            placeholder="Stüdyo adresi..."
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1.5">Seçim Başarı Mesajı</label>
+                        <textarea
+                            value={settings.selectionSuccessMessage}
+                            onChange={e => setSettings({ ...settings, selectionSuccessMessage: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400 min-h-[80px]"
+                            placeholder="Müşterileriniz fotoğraf seçimini tamamladığında görecekleri mesaj..."
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Müşteri panelinde işlem sonunda gösterilir.</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 }

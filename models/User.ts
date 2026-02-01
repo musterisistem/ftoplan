@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema({
     // Subscription Management
     packageType: {
         type: String,
-        enum: ['trial', 'starter', 'pro', 'premium'],
+        enum: ['trial', 'starter', 'pro', 'premium', 'corporate'],
         default: 'trial',
     },
     subscriptionExpiry: {
@@ -96,6 +96,11 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: '',
     },
+    // New Logo Fields
+    panelLogo: { type: String, default: '' }, // For Admin Panel Sidebar
+    siteLogoLight: { type: String, default: '' }, // For Light Theme Component (Dark Logo)
+    siteLogoDark: { type: String, default: '' }, // For Dark Theme Component (Light Logo)
+
     bannerImage: {
         type: String,
         default: '',
@@ -124,6 +129,13 @@ const UserSchema = new mongoose.Schema({
     selectionSuccessMessage: {
         type: String,
         default: 'Albüm siparişiniz alınmıştır. Albüm Teslim süresi seçimlerinizden 15 iş günüdür. Ekiplerimiz sizi arayarak bilgilendirecektir.',
+    },
+    // Panel Configuration
+    panelSettings: {
+        defaultView: { type: String, default: 'month' },
+        autoDelete: { type: Boolean, default: false },
+        appointmentStatuses: [{ id: String, label: String, color: String }],
+        albumStatuses: [{ id: String, label: String, color: String }],
     },
     instagram: {
         type: String,

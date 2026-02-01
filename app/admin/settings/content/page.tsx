@@ -61,75 +61,61 @@ export default function ContentSettingsPage() {
     if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                            <FileText className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">İçerik Yönetimi</h1>
-                            <p className="text-gray-500">Sitenizin metin içeriklerini düzenleyin</p>
-                        </div>
-                    </div>
+        <div className="p-6 max-w-5xl mx-auto space-y-6 pb-20">
+            {/* Header */}
+            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-lg font-bold text-gray-900">İçerik Yönetimi</h1>
+                    <p className="text-xs text-gray-500 font-medium">Sitenizin metin içeriklerini düzenleyin</p>
                 </div>
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                >
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+            </div>
 
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
-                        }`}>
-                        {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                        {message.text}
-                    </div>
-                )}
+            {message.text && (
+                <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'
+                    }`}>
+                    {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                    <span className="text-sm font-medium">{message.text}</span>
+                </div>
+            )}
 
-                {/* About Text Section */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-                    <div className="p-8">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                                <AlignLeft className="w-5 h-5 text-emerald-600" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-900">Hakkımızda Yazısı</h2>
-                                <p className="text-sm text-gray-500">Bu metin müşteri sitesindeki "Hakkımızda" sayfasında görünür</p>
-                            </div>
+            {/* About Text Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <AlignLeft className="w-4 h-4 text-indigo-500" />
+                        Hakkımızda Yazısı
+                    </h2>
+                </div>
+                <div className="p-6">
+                    <p className="text-xs text-gray-500 mb-2">Bu metin müşteri sitesindeki "Hakkımızda" sayfasında görünür</p>
+                    <textarea
+                        value={aboutText}
+                        onChange={e => setAboutText(e.target.value)}
+                        rows={12}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all resize-y text-gray-900 placeholder-gray-400 text-sm leading-relaxed"
+                        placeholder="Stüdyonuz hakkında hikayenizi, deneyiminizi ve fotoğrafçılık yaklaşımınızı anlatın..."
+                    />
+
+                    <div className="mt-2 flex items-center justify-between text-xs text-gray-400">
+                        <div className="flex items-center gap-1">
+                            <Type className="w-3 h-3" />
+                            <span>{aboutText.length} karakter</span>
                         </div>
-
-                        <textarea
-                            value={aboutText}
-                            onChange={e => setAboutText(e.target.value)}
-                            rows={12}
-                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-y text-gray-900 placeholder-gray-400 text-base leading-relaxed"
-                            placeholder="Stüdyonuz hakkında hikayenizi, deneyiminizi ve fotoğrafçılık yaklaşımınızı anlatın..."
-                        />
-
-                        <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
-                            <div className="flex items-center gap-2">
-                                <Type className="w-4 h-4" />
-                                <span>{aboutText.length} karakter</span>
-                            </div>
-                            <span>Zengin içerik için paragraflar kullanın</span>
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 flex justify-end">
-                        <button
-                            onClick={handleSave}
-                            disabled={saving}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50"
-                        >
-                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                            {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                        </button>
+                        <span>Zengin içerik için paragraflar kullanın</span>
                     </div>
                 </div>
             </div>

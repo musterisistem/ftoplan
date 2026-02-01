@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { Save, Palette, Image as ImageIcon, Upload, Check, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Save, Palette, Image as ImageIcon, Upload, Check, Loader2, AlertCircle, Sparkles, ExternalLink, Moon, Sun } from 'lucide-react';
 
 export default function ThemeSettingsPage() {
     const { status } = useSession();
@@ -14,15 +14,22 @@ export default function ThemeSettingsPage() {
     const [settings, setSettings] = useState({
         siteTheme: 'warm',
         primaryColor: '#ec4899',
-        logo: '',
+        logo: '', // Legacy/Fallback
+        siteLogoLight: '', // For Light Theme (Dark Logo)
+        siteLogoDark: '',  // For Dark Theme (Light Logo)
         bannerImage: '',
         slug: '',
         heroTitle: '',
         heroSubtitle: '',
     });
 
-    const [logoFile, setLogoFile] = useState<File | null>(null);
-    const [logoPreview, setLogoPreview] = useState('');
+    // File States
+    const [siteLogoLightFile, setSiteLogoLightFile] = useState<File | null>(null);
+    const [siteLogoLightPreview, setSiteLogoLightPreview] = useState('');
+
+    const [siteLogoDarkFile, setSiteLogoDarkFile] = useState<File | null>(null);
+    const [siteLogoDarkPreview, setSiteLogoDarkPreview] = useState('');
+
     const [bannerFile, setBannerFile] = useState<File | null>(null);
     const [bannerPreview, setBannerPreview] = useState('');
 
@@ -37,12 +44,23 @@ export default function ThemeSettingsPage() {
                             siteTheme: data.siteTheme || 'warm',
                             primaryColor: data.primaryColor || '#ec4899',
                             logo: data.logo || '',
+                            siteLogoLight: data.siteLogoLight || '',
+                            siteLogoDark: data.siteLogoDark || '',
                             bannerImage: data.bannerImage || '',
                             slug: data.slug || '',
                             heroTitle: data.heroTitle || '',
                             heroSubtitle: data.heroSubtitle || '',
                         });
-                        if (data.logo) setLogoPreview(data.logo);
+
+                        // Set Initial Previews
+                        if (data.siteLogoLight) setSiteLogoLightPreview(data.siteLogoLight);
+                        // Fallback logic for existing users: if no specific light logo, use main logo
+                        else if (data.logo) setSiteLogoLightPreview(data.logo);
+
+                        if (data.siteLogoDark) setSiteLogoDarkPreview(data.siteLogoDark);
+                        // Fallback logic for existing users: if no specific dark logo, use main logo
+                        else if (data.logo) setSiteLogoDarkPreview(data.logo);
+
                         if (data.bannerImage) setBannerPreview(data.bannerImage);
                     }
                 })
@@ -54,31 +72,27 @@ export default function ThemeSettingsPage() {
 
     useEffect(() => {
         return () => {
-            if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
+            if (siteLogoLightPreview?.startsWith('blob:')) URL.revokeObjectURL(siteLogoLightPreview);
+            if (siteLogoDarkPreview?.startsWith('blob:')) URL.revokeObjectURL(siteLogoDarkPreview);
             if (bannerPreview?.startsWith('blob:')) URL.revokeObjectURL(bannerPreview);
         };
-    }, [logoPreview, bannerPreview]);
+    }, [siteLogoLightPreview, siteLogoDarkPreview, bannerPreview]);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'banner') => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'siteLogoLight' | 'siteLogoDark' | 'banner') => {
         const file = e.target.files?.[0];
         if (!file) return;
         const preview = URL.createObjectURL(file);
-        if (type === 'logo') {
-            setLogoFile(file);
-            setLogoPreview(preview);
+
+        if (type === 'siteLogoLight') {
+            setSiteLogoLightFile(file);
+            setSiteLogoLightPreview(preview);
+        } else if (type === 'siteLogoDark') {
+            setSiteLogoDarkFile(file);
+            setSiteLogoDarkPreview(preview);
         } else {
             setBannerFile(file);
             setBannerPreview(preview);
         }
-    };
-
-    const uploadFileToApi = async (file: File, folder: string) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', folder);
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-        return data.url;
     };
 
     const handleSave = async () => {
@@ -86,39 +100,71 @@ export default function ThemeSettingsPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            let currentLogo = settings.logo;
-            let currentBanner = settings.bannerImage;
+            const formData = new FormData();
 
-            if (logoFile) {
-                console.log('Uploading logo file:', logoFile.name);
-                const url = await uploadFileToApi(logoFile, 'studio/logos');
-                console.log('Logo uploaded, returned URL:', url);
-                if (url) currentLogo = url;
-            }
+            // Files
+            if (siteLogoLightFile) formData.append('siteLogoLight', siteLogoLightFile);
+            if (siteLogoDarkFile) formData.append('siteLogoDark', siteLogoDarkFile);
             if (bannerFile) {
-                console.log('Uploading banner file:', bannerFile.name);
-                const url = await uploadFileToApi(bannerFile, 'studio/banners');
-                console.log('Banner uploaded, returned URL:', url);
-                if (url) currentBanner = url;
+                // Use legacy upload for banner if simpler, or just allow API to handle
+                // Note: Our modified API does NOT handle 'banner' file upload directly via specific key yet,
+                // It handles logo keys. We need to check if we broke banner upload.
+                // The previous code used a separate /api/upload endpoint for banners/logos.
+                // We should ideally keep that for banners OR update the main settings API to handle banner.
+                // Let's stick to the previous pattern for BANNER for safety, or migrate it.
+                // Detailed Plan: Let's use the new API for logos, but keep the separate upload for banners 
+                // to minimize risk, OR just let the API handle it if we updated it?
+                // Wait, we didn't add 'banner' file handling to the main API route in the previous step.
+                // We only added logo handling. So we MUST manually upload banner here first.
+
+                const bannerFormData = new FormData();
+                bannerFormData.append('file', bannerFile);
+                bannerFormData.append('folder', 'studio/banners');
+                const res = await fetch('/api/upload', { method: 'POST', body: bannerFormData });
+                const data = await res.json();
+                if (data.url) {
+                    // Update the settings object effectively
+                    settings.bannerImage = data.url;
+                }
             }
 
-            console.log('Saving settings to API:', { ...settings, logo: currentLogo, bannerImage: currentBanner });
+            // Prepare Theme Settings specific data
+            const themeSettingsData = {
+                siteTheme: settings.siteTheme,
+                primaryColor: settings.primaryColor,
+                heroTitle: settings.heroTitle,
+                heroSubtitle: settings.heroSubtitle,
+                bannerImage: settings.bannerImage, // updated if uploaded
+                // We don't send logos in JSON, we send them as files in FormData
+            };
 
-            const res = await fetch('/api/admin/studio-settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...settings, logo: currentLogo, bannerImage: currentBanner })
+            formData.append('themeSettings', JSON.stringify(themeSettingsData));
+
+            const res = await fetch('/api/studio/settings', {
+                method: 'POST',
+                body: formData
             });
 
             if (res.ok) {
+                const data = await res.json();
                 setMessage({ type: 'success', text: 'Tema ayarları kaydedildi!' });
-                setSettings(prev => ({ ...prev, logo: currentLogo, bannerImage: currentBanner }));
-                setLogoFile(null);
+                // Update local state with returned user data to ensure sync
+                if (data.user) {
+                    setSettings(prev => ({
+                        ...prev,
+                        siteLogoLight: data.user.siteLogoLight,
+                        siteLogoDark: data.user.siteLogoDark,
+                        logo: data.user.logo
+                    }));
+                }
+                setSiteLogoLightFile(null);
+                setSiteLogoDarkFile(null);
                 setBannerFile(null);
             } else {
                 throw new Error('Kaydetme başarısız');
             }
-        } catch {
+        } catch (err) {
+            console.error(err);
             setMessage({ type: 'error', text: 'Bir hata oluştu.' });
         } finally {
             setSaving(false);
@@ -127,156 +173,228 @@ export default function ThemeSettingsPage() {
     };
 
     const themes = [
-        { id: 'warm', name: 'Dark Theme', color: 'from-slate-700 to-slate-900', desc: 'Şık ve modern karanlık görünüm', accent: '#ec4899' },
-        { id: 'light', name: 'Light Theme', color: 'from-slate-100 to-white', desc: 'Aydınlık ve ferah görünüm', accent: '#ec4899' },
+        { id: 'warm', name: 'Dark Theme', color: 'bg-slate-900', desc: 'Şık ve modern karanlık görünüm', accent: '#ec4899', type: 'dark' },
+        { id: 'light', name: 'Light Theme', color: 'bg-white border', desc: 'Aydınlık ve ferah görünüm', accent: '#ec4899', type: 'light' },
     ];
 
     if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-purple-600" />
+                <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/25">
-                            <Palette className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Tema & Görünüm</h1>
-                            <p className="text-gray-500">Sitenizin görsel kimliğini özelleştirin</p>
-                            {settings.slug && (
-                                <a
-                                    href={`/studio/${settings.slug}`}
-                                    target="_blank"
-                                    className="text-violet-600 hover:underline text-sm font-medium flex items-center gap-1 mt-1"
-                                >
-                                    Sitenizi Görüntüleyin: /studio/{settings.slug}
-                                    <Sparkles className="w-3 h-3" />
-                                </a>
-                            )}
-                        </div>
-                    </div>
+        <div className="p-6 max-w-4xl mx-auto space-y-6 pb-20">
+            {/* Header */}
+            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-lg font-bold text-gray-900">Tema & Görünüm</h1>
+                    <p className="text-xs text-gray-500 font-medium">Sitenizin görsel kimliğini özelleştirin</p>
                 </div>
+                <div className="flex items-center gap-3">
+                    {settings.slug && (
+                        <a
+                            href={`/studio/${settings.slug}`}
+                            target="_blank"
+                            className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                            <span>Önizle</span>
+                        </a>
+                    )}
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                    >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                    </button>
+                </div>
+            </div>
 
-                {message.text && (
-                    <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
-                        }`}>
-                        {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
-                        {message.text}
-                    </div>
-                )}
+            {message.text && (
+                <div className={`p-4 rounded-xl border flex items-center gap-3 animate-in slide-in-from-top-2 ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'
+                    }`}>
+                    {message.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
+                    <span className="text-sm font-medium">{message.text}</span>
+                </div>
+            )}
 
-                {/* Theme Selection */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-violet-500" />
+            {/* Theme Selection */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-500" />
                         Tema Seçimi
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {themes.map(theme => (
                             <button
                                 key={theme.id}
                                 onClick={() => setSettings({ ...settings, siteTheme: theme.id, primaryColor: theme.accent })}
-                                className={`relative p-5 rounded-2xl border-2 text-left transition-all group hover:scale-[1.02] ${settings.siteTheme === theme.id
-                                    ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-500/10'
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                className={`relative p-4 rounded-xl border-2 text-left transition-all group ${settings.siteTheme === theme.id
+                                    ? 'border-indigo-600 bg-indigo-50/20'
+                                    : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
                                     }`}
                             >
-                                <div className={`w-full h-28 rounded-xl bg-gradient-to-br ${theme.color} mb-4 shadow-inner`} />
-                                <div className="font-bold text-gray-900 text-lg">{theme.name}</div>
-                                <div className="text-sm text-gray-500">{theme.desc}</div>
+                                <div className={`w-full aspect-video rounded-lg ${theme.color} mb-3 shadow-inner`} />
+                                <div className="font-semibold text-gray-900 text-sm">{theme.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">{theme.desc}</div>
                                 {settings.siteTheme === theme.id && (
-                                    <div className="absolute top-4 right-4 bg-violet-600 text-white p-1.5 rounded-full shadow-lg">
-                                        <Check className="w-4 h-4" />
+                                    <div className="absolute top-3 right-3 bg-indigo-600 text-white p-1 rounded-full shadow-sm">
+                                        <Check className="w-3 h-3" />
                                     </div>
                                 )}
                             </button>
                         ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Logo & Banner */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                        <ImageIcon className="w-5 h-5 text-violet-500" />
-                        Logo ve Banner
+            {/* Logos for Themes */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-indigo-500" />
+                        Site Logoları
                     </h2>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                    <div className="grid grid-cols-1 gap-8">
-                        {/* Logo */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">Logo</label>
-                            <div className="relative w-full aspect-square max-w-[200px] bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center overflow-hidden group hover:border-violet-400 transition-all">
-                                {logoPreview ? (
-                                    <img src={logoPreview} className="w-full h-full object-contain p-4" alt="Logo" />
+                    {/* Light Theme Logo (Should be Dark) */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Sun className="w-4 h-4 text-orange-500" />
+                            <label className="text-xs font-semibold text-gray-700">Light Tema Logosu</label>
+                        </div>
+                        <p className="text-[10px] text-gray-500 mb-3">
+                            Açık renkli (beyaz) arka planda görünecektir. <br />
+                            <strong>Koyu renkli (siyah) logo yükleyiniz.</strong>
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            {/* Preview Container - White Background for Light Theme Simulation */}
+                            <div className="relative aspect-[3/2] bg-white border border-dashed border-gray-300 rounded-xl flex items-center justify-center overflow-hidden hover:bg-gray-50 transition-colors group">
+                                {siteLogoLightPreview ? (
+                                    <img src={siteLogoLightPreview} className="w-full h-full object-contain p-4" alt="Light Theme Logo" />
                                 ) : (
-                                    <div className="text-center text-gray-400">
-                                        <Upload className="w-10 h-10 mx-auto mb-2" />
-                                        <span className="text-sm">Logo Yükle</span>
+                                    <div className="text-center p-4">
+                                        <Upload className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                                        <span className="text-xs text-gray-400">Siyah Logo Yükle</span>
                                     </div>
                                 )}
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) => handleFileSelect(e, 'logo')}
+                                    onChange={(e) => handleFileSelect(e, 'siteLogoLight')}
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
                             </div>
-                            <p className="mt-2 text-xs text-gray-500">PNG veya JPG, transparan önerilir</p>
+                        </div>
+                    </div>
+
+                    {/* Dark Theme Logo (Should be Light) */}
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Moon className="w-4 h-4 text-indigo-500" />
+                            <label className="text-xs font-semibold text-gray-700">Dark Tema Logosu</label>
+                        </div>
+                        <p className="text-[10px] text-gray-500 mb-3">
+                            Koyu renkli (siyah) arka planda görünecektir. <br />
+                            <strong>Açık renkli (beyaz) logo yükleyiniz.</strong>
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            {/* Preview Container - Dark Background for Dark Theme Simulation */}
+                            <div className="relative aspect-[3/2] bg-gray-900 border border-dashed border-gray-700 rounded-xl flex items-center justify-center overflow-hidden hover:bg-gray-800 transition-colors group">
+                                {siteLogoDarkPreview ? (
+                                    <img src={siteLogoDarkPreview} className="w-full h-full object-contain p-4" alt="Dark Theme Logo" />
+                                ) : (
+                                    <div className="text-center p-4">
+                                        <Upload className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+                                        <span className="text-xs text-gray-500">Beyaz Logo Yükle</span>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleFileSelect(e, 'siteLogoDark')}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {/* Banner Override */}
+            {/* Note: This section remains largely as is, to handle Banner */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-indigo-500" />
+                        Site Banner
+                    </h2>
+                </div>
+                <div className="p-6">
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">Banner Resmi</label>
+                    <div className="flex items-start gap-4">
+                        <div className="relative w-full h-32 bg-gray-50 border border-dashed border-gray-300 rounded-xl flex items-center justify-center overflow-hidden hover:bg-gray-100 transition-colors">
+                            {bannerPreview ? (
+                                <img src={bannerPreview} className="w-full h-full object-cover" alt="Banner" />
+                            ) : (
+                                <Upload className="w-6 h-6 text-gray-400" />
+                            )}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleFileSelect(e, 'banner')}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                            />
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Hero Text Settings */}
-                <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 mt-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                        <Palette className="w-5 h-5 text-violet-500" />
+            {/* Hero Text Settings */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                        <Palette className="w-4 h-4 text-indigo-500" />
                         Ana Sayfa Yazıları
                     </h2>
+                </div>
+                <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Büyük Başlık (Title)</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1.5">Büyük Başlık (Title)</label>
                             <input
                                 type="text"
                                 value={settings.heroTitle}
                                 onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all"
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
                                 placeholder="Örn: Catch Your Life Moment"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Alt Başlık (Subtitle)</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1.5">Alt Başlık (Subtitle)</label>
                             <input
                                 type="text"
                                 value={settings.heroSubtitle}
                                 onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all"
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
                                 placeholder="Örn: Photography & Cinema"
                             />
                         </div>
                     </div>
                 </div>
-
-                {/* Save Button */}
-                <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50"
-                    >
-                        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                        {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
-                    </button>
-                </div>
             </div>
         </div>
-
     );
 }

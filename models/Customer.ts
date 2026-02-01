@@ -40,6 +40,10 @@ const CustomerSchema = new mongoose.Schema({
         enum: ['islem_yapilmadi', 'tasarim_asamasinda', 'baskida', 'paketlemede', 'kargoda', 'teslimata_hazir', 'teslim_edildi'],
         default: 'islem_yapilmadi',
     },
+    deliveredAt: {
+        type: Date,
+        default: null,
+    },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

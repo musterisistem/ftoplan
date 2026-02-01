@@ -111,7 +111,16 @@ export async function PUT(
         if (appointmentStatus !== undefined) updateData.appointmentStatus = appointmentStatus;
         if (status !== undefined) updateData.status = status;
         if (appointmentStatus !== undefined) updateData.appointmentStatus = appointmentStatus;
-        if (albumStatus !== undefined) updateData.albumStatus = albumStatus;
+        if (albumStatus !== undefined) {
+            updateData.albumStatus = albumStatus;
+            // Set deliveredAt if status is 'teslim_edildi'
+            if (albumStatus === 'teslim_edildi') {
+                updateData.deliveredAt = new Date();
+            } else if (customer.albumStatus === 'teslim_edildi' && albumStatus !== 'teslim_edildi') {
+                // Reset if moved away from delivered (optional, but safer)
+                updateData.deliveredAt = null;
+            }
+        }
         if (tcId !== undefined) updateData.tcId = tcId;
         if (body.contractId !== undefined) updateData.contractId = body.contractId;
 

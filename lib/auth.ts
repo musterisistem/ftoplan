@@ -118,6 +118,9 @@ export const authOptions: NextAuthOptions = {
                     studioName: user.studioName,
                     subscriptionExpiry: user.subscriptionExpiry ? new Date(user.subscriptionExpiry).toISOString() : undefined,
                     packageType: user.packageType || 'starter',
+                    // Logic: Use panelLogo if available, otherwise fallback to logo
+                    image: user.panelLogo || user.logo || '',
+                    panelSettings: user.panelSettings || undefined,
                 };
             }
         })
@@ -133,16 +136,18 @@ export const authOptions: NextAuthOptions = {
                 token.studioName = user.studioName;
                 token.subscriptionExpiry = user.subscriptionExpiry;
                 token.packageType = user.packageType;
+                token.picture = user.image;
+                token.panelSettings = user.panelSettings;
             }
 
             // REFRESH DATA ON NAVIGATION/UPDATE
-            // Always fetch fresh data for storage usage to ensure UI is live
+            // Always fetch fresh data for storage usage (and LOGO) to ensure UI is live
             try {
                 await dbConnect();
 
-                // Fetch actual user data by email (from token.email)
                 if (token.email && token.role === 'admin') {
-                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType');
+                    // Update: Select panelLogo and panelSettings
+                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings');
 
                     if (adminUser) {
                         token.storageUsage = adminUser.storageUsage || 0;
@@ -150,6 +155,9 @@ export const authOptions: NextAuthOptions = {
                         token.studioName = adminUser.studioName || '';
                         token.subscriptionExpiry = adminUser.subscriptionExpiry?.toISOString() || null;
                         token.packageType = adminUser.packageType || 'starter';
+                        // Logic: Use panelLogo if available, otherwise fallback to logo
+                        token.picture = adminUser.panelLogo || adminUser.logo || '';
+                        token.panelSettings = adminUser.panelSettings || undefined;
                     }
                 }
             } catch (error) {
@@ -168,6 +176,8 @@ export const authOptions: NextAuthOptions = {
                 session.user.studioName = token.studioName;
                 session.user.subscriptionExpiry = token.subscriptionExpiry;
                 session.user.packageType = token.packageType;
+                session.user.image = token.picture; // Explicitly map image
+                session.user.panelSettings = token.panelSettings;
             }
             return session;
         }
