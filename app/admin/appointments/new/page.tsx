@@ -28,12 +28,6 @@ const PACKAGES = [
     { id: '3', name: 'Standart Video Klip', price: 5000 },
 ];
 
-const CONTRACTS = [
-    { id: '1', name: 'Dış Çekim Sözleşmesi (Standart)' },
-    { id: '2', name: 'Video Çekim Sözleşmesi v2' },
-    { id: '3', name: 'Düğün Hikayesi Sözleşmesi' },
-];
-
 export default function NewAppointmentPage() {
     const router = useRouter();
     const searchParams = useSearchParams();

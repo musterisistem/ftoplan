@@ -27,11 +27,12 @@ export const authOptions: NextAuthOptions = {
                 }
 
                 // DEVELOPMENT ONLY: Hardcoded photographer for testing
-                if (credentials?.email === 'admin@fotopanel.com' && credentials?.password === 'admin123') {
+                if (credentials?.email === 'admin@weey.net' && credentials?.password === 'admin123') {
                     return {
                         id: 'dev-admin-id',
-                        email: 'admin@fotopanel.com',
+                        email: 'admin@weey.net',
                         name: 'Test Fotoğrafçı',
+                        studioName: 'Weey.NET Fotoğrafçılık',
                         role: 'admin', // admin = photographer
                         storageUsage: 0,
                         storageLimit: 21474836480,
@@ -58,9 +59,15 @@ export const authOptions: NextAuthOptions = {
                     const customer = await Customer.findOne({ plainUsername: credentials.email });
 
                     if (customer && customer.userId) {
+                        user = await User.findById(customer.userId);
+
+                        // Check if user is blocked
+                        if (user?.isBlocked) {
+                            throw new Error('Hesabınız engellenmiştir. Lütfen fotoğrafçınız ile iletişime geçin.');
+                        }
+
                         // Check plainPassword directly (stored for customer login)
                         if (customer.plainPassword === credentials.password) {
-                            user = await User.findById(customer.userId);
                             if (user) {
                                 return {
                                     id: user._id.toString(),
@@ -80,6 +87,11 @@ export const authOptions: NextAuthOptions = {
 
                 if (!user) {
                     throw new Error('Kullanıcı bulunamadı');
+                }
+
+                // Global Block Check (Customers)
+                if (user.role === 'couple' && user.isBlocked) {
+                    throw new Error('Hesabınız engellenmiştir. Lütfen fotoğrafçınız ile iletişime geçin.');
                 }
 
                 // Check Email Verification (Only for Admin/Photographers)

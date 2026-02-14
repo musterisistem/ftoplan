@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 
-const inter = Inter({ subsets: ["latin"] });
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: "Fotoğrafçı Yönetim Paneli",
+  title: "Weey.NET - Fotoğrafçı Yönetim Paneli",
   description: "Düğün ve dış çekim yönetim sistemi",
 };
 
@@ -18,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={`${jakarta.variable} font-sans`} suppressHydrationWarning>
         <Providers>
           <AnalyticsTracker />
           {children}

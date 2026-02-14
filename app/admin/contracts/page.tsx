@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useAlert } from '@/context/AlertContext';
 import {
     FileText,
@@ -15,9 +16,8 @@ import {
     RefreshCw
 } from 'lucide-react';
 
-// Default Formal Contracts (Fallback)
 const OUTDOOR_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
-İşbu sözleşme, Kadraj Panel (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen dış mekan fotoğraf çekimi hizmeti hususunda akdedilmiştir.
+İşbu sözleşme, {{STUDIO_NAME}} (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen dış mekan fotoğraf çekimi hizmeti hususunda akdedilmiştir.
 
 2. ÖDEME KOŞULLARI
 • Paket dahilinde kalan ödeme miktarı, fotoğraf çekiminin gerçekleştirileceği gün, çekim başlamadan önce nakit olarak elden teslim edilecektir.
@@ -46,7 +46,7 @@ const OUTDOOR_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
 İşbu sözleşmeden doğabilecek uyuşmazlıklarda yerel mahkemeler ve icra daireleri yetkilidir.`;
 
 const VIDEO_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
-İşbu sözleşme, Kadraj Panel (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen video prodüksiyon ve klip çekimi hizmeti hususunda akdedilmiştir.
+İşbu sözleşme, {{STUDIO_NAME}} (Hizmet Sağlayıcı) ile Müşteri arasında, aşağıda detayları belirtilen video prodüksiyon ve klip çekimi hizmeti hususunda akdedilmiştir.
 
 2. HİZMET KAPSAMI
 • Hizmet Sağlayıcı, anlaşılan paket içeriğine uygun olarak (Drone çekimi, 4K/1080p çözünürlük, aktüel kamera vb.) video çekim hizmetini gerçekleştirecektir.
@@ -72,6 +72,7 @@ const VIDEO_CONTRACT_DEFAULT = `1. TARAFLAR VE KONU
 İşbu sözleşmeden doğabilecek uyuşmazlıklarda yerel mahkemeler ve icra daireleri yetkilidir.`;
 
 export default function ContractsPage() {
+    const { data: session } = useSession();
     const { showAlert } = useAlert();
     const [activeTab, setActiveTab] = useState<'outdoor' | 'video'>('outdoor');
     const [outdoorText, setOutdoorText] = useState(OUTDOOR_CONTRACT_DEFAULT);
@@ -80,9 +81,43 @@ export default function ContractsPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
+    const cleanContractContent = (content: string) => {
+        const studioName = session?.user?.studioName || 'Fotoğraf Stüdyosu';
+        return content
+            .replace(/Kadraj\s*Panel/gi, studioName)
+            .replace(/Weey.NET/gi, studioName)
+            .replace(/weey-net/gi, studioName)
+            .replace(/Weey\.NET/gi, studioName)
+            .replace(/Foto\s*Plan/gi, studioName)
+            .replace(/Hizmet\s*Sağlayıcı/gi, studioName);
+    };
+
+    const getOutdoorDefault = () => {
+        const studioName = session?.user?.studioName || 'Fotoğraf Stüdyosu';
+        return OUTDOOR_CONTRACT_DEFAULT.replace('{{STUDIO_NAME}}', studioName);
+    };
+
+    const getVideoDefault = () => {
+        const studioName = session?.user?.studioName || 'Fotoğraf Stüdyosu';
+        return VIDEO_CONTRACT_DEFAULT.replace('{{STUDIO_NAME}}', studioName);
+    };
+
     useEffect(() => {
         fetchContracts();
     }, []);
+
+    // Re-clean if session loads
+    useEffect(() => {
+        if (session?.user && contracts.length > 0) {
+            const outdoor = contracts.find((c: any) => c.type === 'outdoor');
+            const video = contracts.find((c: any) => c.type === 'video');
+            if (outdoor) setOutdoorText(cleanContractContent(outdoor.content));
+            if (video) setVideoText(cleanContractContent(video.content));
+        } else if (session?.user) {
+            setOutdoorText(prev => prev === OUTDOOR_CONTRACT_DEFAULT ? getOutdoorDefault() : prev);
+            setVideoText(prev => prev === VIDEO_CONTRACT_DEFAULT ? getVideoDefault() : prev);
+        }
+    }, [session, contracts]);
 
     const fetchContracts = async () => {
         try {
@@ -90,13 +125,17 @@ export default function ContractsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setContracts(data);
+
                 const outdoor = data.find((c: any) => c.type === 'outdoor');
                 const video = data.find((c: any) => c.type === 'video');
+
                 if (outdoor) {
-                    setOutdoorText(outdoor.content);
+                    setOutdoorText(cleanContractContent(outdoor.content));
                     setLastSaved(new Date(outdoor.updatedAt));
                 }
-                if (video) setVideoText(video.content);
+                if (video) {
+                    setVideoText(cleanContractContent(video.content));
+                }
             }
         } catch (error) {
             console.error('Failed to fetch contracts:', error);
@@ -108,16 +147,6 @@ export default function ContractsPage() {
         const type = activeTab;
         const content = type === 'outdoor' ? outdoorText : videoText;
         const name = type === 'outdoor' ? 'Dış Çekim Sözleşmesi' : 'Video Çekim Sözleşmesi';
-
-        // Check if exists to determine if we update (implementation might just define findOneAndUpdate on backend or filtering here)
-        // Since my POST implementation is simple CREATE, I should ideally add PUT logic or handle upsert in POST.
-        // But for simplicity, I'll assume POST upserts or I will handle logic here if API supported ID.
-        // Actually my API simple POST creates. I should probably iterate over contracts.
-        // Let's rely on basic POST for now, but really I should add PUT or upsert to API.
-        // I will quick-fix the API logic in my mind: POST creates new entry.
-        // Better: I will use a different endpoint or modify API?
-        // Let's stick to POST creates new document for versioning or I can update.
-        // For now, I'll just create a new one, showing latest is fine.
 
         try {
             const res = await fetch('/api/contracts', {
@@ -132,7 +161,7 @@ export default function ContractsPage() {
             });
             if (res.ok) {
                 setLastSaved(new Date());
-                fetchContracts(); // refresh to get IDs if needed
+                fetchContracts();
             } else {
                 showAlert('Kaydedilemedi!', 'error');
             }
@@ -145,27 +174,21 @@ export default function ContractsPage() {
 
     const handleReset = () => {
         if (confirm('Sözleşme metnini varsayılan fabrika ayarlarına döndürmek istediğinize emin misiniz?')) {
-            if (activeTab === 'outdoor') setOutdoorText(OUTDOOR_CONTRACT_DEFAULT);
-            else setVideoText(VIDEO_CONTRACT_DEFAULT);
+            if (activeTab === 'outdoor') setOutdoorText(getOutdoorDefault());
+            else setVideoText(getVideoDefault());
         }
     };
 
     return (
         <div className="p-8 max-w-[1920px] mx-auto space-y-6">
-            {/* Page Header */}
             <div>
                 <h2 className="text-2xl font-bold text-gray-800">Çekim Sözleşmeleri</h2>
                 <p className="text-gray-500 text-sm">Müşterilerinize onaylatacağınız hizmet sözleşmelerini buradan yönetin.</p>
             </div>
 
             <div className="flex flex-col xl:flex-row gap-6">
-
-                {/* Main Editor Section */}
                 <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-
-                    {/* Toolbar */}
                     <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-                        {/* Tabs */}
                         <div className="flex bg-gray-200/50 p-1 rounded-xl">
                             <button
                                 onClick={() => setActiveTab('outdoor')}
@@ -189,7 +212,6 @@ export default function ContractsPage() {
                             </button>
                         </div>
 
-                        {/* Actions */}
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleReset}
@@ -223,7 +245,6 @@ export default function ContractsPage() {
                         </div>
                     </div>
 
-                    {/* Editor Area */}
                     <div className="flex-1 p-0 relative group">
                         <textarea
                             value={activeTab === 'outdoor' ? outdoorText : videoText}
@@ -238,10 +259,7 @@ export default function ContractsPage() {
                     </div>
                 </div>
 
-                {/* Sidebar Info */}
                 <div className="w-full lg:w-80 space-y-6">
-
-                    {/* Status Card */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <FileText className="w-4 h-4 text-[#6366F1]" />
@@ -274,7 +292,6 @@ export default function ContractsPage() {
                         </div>
                     </div>
 
-                    {/* Quick Tips */}
                     <div className="bg-gradient-to-br from-[#1E293B] to-[#0F172A] rounded-xl shadow-lg p-5 text-white">
                         <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                             <AlertCircle className="w-4 h-4 text-yellow-400" />
@@ -283,7 +300,7 @@ export default function ContractsPage() {
                         <ul className="space-y-3">
                             <li className="text-xs text-gray-300 leading-relaxed flex gap-2">
                                 <span className="text-yellow-400">•</span>
-                                Sözleşme maddelerini açık ve anlaşılır bir dille yazdığınızdan emin olun.
+                                Sözleşme stüdyonuz ile müşteri arasında bir bağ kurar.
                             </li>
                             <li className="text-xs text-gray-300 leading-relaxed flex gap-2">
                                 <span className="text-yellow-400">•</span>
@@ -296,7 +313,6 @@ export default function ContractsPage() {
                         </ul>
                     </div>
 
-                    {/* Export Card */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                         <h3 className="text-sm font-bold text-gray-900 mb-3">Dışa Aktar</h3>
                         <p className="text-xs text-gray-500 mb-4 leading-relaxed">
@@ -307,7 +323,6 @@ export default function ContractsPage() {
                             Taslağı İndir (PDF)
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>

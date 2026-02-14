@@ -86,19 +86,20 @@ export async function POST(req: Request) {
 
         // Send Welcome Email
         try {
-            const { sendEmail } = await import('@/lib/resend');
-            const { WelcomePhotographer } = await import('@/lib/emails/WelcomePhotographer');
+            const { sendEmailWithTemplate } = await import('@/lib/resend');
+            const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
             const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
-            await sendEmail({
+            await sendEmailWithTemplate({
                 to: email,
-                subject: 'Kadraj Panel - Aramıza Hoş Geldiniz!',
-                react: WelcomePhotographer({
+                templateType: EmailTemplateType.WELCOME_PHOTOGRAPHER,
+                photographerId: photographer._id.toString(),
+                data: {
                     photographerName: name,
                     studioName: studioName,
                     loginUrl: `${baseUrl}/login`
-                })
+                }
             });
         } catch (err) {
             console.error('Failed to send welcome email:', err);

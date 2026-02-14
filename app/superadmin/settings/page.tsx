@@ -7,9 +7,9 @@ import { useAlert } from '@/context/AlertContext';
 export default function SuperAdminSettingsPage() {
     const { showAlert } = useAlert();
     const [settings, setSettings] = useState({
-        siteName: 'Kadraj Panel',
-        siteUrl: 'https://Kadraj Panel.app',
-        supportEmail: 'destek@Kadraj Panel.app',
+        siteName: 'Weey.NET',
+        siteUrl: 'https://weey.net',
+        supportEmail: 'destek@weey.net',
         defaultQuota: 20,
         trialDays: 14,
         enableRegistration: true,
@@ -128,6 +128,32 @@ export default function SuperAdminSettingsPage() {
                             className="w-5 h-5 accent-red-500"
                         />
                     </label>
+                </div>
+            </div>
+
+            {/* Communication Settings */}
+            <div className="bg-gray-800/50 rounded-2xl border border-white/10 p-6 space-y-6">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Mail className="w-5 h-5 text-indigo-400" />
+                    İletişim Ayarları
+                </h2>
+
+                <div className="grid grid-cols-1 gap-4">
+                    <a
+                        href="/superadmin/settings/mail-templates"
+                        className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg cursor-pointer hover:bg-gray-900/70 border border-white/5 transition-all group"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
+                                <Mail className="w-6 h-6 text-indigo-400" />
+                            </div>
+                            <div>
+                                <p className="text-white font-medium">Sistem Mail Şablonları</p>
+                                <p className="text-sm text-gray-400">Doğrulama ve hoş geldin maillerini düzenleyin</p>
+                            </div>
+                        </div>
+                        <Globe className="w-5 h-5 text-gray-600 group-hover:text-indigo-400 transition-colors" />
+                    </a>
                 </div>
             </div>
 

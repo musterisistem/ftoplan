@@ -74,7 +74,7 @@ export default function DashboardPage() {
             <div className="bg-white border-b border-gray-100 px-8 py-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">{greeting}!</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900">{greeting}!</h1>
                         <p className="text-sm text-gray-500 mt-1">Bugün, {dateStr}</p>
                     </div>
                     <div className="flex items-center gap-4">
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <div className="text-xs font-medium text-gray-500">Toplam Fotoğraf</div>
-                                    <div className="text-2xl font-bold text-gray-900">{stats.counts.photos.toLocaleString('tr-TR')}</div>
+                                    <div className="text-2xl font-semibold text-gray-900">{stats.counts.photos.toLocaleString('tr-TR')}</div>
                                     <div className="text-xs text-gray-400">Son 30 gün</div>
                                 </div>
                             </div>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <div className="text-xs font-medium text-gray-500">Aktif Müşteriler</div>
-                                    <div className="text-2xl font-bold text-gray-900">{stats.counts.activeCustomers.toLocaleString('tr-TR')}</div>
+                                    <div className="text-2xl font-semibold text-gray-900">{stats.counts.activeCustomers.toLocaleString('tr-TR')}</div>
                                     <div className="text-xs text-gray-400">Toplam müşteri</div>
                                 </div>
                             </div>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <div className="text-xs font-medium text-gray-500">Bu Ayki Çekimler</div>
-                                    <div className="text-2xl font-bold text-gray-900">{stats.counts.activeShootsMonth}</div>
+                                    <div className="text-2xl font-semibold text-gray-900">{stats.counts.activeShootsMonth}</div>
                                     <div className="text-xs text-gray-400">{stats.todaySchedule?.length || 0} bugün</div>
                                 </div>
                             </div>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <div className="text-xs font-medium text-gray-500">Toplam Gelir</div>
-                                    <div className="text-2xl font-bold text-gray-900">₺{stats.counts.totalRevenue.toLocaleString('tr-TR')}</div>
+                                    <div className="text-2xl font-semibold text-gray-900">₺{stats.counts.totalRevenue.toLocaleString('tr-TR')}</div>
                                     <div className="text-xs text-gray-400">Tüm zamanlar</div>
                                 </div>
                             </div>

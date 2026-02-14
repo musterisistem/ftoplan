@@ -68,16 +68,6 @@ const menuSections: MenuSection[] = [
         ]
     },
     {
-        title: 'WEB SİTE AYARLARI',
-        items: [
-            { name: 'Ana Sayfa', href: '/admin/website/home', icon: Home },
-            { name: 'Hakkımızda', href: '/admin/website/about', icon: Info },
-            { name: 'Paketler', href: '/admin/website/packages', icon: Boxes },
-            { name: 'Galeri', href: '/admin/website/gallery', icon: ImageIcon },
-            { name: 'İletişim', href: '/admin/website/contact', icon: Mail },
-        ]
-    },
-    {
         title: 'UYGULAMA AYARLARI',
         items: [
             { name: 'Genel Bilgiler', href: '/admin/settings/general', icon: User },
@@ -91,12 +81,18 @@ const menuSections: MenuSection[] = [
         title: 'GENEL AYARLAR',
         items: [
             { name: 'Panel Ayarları', href: '/admin/settings/panel', icon: Settings },
-            { name: 'Bildirim Ayarları', href: '/admin/settings/notifications', icon: Bell },
-            { name: 'Yönetici Tanımla', href: '/admin/settings/admins', icon: UserCog },
             { name: 'Engellenenler', href: '/admin/settings/blocked', icon: UserX },
-            { name: 'Mail Server', href: '/admin/settings/mail-server', icon: Server },
-            { name: 'NETGSM Ayar', href: '/admin/settings/sms', icon: MessageSquare },
             { name: 'Mail Şablonları', href: '/admin/settings/mail-templates', icon: FileCode },
+        ]
+    },
+    {
+        title: 'WEB SİTE AYARLARI',
+        items: [
+            { name: 'Ana Sayfa', href: '/admin/website/home', icon: Home },
+            { name: 'Hakkımızda', href: '/admin/website/about', icon: Info },
+            { name: 'Paketler', href: '/admin/website/packages', icon: Boxes },
+            { name: 'Galeri', href: '/admin/website/gallery', icon: ImageIcon },
+            { name: 'İletişim', href: '/admin/website/contact', icon: Mail },
         ]
     }
 ];
@@ -155,14 +151,14 @@ export default function Sidebar() {
                         <div className="relative flex-shrink-0">
                             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-purple-500/20 bg-white/5 flex items-center justify-center">
                                 {/* Initials of Name or StudioName */}
-                                <div className="w-full h-full bg-gradient-to-br from-[#ff4081] to-[#673ab7] flex items-center justify-center text-white font-bold text-lg">
+                                <div className="w-full h-full bg-gradient-to-br from-[#ff4081] to-[#673ab7] flex items-center justify-center text-white font-semibold text-lg">
                                     {(session?.user?.name || session?.user?.studioName || 'K').charAt(0).toUpperCase()}
                                 </div>
                             </div>
                         </div>
                         <div className="overflow-hidden">
-                            <h2 className="text-white font-bold text-sm leading-tight tracking-wide truncate">
-                                {session?.user?.name || session?.user?.studioName || 'Kadraj Panel'}
+                            <h2 className="text-white font-semibold text-sm leading-tight tracking-wide truncate">
+                                {session?.user?.name || session?.user?.studioName || 'Weey.NET'}
                             </h2>
                             <p className="text-[10px] text-[#6e6e85] mt-0.5 truncate">Yönetim Paneli</p>
                         </div>
@@ -196,7 +192,7 @@ export default function Sidebar() {
                                     <ChevronDown className={`w-3 h-3 transition-transform ${websiteSettingsOpen ? 'rotate-180' : ''}`} />
                                 </button>
                             ) : (
-                                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#555570] mb-3 pl-3">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-[#555570] mb-3 pl-3">
                                     {section.title}
                                 </h3>
                             )}
@@ -305,7 +301,7 @@ export default function Sidebar() {
                                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${session?.user?.packageType === 'corporate' ? 'bg-purple-400' : 'bg-green-400'}`}></span>
                                         <span className={`relative inline-flex rounded-full h-3 w-3 ${session?.user?.packageType === 'corporate' ? 'bg-purple-500' : 'bg-green-500'}`}></span>
                                     </div>
-                                    <span className="text-sm font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-wider">
+                                    <span className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-wider">
                                         {session?.user?.packageType === 'corporate' ? 'KURUMSAL' : 'STANDART'}
                                     </span>
                                 </div>

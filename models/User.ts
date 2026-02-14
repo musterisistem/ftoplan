@@ -59,6 +59,10 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+    isBlocked: {
+        type: Boolean,
+        default: false,
+    },
     // Studio Info (for photographers)
     studioName: {
         type: String,

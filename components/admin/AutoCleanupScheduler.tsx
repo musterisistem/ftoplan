@@ -7,7 +7,7 @@ export default function AutoCleanupScheduler() {
         const runCleanup = async () => {
             try {
                 // Check if we already ran today
-                const lastRun = localStorage.getItem('fotoPlan_lastCleanup');
+                const lastRun = localStorage.getItem('weeyNet_lastCleanup');
                 const today = new Date().toDateString();
 
                 if (lastRun !== today) {
@@ -20,7 +20,7 @@ export default function AutoCleanupScheduler() {
                         .then(data => {
                             console.log('Auto-cleanup result:', data);
                             // Only update flag if successful or at least attempted without network error
-                            localStorage.setItem('fotoPlan_lastCleanup', today);
+                            localStorage.setItem('weeyNet_lastCleanup', today);
                         })
                         .catch(err => console.error('Auto-cleanup failed:', err));
                 }

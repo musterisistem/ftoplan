@@ -1,5 +1,5 @@
 {
-  "name": "foto-plan",
+  "name": "weey-net",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -24,6 +24,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-dropzone": "^14.3.8",
+    "react-quill": "^2.0.0",
     "react-zoom-pan-pinch": "^3.7.0",
     "recharts": "^3.7.0",
     "resend": "^6.9.1",

@@ -98,7 +98,7 @@ export default function DashboardSlider() {
                         {/* Overlay with Content */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end">
                             <div className="p-6 text-white w-full">
-                                <h3 className="text-2xl font-bold mb-2">{slide.title}</h3>
+                                <h3 className="text-2xl font-semibold mb-2">{slide.title}</h3>
                                 {slide.description && (
                                     <p className="text-sm text-white/90 mb-3 line-clamp-2">
                                         {slide.description}

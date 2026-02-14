@@ -72,8 +72,8 @@ export async function PUT(
 
         if (isPlanChanged && photographer.email) {
             try {
-                const { sendEmail } = await import('@/lib/resend');
-                const { PlanUpdated } = await import('@/lib/emails/PlanUpdated');
+                const { sendEmailWithTemplate } = await import('@/lib/resend');
+                const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
                 const packageNames: any = {
                     'trial': '7 Günlük Deneme',
@@ -90,15 +90,16 @@ export async function PUT(
                     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
                 };
 
-                await sendEmail({
+                await sendEmailWithTemplate({
                     to: photographer.email,
-                    subject: 'FotoPlan - Üyelik Planınız Güncellendi',
-                    react: PlanUpdated({
+                    templateType: EmailTemplateType.PLAN_UPDATED,
+                    photographerId: photographer._id.toString(),
+                    data: {
                         photographerName: photographer.name || 'Fotoğrafçı',
                         newPlanName: packageNames[photographer.packageType] || photographer.packageType,
                         expiryDate: photographer.subscriptionExpiry ? new Date(photographer.subscriptionExpiry).toLocaleDateString('tr-TR') : 'Belirtilmedi',
                         storageLimit: formatBytes(photographer.storageLimit)
-                    })
+                    }
                 });
             } catch (err) {
                 console.error('Failed to send plan update email:', err);

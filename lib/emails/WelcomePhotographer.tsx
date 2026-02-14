@@ -28,23 +28,23 @@ export const WelcomePhotographer = ({
     return (
         <Html>
             <Head />
-            <Preview>Kadraj Panel ailesine hoş geldiniz! Stüdyonuz için yeni bir dönem başlıyor.</Preview>
+            <Preview>Weey.NET ailesine hoş geldiniz! Stüdyonuz için yeni bir dönem başlıyor.</Preview>
             <Tailwind>
                 <Body className="bg-white font-sans text-gray-900">
                     <Container className="mx-auto py-10 px-4 max-w-[580px]">
                         <Section className="bg-[#6366f1] rounded-t-3xl p-10 text-center">
                             <Img
-                                src="https://Kadraj Panel.b-cdn.net/logo-white.png"
+                                src="https://Weey.NET.b-cdn.net/logo-white.png"
                                 width="140"
                                 height="40"
-                                alt="Kadraj Panel"
+                                alt="Weey.NET"
                                 className="mx-auto mb-6"
                             />
                             <Heading className="text-3xl font-bold text-white mb-2">
                                 Hoş Geldin {photographerName}! 🥂
                             </Heading>
                             <Text className="text-indigo-100 text-lg">
-                                **{studioName}** artık Kadraj Panel ile çok daha güçlü.
+                                **{studioName}** artık Weey.NET ile çok daha güçlü.
                             </Text>
                         </Section>
 
@@ -52,7 +52,7 @@ export const WelcomePhotographer = ({
                             <Text className="text-gray-600 text-base leading-7 mb-6">
                                 Merhaba,
                                 <br /><br />
-                                Stüdyonuzun yönetimini kolaylaştırmak ve müşterilerinize eşsiz bir fotoğraf seçim deneyimi sunmak için en doğru yerdesiniz. Kadraj Panel paneliniz üzerinden randevularınızı yönetebilir, çekim paketlerinizi oluşturabilir ve müşterileriniz için profesyonel seçim galerileri hazırlayabilirsiniz.
+                                Stüdyonuzun yönetimini kolaylaştırmak ve müşterilerinize eşsiz bir fotoğraf seçim deneyimi sunmak için en doğru yerdesiniz. Weey.NET paneliniz üzerinden randevularınızı yönetebilir, çekim paketlerinizi oluşturabilir ve müşterileriniz için profesyonel seçim galerileri hazırlayabilirsiniz.
                             </Text>
 
                             <Section className="bg-white rounded-2xl p-6 border border-gray-100 mb-8">
@@ -87,7 +87,7 @@ export const WelcomePhotographer = ({
                             <Text className="text-gray-400 text-xs text-center">
                                 Yardıma mı ihtiyacınız var? Destek ekibimiz her zaman yanınızda.
                                 <br />
-                                support@Kadraj Panel.com
+                                support@Weey.NET.com
                             </Text>
                         </Section>
                     </Container>

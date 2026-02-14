@@ -60,7 +60,7 @@ export const CustomerStatusUpdate = ({
 
                             <Section className="text-center">
                                 <Text className="text-white font-bold text-sm mb-1">{studioName}</Text>
-                                <Text className="text-gray-500 text-xs">Kadraj Panel Altyapısı ile Gönderilmiştir</Text>
+                                <Text className="text-gray-500 text-xs">Weey.NET Altyapısı ile Gönderilmiştir</Text>
                             </Section>
                         </Section>
                     </Container>

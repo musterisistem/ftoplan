@@ -37,10 +37,10 @@ export const PlanUpdated = ({
                         {/* Logo Section */}
                         <Section style={{ textAlign: 'center', marginBottom: '32px' }}>
                             <Img
-                                src="https://Kadraj Panel.b-cdn.net/logo-dark.png"
+                                src="https://Weey.NET.b-cdn.net/logo-dark.png"
                                 width="140"
                                 height="40"
-                                alt="Kadraj Panel"
+                                alt="Weey.NET"
                                 style={{ margin: '0 auto' }}
                             />
                         </Section>
@@ -162,7 +162,7 @@ export const PlanUpdated = ({
                                 <Text style={{ color: '#9ca3af', fontSize: '12px', textAlign: 'center', lineHeight: '1.5', margin: '0' }}>
                                     Bu bir bilgilendirme mesajıdır. Sorularınız için bize ulaşabilirsiniz.
                                     <br />
-                                    <strong style={{ color: '#6b7280' }}>© {new Date().getFullYear()} Kadraj Panel</strong> - Profesyonel Stüdyo Yönetimi
+                                    <strong style={{ color: '#6b7280' }}>© {new Date().getFullYear()} Weey.NET</strong> - Profesyonel Stüdyo Yönetimi
                                 </Text>
                             </Section>
                         </Section>
@@ -170,7 +170,7 @@ export const PlanUpdated = ({
                         {/* Bottom Note */}
                         <Section style={{ textAlign: 'center', marginTop: '32px' }}>
                             <Text style={{ color: '#9ca3af', fontSize: '12px' }}>
-                                Bu e-postayı Kadraj Panel üyeliğiniz kapsamında aldınız.
+                                Bu e-postayı Weey.NET üyeliğiniz kapsamında aldınız.
                             </Text>
                         </Section>
                     </Container>

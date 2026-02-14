@@ -10,7 +10,7 @@ export default function AdminLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen bg-[#F3F6FD] flex font-sans text-gray-800">
+        <div className="min-h-screen bg-[#F3F6FD] flex text-gray-800">
             <AutoCleanupScheduler />
             <Sidebar />
             <div className="flex-1 flex flex-col md:ml-[260px] transition-all duration-300">

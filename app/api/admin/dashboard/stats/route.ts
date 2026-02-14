@@ -140,7 +140,7 @@ export async function GET(req: Request) {
         const shootsThisMonth = await Shoot.find({
             date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
             status: { $ne: 'cancelled' }
-        }).select('date').lean();
+        }).select('date type customerName location').populate('customerId', 'brideName groomName').lean();
 
         const daysWithEvents = [...new Set(shootsThisMonth.map(shoot => new Date(shoot.date).getDate()))];
 
@@ -163,7 +163,7 @@ export async function GET(req: Request) {
             customerName: `${(shoot.customerId as any)?.brideName || ''} & ${(shoot.customerId as any)?.groomName || ''}`.trim(),
             type: shoot.type || 'Çekim',
             location: shoot.location || 'Belirtilmemiş',
-            duration: '2h' // Default, can be calculated if needed
+            duration: '2h'
         }));
 
         // 10. Monthly Activity (Shoots per week)
@@ -263,7 +263,14 @@ export async function GET(req: Request) {
             // NEW: Calendar and Schedule Data
             calendar: {
                 currentMonth: `${currentMonthName} ${currentYear}`,
-                daysWithEvents
+                daysWithEvents,
+                eventDetails: shootsThisMonth.map(shoot => ({
+                    day: new Date(shoot.date).getDate(),
+                    time: new Date(shoot.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+                    customerName: `${(shoot.customerId as any)?.brideName || ''} & ${(shoot.customerId as any)?.groomName || ''}`.trim(),
+                    type: shoot.type || 'Çekim',
+                    location: shoot.location || 'Belirtilmemiş'
+                }))
             },
             todaySchedule,
             monthlyActivity,

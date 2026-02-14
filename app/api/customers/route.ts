@@ -93,7 +93,7 @@ export async function POST(req: Request) {
         const tempPassword = Math.floor(100000 + Math.random() * 900000).toString();
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-        const userEmail = `${username}@fotopanel.com`;
+        const userEmail = `${username}@weey.net`;
 
         console.log('Creating user with email:', userEmail);
 

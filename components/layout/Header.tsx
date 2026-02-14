@@ -1,10 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { Bell, Search, Globe, Menu } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useNotifications } from '@/hooks/useNotifications';
+import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 
 export default function Header() {
     const { data: session } = useSession();
+    const [notificationOpen, setNotificationOpen] = useState(false);
+    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
     return (
         <header className="h-20 bg-[#F3F6FD] flex items-center justify-between px-8 sticky top-0 z-30">
@@ -32,23 +37,37 @@ export default function Header() {
 
                 {/* Notifications */}
                 <div className="relative">
-                    <button className="p-2 text-gray-500 hover:text-[#ff4081] transition-colors relative">
+                    <button
+                        onClick={() => setNotificationOpen(!notificationOpen)}
+                        className="p-2 text-gray-500 hover:text-[#ff4081] transition-colors relative"
+                    >
                         <span className="sr-only">Bildirimler</span>
                         <Bell className="h-6 w-6" />
-                        <span className="absolute top-1.5 right-1.5 block h-2.5 w-2.5 rounded-full bg-[#ff4081] ring-2 ring-[#F3F6FD]" />
+                        {unreadCount > 0 && (
+                            <>
+                                <span className="absolute top-1.5 right-1.5 block h-2.5 w-2.5 rounded-full bg-[#ff4081] ring-2 ring-[#F3F6FD]" />
+                                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff4081] text-[10px] font-bold text-white shadow-sm border border-white">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            </>
+                        )}
                     </button>
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff4081] text-[10px] font-bold text-white shadow-sm border border-white">
-                        2
-                    </span>
+                    <NotificationDropdown
+                        notifications={notifications}
+                        onMarkAsRead={markAsRead}
+                        onMarkAllAsRead={markAllAsRead}
+                        onClose={() => setNotificationOpen(false)}
+                        isOpen={notificationOpen}
+                    />
                 </div>
 
                 {/* User Profile */}
                 <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
                     <div className="text-right hidden md:block">
-                        <p className="text-sm font-bold text-gray-800">{session?.user?.name || 'Admin'}</p>
+                        <p className="text-sm font-semibold text-gray-800">{session?.user?.name || 'Admin'}</p>
                         <p className="text-xs text-gray-500">{session?.user?.studioName || 'Studio'}</p>
                     </div>
-                    <div className="h-10 w-10 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[#ff4081] font-bold">
+                    <div className="h-10 w-10 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[#ff4081] font-semibold">
                         {session?.user?.name?.charAt(0) || 'A'}
                     </div>
                 </div>

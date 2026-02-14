@@ -21,9 +21,9 @@ async function testEmail() {
 
     try {
         const data = await resend.emails.send({
-            from: envVars.EMAIL_FROM || 'FotoPlan <onboarding@resend.dev>',
+            from: envVars.EMAIL_FROM || 'Weey.NET <onboarding@resend.dev>',
             to: 'armin.mizani@gmail.com', // Change to owner mail for test
-            subject: 'FotoPlan - Resend Test Direct',
+            subject: 'Weey.NET - Resend Test Direct',
             html: '<h1>Test Email</h1><p>Resend entegrasyonu test ediliyor. Bu mail direkt node scriptinden gönderildi.</p>'
         });
         console.log('Resend Response:', JSON.stringify(data, null, 2));

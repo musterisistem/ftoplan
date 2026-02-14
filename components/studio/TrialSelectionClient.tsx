@@ -138,7 +138,7 @@ export default function TrialSelectionClient({ customer, photos: initialPhotos, 
                     </form>
 
                     <div className="mt-8 pt-8 border-t border-white/5 text-center">
-                        <p className="text-xs text-neutral-500">© {new Date().getFullYear()} {photographer?.studioName || 'Kadraj Panel Stüdyo'}</p>
+                        <p className="text-xs text-neutral-500">© {new Date().getFullYear()} {photographer?.studioName || 'Weey.NET Stüdyo'}</p>
                     </div>
                 </div>
             </div>

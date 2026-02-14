@@ -52,11 +52,11 @@ async function createSuperAdmin() {
 
         const superAdmin = await User.create({
             name: 'Super Admin',
-            email: 'admin@fotoplan.com',
+            email: 'admin@weey.net',
             password: hashedPassword,
             role: 'superadmin',
-            studioName: 'FotoPlan HQ',
-            slug: 'fotoplan-hq',
+            studioName: 'Weey.NET HQ',
+            slug: 'weey-hq',
             isActive: true,
             isEmailVerified: true,
             packageType: 'unlimited',
@@ -66,7 +66,7 @@ async function createSuperAdmin() {
 
         console.log('\n✓ SuperAdmin created successfully!');
         console.log('\n--- LOGIN CREDENTIALS ---');
-        console.log('Email: admin@fotoplan.com');
+        console.log('Email: admin@weey.net');
         console.log('Password: superadmin123');
         console.log('URL: http://localhost:3000/login');
         console.log('-------------------------\n');

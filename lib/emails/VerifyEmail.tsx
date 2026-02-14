@@ -27,16 +27,16 @@ export const VerifyEmail = ({
     return (
         <Html>
             <Head />
-            <Preview>Kadraj Panel panelinize erişmek için e-posta adresinizi doğrulayın.</Preview>
+            <Preview>Weey.NET panelinize erişmek için e-posta adresinizi doğrulayın.</Preview>
             <Tailwind>
                 <Body className="bg-white font-sans">
                     <Container className="mx-auto py-10 px-4 max-w-[580px]">
                         <Section className="text-center mb-8">
                             <Img
-                                src="https://Kadraj Panel.b-cdn.net/logo-dark.png" // Placeholder or real logo
+                                src="https://Weey.NET.b-cdn.net/logo-dark.png" // Placeholder or real logo
                                 width="140"
                                 height="40"
-                                alt="Kadraj Panel"
+                                alt="Weey.NET"
                                 className="mx-auto"
                             />
                         </Section>
@@ -47,7 +47,7 @@ export const VerifyEmail = ({
                             <Text className="text-gray-600 text-sm leading-6 mb-6">
                                 Merhaba **{photographerName}**,
                                 <br /><br />
-                                Kadraj Panel stüdyo yönetim paneline kaydolduğun için çok mutluyuz. 7 günlük deneme sürümünü başlatmak ve panelini kullanmaya başlamak için lütfen e-posta adresini doğrula.
+                                Weey.NET stüdyo yönetim paneline kaydolduğun için çok mutluyuz. 7 günlük deneme sürümünü başlatmak ve panelini kullanmaya başlamak için lütfen e-posta adresini doğrula.
                             </Text>
                             <Section className="text-center mb-6">
                                 <Button
@@ -66,12 +66,12 @@ export const VerifyEmail = ({
                             </Text>
                             <Hr className="border-gray-200 my-8" />
                             <Text className="text-gray-400 text-xs leading-5">
-                                Bu e-postayı Kadraj Panel'e kayıt olduğun için aldın. Eğer kayıt olmadıysan bu mesajı dikkate almayabilirsin.
+                                Bu e-postayı Weey.NET'e kayıt olduğun için aldın. Eğer kayıt olmadıysan bu mesajı dikkate almayabilirsin.
                             </Text>
                         </Section>
                         <Section className="text-center mt-8">
                             <Text className="text-gray-400 text-xs">
-                                © {new Date().getFullYear()} Kadraj Panel. Tüm hakları saklıdır.
+                                © {new Date().getFullYear()} Weey.NET. Tüm hakları saklıdır.
                             </Text>
                         </Section>
                     </Container>

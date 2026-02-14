@@ -138,6 +138,34 @@ export async function POST(req: Request) {
         });
 
         console.log('POST Shoot - Created with photographerId:', newShoot.photographerId);
+
+        // Create Notification for New Appointment
+        if (photographerId && customerId) {
+            try {
+                const { createNotification } = await import('@/lib/notifications');
+                const { NotificationType } = await import('@/models/Notification');
+                const Customer = (await import('@/models/Customer')).default;
+
+                // Get customer details
+                const customer = await Customer.findById(customerId);
+                const customerName = customer
+                    ? `${customer.brideName} & ${customer.groomName}`
+                    : 'Müşteri';
+
+                await createNotification({
+                    type: NotificationType.NEW_APPOINTMENT,
+                    userId: photographerId.toString(),
+                    customerId,
+                    relatedId: newShoot._id.toString(),
+                    customerName,
+                    shootDate: new Date(date),
+                    shootType: type,
+                });
+            } catch (err) {
+                console.error('Failed to create new appointment notification:', err);
+            }
+        }
+
         return NextResponse.json(newShoot, { status: 201 });
     } catch (error: any) {
         console.error('Shoot creation error:', error);

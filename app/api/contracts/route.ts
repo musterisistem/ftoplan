@@ -5,7 +5,7 @@ import Contract from '@/models/Contract';
 export async function GET() {
     await dbConnect();
     try {
-        // Only show these specific contracts
+        // Only show these specific contracts for appointment selection
         const allowedContracts = [
             'Dış Çekim Sözleşmesi',
             'Video Çekim Sözleşmesi'
@@ -14,7 +14,7 @@ export async function GET() {
         const contracts = await Contract.find({
             isActive: true,
             name: { $in: allowedContracts }
-        }).sort({ createdAt: -1 });
+        }).sort({ name: 1 }); // Sort by name for consistent UI
 
         return NextResponse.json(contracts);
     } catch (error: any) {

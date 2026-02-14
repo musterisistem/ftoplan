@@ -91,6 +91,8 @@ interface Customer {
     contractId?: string;
     photographerPackageType?: string;
     photographerSubscriptionExpiry?: string;
+    photographerName?: string;
+    photographerStudioName?: string;
 }
 
 type TabType = 'summary' | 'package' | 'appointments' | 'payments' | 'contract' | 'album-settings' | 'send-album' | 'approved-album' | 'account';
@@ -1771,12 +1773,14 @@ function ContractTab({ customerId, onTabChange }: { customerId: string; onTabCha
                                 <p><strong>HİZMET SAĞLAYICI</strong></p>
                                 <div className="signature-circle">
                                     <div className="text-center">
-                                        <p className="font-bold text-[10px]">FOTOPLAN</p>
-                                        <p className="text-[8px]">STÜDYO</p>
+                                        <p className="font-bold text-[10px] uppercase truncate px-1">
+                                            {customer?.photographerStudioName || 'STÜDYO'}
+                                        </p>
+                                        <p className="text-[8px] uppercase">DİJİTAL ONAY</p>
                                     </div>
                                 </div>
-                                <p className="font-serif">FotoPlan Stüdyo</p>
-                                <p className="text-[10px] text-gray-500">Dijital Onaylı Belge</p>
+                                <p className="font-serif">{customer?.photographerStudioName || 'Fotoğraf Stüdyonuz'}</p>
+                                <p className="text-[10px] text-gray-500">{customer?.photographerName || 'Yetkili İmza'}</p>
                             </div>
 
                             {/* Customer Signature */}
@@ -1803,7 +1807,9 @@ function ContractTab({ customerId, onTabChange }: { customerId: string; onTabCha
                             </div>
                         </div>
                         <div className="text-center mt-4">
-                            <p className="text-[8px] text-gray-400 font-serif">FotoPlan Stüdyo • {new Date().getFullYear()}</p>
+                            <p className="text-[8px] text-gray-400 font-serif">
+                                {customer?.photographerStudioName || 'Stüdyonuz'} • {new Date().getFullYear()}
+                            </p>
                         </div>
                     </div>
                 </div>

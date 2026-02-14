@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         // Create User
-        await User.create({
+        const newUser = await User.create({
             name,
             studioName,
             slug,
@@ -78,17 +78,20 @@ export async function POST(req: Request) {
             verificationTokenExpiry
         });
 
-        // Send Verification Email
-        const { sendEmail } = await import('@/lib/resend');
-        const { VerifyEmail } = await import('@/lib/emails/VerifyEmail');
+        // Send verification email
+        const { sendEmailWithTemplate } = await import('@/lib/resend');
+        const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        const verifyUrl = `${baseUrl}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+        const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
-        await sendEmail({
+        await sendEmailWithTemplate({
             to: email,
-            subject: 'Kadraj Panel - E-posta Adresinizi Doğrulayın',
-            react: VerifyEmail({ photographerName: name, verifyUrl })
+            templateType: EmailTemplateType.VERIFY_EMAIL,
+            photographerId: newUser._id.toString(),
+            data: {
+                photographerName: name,
+                verifyUrl,
+            },
         });
 
         return NextResponse.json({

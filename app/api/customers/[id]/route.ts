@@ -42,13 +42,17 @@ export async function GET(
         let photographerSlug = null;
         let photographerPackageType = 'trial';
         let photographerSubscriptionExpiry = null;
+        let photographerName = null;
+        let photographerStudioName = null;
 
         if (customer.photographerId) {
-            const photographer = await User.findById(customer.photographerId).select('slug packageType subscriptionExpiry');
+            const photographer = await User.findById(customer.photographerId).select('slug packageType subscriptionExpiry name studioName');
             if (photographer) {
                 photographerSlug = photographer.slug;
                 photographerPackageType = photographer.packageType || 'trial';
                 photographerSubscriptionExpiry = photographer.subscriptionExpiry;
+                photographerName = photographer.name;
+                photographerStudioName = photographer.studioName;
             }
         }
 
@@ -57,7 +61,9 @@ export async function GET(
             user: userInfo,
             photographerSlug,
             photographerPackageType,
-            photographerSubscriptionExpiry
+            photographerSubscriptionExpiry,
+            photographerName,
+            photographerStudioName
         });
     } catch (error: any) {
         console.error('Error fetching customer:', error);
@@ -130,6 +136,11 @@ export async function PUT(
         if (body.selectionCompleted !== undefined) updateData.selectionCompleted = body.selectionCompleted;
         if (body.canDownload !== undefined) updateData.canDownload = body.canDownload;
 
+        // Check if photo selection was just completed for notification
+        const wasSelectionJustCompleted =
+            body.selectionCompleted === true &&
+            customer.selectionCompleted === false;
+
         // Sync with User Model if credentials or status changed
         if (customer.userId) {
             const userUpdate: any = {};
@@ -146,7 +157,7 @@ export async function PUT(
             if (body.plainUsername && body.plainUsername !== customer.plainUsername) {
                 updateData.plainUsername = body.plainUsername;
                 // If we use email-based login, and generate email from username:
-                const newUserEmail = `${body.plainUsername}@fotopanel.com`;
+                const newUserEmail = `${body.plainUsername}@weey.net`;
                 userUpdate.email = newUserEmail;
                 updateData.email = newUserEmail; // Also update customer email to match
             }
@@ -169,10 +180,10 @@ export async function PUT(
         );
 
         // Send Email Notification if Status Changed and Email exists
-        if (isStatusChanged && updatedCustomer?.email) {
+        if (isStatusChanged && updatedCustomer?.email && updatedCustomer?.photographerId) {
             try {
-                const { sendEmail } = await import('@/lib/resend');
-                const { CustomerStatusUpdate } = await import('@/lib/emails/CustomerStatusUpdate');
+                const { sendEmailWithTemplate } = await import('@/lib/resend');
+                const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
                 // Get Photographer Studio Name
                 const photographer = await User.findById(updatedCustomer.photographerId).select('studioName');
@@ -198,18 +209,37 @@ export async function PUT(
                     ? { title: 'Randevu Durumu', value: statusMap[appointmentStatus] || appointmentStatus }
                     : { title: 'Albüm Durumu', value: statusMap[albumStatus] || albumStatus };
 
-                await sendEmail({
+                await sendEmailWithTemplate({
                     to: updatedCustomer.email,
-                    subject: `FotoPlan - ${changedStatus.title} Güncellendi`,
-                    react: CustomerStatusUpdate({
+                    templateType: EmailTemplateType.CUSTOMER_STATUS_UPDATE,
+                    photographerId: updatedCustomer.photographerId.toString(),
+                    data: {
                         customerName: `${updatedCustomer.brideName} & ${updatedCustomer.groomName}`,
                         statusTitle: changedStatus.title,
                         statusValue: changedStatus.value,
                         studioName: photographer?.studioName || 'Fotoğraf Stüdyonuz'
-                    })
+                    }
                 });
             } catch (err) {
                 console.error('Failed to send status update email:', err);
+            }
+        }
+
+        // Create Notification for Photo Selection Completion
+        if (wasSelectionJustCompleted && updatedCustomer?.photographerId) {
+            try {
+                const { createNotification } = await import('@/lib/notifications');
+                const { NotificationType } = await import('@/models/Notification');
+
+                await createNotification({
+                    type: NotificationType.PHOTO_SELECTION,
+                    userId: updatedCustomer.photographerId.toString(),
+                    customerId: updatedCustomer._id.toString(),
+                    relatedId: updatedCustomer._id.toString(),
+                    customerName: `${updatedCustomer.brideName} & ${updatedCustomer.groomName}`,
+                });
+            } catch (err) {
+                console.error('Failed to create photo selection notification:', err);
             }
         }
 

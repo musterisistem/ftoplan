@@ -28,6 +28,7 @@ const menuItems = [
     { name: 'Toplu Email', href: '/superadmin/communications/email', icon: Mail },
     { name: 'Toplu SMS', href: '/superadmin/communications/sms', icon: MessageSquare },
     { name: 'Paketler', href: '/superadmin/packages', icon: Package },
+    { name: 'Sistem Mailleri', href: '/superadmin/settings/mail-templates', icon: Mail },
     { name: 'Ayarlar', href: '/superadmin/settings', icon: Settings },
 ];
 
@@ -85,7 +86,7 @@ export default function SuperAdminLayout({
                             <Crown className="w-7 h-7 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Kadraj Panel</h1>
+                            <h1 className="text-xl font-bold text-white">Weey.NET</h1>
                             <p className="text-xs text-purple-300">Süper Admin</p>
                         </div>
                     </div>

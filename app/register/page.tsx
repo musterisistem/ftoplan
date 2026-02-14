@@ -139,7 +139,7 @@ export default function RegisterPage() {
                     </div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-4">Harika! Kaydınız Alındı</h2>
                     <p className="text-gray-600 mb-8 leading-relaxed">
-                        Sayın **{formData.name}**, Kadraj Panel dünyasına hoş geldiniz! <br /><br />
+                        Sayın **{formData.name}**, Weey.NET dünyasına hoş geldiniz! <br /><br />
                         Hesabınızı aktifleştirmek ve 7 günlük ücretsiz denemenizi başlatmak için **{formData.email}** adresine bir doğrulama e-postası gönderdik. <br /><br />
                         <span className="text-sm italic">Not: E-posta ulaşmadıysa Spam/Gereksiz kutusunu kontrol etmeyi unutmayın.</span>
                     </p>
@@ -170,7 +170,7 @@ export default function RegisterPage() {
                             <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20">
                                 <Camera className="w-6 h-6 text-purple-400" />
                             </div>
-                            <span className="text-2xl font-bold">Kadraj Panel</span>
+                            <span className="text-2xl font-bold">Weey.NET</span>
                         </div>
 
                         <h1 className="text-4xl font-bold leading-tight mb-6">
@@ -202,7 +202,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="text-sm text-gray-400">
-                        © 2026 Kadraj Panel. Tüm hakları saklıdır.
+                        © 2026 Weey.NET. Tüm hakları saklıdır.
                     </div>
                 </div>
             </div>
@@ -315,7 +315,7 @@ export default function RegisterPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Web Adresi (Link)</label>
                                 <div className="flex items-center">
                                     <span className="px-3 py-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-lg text-gray-500 text-sm whitespace-nowrap">
-                                        Kadraj Panel.com/studio/
+                                        Weey.NET.com/studio/
                                     </span>
                                     <input
                                         name="slug"
@@ -450,7 +450,7 @@ export default function RegisterPage() {
 
             {/* Mobile Footer/Disclaimer */}
             <div className="lg:hidden absolute bottom-4 w-full text-center text-[10px] text-gray-400">
-                © 2026 Kadraj Panel
+                © 2026 Weey.NET
             </div>
         </div>
     );

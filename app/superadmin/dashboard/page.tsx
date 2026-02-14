@@ -97,7 +97,7 @@ export default function SuperAdminDashboard() {
                     Hoş Geldiniz, {session?.user?.name || 'Sistem Yöneticisi'}
                 </h1>
                 <p className="text-gray-400">
-                    Kadraj Panel platformunun genel durumunu ve canlı istatistiklerini buradan takip edebilirsiniz.
+                    Weey.NET platformunun genel durumunu ve canlı istatistiklerini buradan takip edebilirsiniz.
                 </p>
             </div>
 

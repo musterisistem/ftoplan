@@ -204,7 +204,7 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
                 </p>
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                     <Camera className="w-4 h-4" />
-                    <span>Powered by FotoPlan</span>
+                    <span>Powered by Weey.NET</span>
                 </div>
             </footer>
 

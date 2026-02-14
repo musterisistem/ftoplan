@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,7 +30,7 @@ export default function ClientSidebar({ customerName }: ClientSidebarProps) {
                             <Heart className="w-5 h-5" />
                         </div>
                         <span className="text-xl font-bold text-gray-900">
-                            Kadraj Panel
+                            Weey.NET
                         </span>
                     </div>
 
@@ -52,36 +52,36 @@ export default function ClientSidebar({ customerName }: ClientSidebarProps) {
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${isActive
+                                    className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 \${isActive
                                         ? 'bg-pink-50 text-pink-700'
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                        }`}
+                                        }\`}
                                 >
                                     <item.icon
-                                        className={`mr-3 flex-shrink-0 h-5 w-5 ${isActive ? 'text-pink-600' : 'text-gray-400 group-hover:text-gray-500'
-                                            }`}
-                                        aria-hidden="true"
+                                        className={`mr-3 flex-shrink-0 h-5 w-5 \${isActive ? 'text-pink-600' : 'text-gray-400 group-hover:text-gray-500'
+                        }\`}
+                        aria-hidden="true"
                                     />
-                                    {item.name}
-                                </Link>
-                            );
+                        {item.name}
+                    </Link>
+                    );
                         })}
-                    </nav>
-                </div>
+                </nav>
+            </div>
 
-                {/* Logout */}
-                <div className="flex-shrink-0 flex border-t border-gray-100 p-4">
-                    <button
-                        onClick={() => signOut({ callbackUrl: '/client/login' })}
-                        className="flex-shrink-0 w-full group block px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                        <div className="flex items-center text-gray-500 group-hover:text-red-600">
-                            <LogOut size={18} className="mr-2" />
-                            <span className="text-sm font-medium">Çıkış Yap</span>
-                        </div>
-                    </button>
-                </div>
+            {/* Logout */}
+            <div className="flex-shrink-0 flex border-t border-gray-100 p-4">
+                <button
+                    onClick={() => signOut({ callbackUrl: '/client/login' })}
+                    className="flex-shrink-0 w-full group block px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                    <div className="flex items-center text-gray-500 group-hover:text-red-600">
+                        <LogOut size={18} className="mr-2" />
+                        <span className="text-sm font-medium">Çıkış Yap</span>
+                    </div>
+                </button>
             </div>
         </div>
+        </div >
     );
 }
