@@ -34,9 +34,14 @@ const UserSchema = new mongoose.Schema({
         default: 21474836480, // 20GB in bytes
     },
     // Subscription Management
+    intendedAction: {
+        type: String,
+        enum: ['trial', 'purchase'],
+        default: 'trial',
+    },
     packageType: {
         type: String,
-        enum: ['trial', 'starter', 'pro', 'premium', 'corporate'],
+        enum: ['trial', 'standart', 'kurumsal'],
         default: 'trial',
     },
     subscriptionExpiry: {
@@ -157,6 +162,10 @@ const UserSchema = new mongoose.Schema({
         url: { type: String },
         title: { type: String },
     }],
+    hasCompletedOnboarding: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
 // Delete cached model to force fresh schema in development

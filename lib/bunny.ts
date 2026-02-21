@@ -66,3 +66,32 @@ export async function deleteFromBunny(filename: string, folder: string = ''): Pr
     }
 }
 
+export async function listBunnyFiles(folder: string = ''): Promise<any[]> {
+    if (!STORAGE_ZONE_NAME || !ACCESS_KEY) {
+        throw new Error('BunnyCDN configuration is missing');
+    }
+
+    const path = folder ? `${folder.replace(/\/$/, '')}/` : '';
+    const storageUrl = `https://storage.bunnycdn.com/${STORAGE_ZONE_NAME}/${path}`;
+
+    try {
+        const response = await fetch(storageUrl, {
+            method: 'GET',
+            headers: {
+                'AccessKey': ACCESS_KEY,
+                'Accept': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            console.error(`Failed to list files from BunnyCDN: ${response.status} ${response.statusText}`);
+            return [];
+        }
+
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Error listing files from BunnyCDN:', error);
+        return [];
+    }
+}

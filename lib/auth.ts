@@ -133,6 +133,7 @@ export const authOptions: NextAuthOptions = {
                     // Logic: Use panelLogo if available, otherwise fallback to logo
                     image: user.panelLogo || user.logo || '',
                     panelSettings: user.panelSettings || undefined,
+                    hasCompletedOnboarding: user.hasCompletedOnboarding || false,
                 };
             }
         })
@@ -150,6 +151,7 @@ export const authOptions: NextAuthOptions = {
                 token.packageType = user.packageType;
                 token.picture = user.image;
                 token.panelSettings = user.panelSettings;
+                token.hasCompletedOnboarding = user.hasCompletedOnboarding;
             }
 
             // REFRESH DATA ON NAVIGATION/UPDATE
@@ -170,6 +172,7 @@ export const authOptions: NextAuthOptions = {
                         // Logic: Use panelLogo if available, otherwise fallback to logo
                         token.picture = adminUser.panelLogo || adminUser.logo || '';
                         token.panelSettings = adminUser.panelSettings || undefined;
+                        token.hasCompletedOnboarding = adminUser.hasCompletedOnboarding || false;
                     }
                 }
             } catch (error) {
@@ -190,6 +193,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.packageType = token.packageType;
                 session.user.image = token.picture; // Explicitly map image
                 session.user.panelSettings = token.panelSettings;
+                session.user.hasCompletedOnboarding = token.hasCompletedOnboarding;
             }
             return session;
         }

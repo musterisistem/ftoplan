@@ -75,11 +75,10 @@ export async function PUT(
                 const { sendEmailWithTemplate } = await import('@/lib/resend');
                 const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
-                const packageNames: any = {
+                const packageNames: Record<string, string> = {
                     'trial': '7 Günlük Deneme',
-                    'starter': 'Starter Paket',
-                    'pro': 'Pro Paket',
-                    'premium': 'Premium Paket'
+                    'standart': 'Standart Paket',
+                    'kurumsal': 'Kurumsal Paket'
                 };
 
                 const formatBytes = (bytes: number) => {

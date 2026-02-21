@@ -95,7 +95,8 @@ export default function EditPhotographerPage() {
                     phone: photographer.phone,
                     packageType: photographer.packageType,
                     storageLimit: photographer.storageLimit,
-                    isActive: photographer.isActive
+                    isActive: photographer.isActive,
+                    subscriptionExpiry: photographer.subscriptionExpiry
                 })
             });
 

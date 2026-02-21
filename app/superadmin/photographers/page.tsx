@@ -77,19 +77,19 @@ export default function PhotographersPage() {
 
     const getPackageColor = (type: string) => {
         switch (type) {
-            case 'premium': return 'from-amber-500 to-orange-500';
-            case 'pro': return 'from-purple-500 to-pink-500';
+            case 'kurumsal': return 'from-purple-500 to-pink-500';
+            case 'standart': return 'from-blue-500 to-cyan-500';
             case 'trial': return 'from-gray-500 to-gray-400';
-            default: return 'from-blue-500 to-cyan-500';
+            default: return 'from-gray-500 to-gray-400';
         }
     };
 
     const getPackageName = (type: string) => {
         switch (type) {
-            case 'premium': return 'Premium';
-            case 'pro': return 'Pro';
+            case 'kurumsal': return 'Kurumsal';
+            case 'standart': return 'Standart';
             case 'trial': return 'Deneme';
-            default: return 'Başlangıç';
+            default: return 'Bilinmiyor';
         }
     };
 
@@ -260,8 +260,8 @@ function AddPhotographerModal({ onClose, onSuccess }: { onClose: () => void; onS
         studioName: '',
         slug: '',
         phone: '',
-        packageType: 'starter',
-        storageLimit: 21474836480, // 20GB default
+        packageType: 'standart',
+        storageLimit: 10737418240, // 10GB default
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -419,18 +419,16 @@ function AddPhotographerModal({ onClose, onSuccess }: { onClose: () => void; onS
                                 value={formData.packageType}
                                 onChange={(e) => {
                                     const type = e.target.value;
-                                    let limit = 21474836480; // 20GB default
+                                    let limit = 10737418240; // 10GB default
                                     if (type === 'trial') limit = 3221225472; // 3GB
-                                    if (type === 'pro') limit = 53687091200; // 50GB
-                                    if (type === 'premium') limit = 107374182400; // 100GB
+                                    if (type === 'kurumsal') limit = 32212254720; // 30GB
                                     setFormData({ ...formData, packageType: type, storageLimit: limit });
                                 }}
                                 className="w-full px-4 py-2 bg-gray-800 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                             >
                                 <option value="trial">Deneme (3GB - 7 Gün)</option>
-                                <option value="starter">Başlangıç (20GB)</option>
-                                <option value="pro">Pro (50GB)</option>
-                                <option value="premium">Premium (100GB)</option>
+                                <option value="standart">Standart (10GB)</option>
+                                <option value="kurumsal">Kurumsal (30GB)</option>
                             </select>
                         </div>
                         <div>

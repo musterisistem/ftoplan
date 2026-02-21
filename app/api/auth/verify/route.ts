@@ -30,14 +30,22 @@ export async function GET(req: Request) {
         user.verificationToken = null;
         user.verificationTokenExpiry = null;
 
+        if (user.intendedAction === 'purchase' || user.packageType !== 'trial') {
+            // For paid packages, we do NOT give 7 days. We just verify email.
+            // Expiry remains in the past (or whatever default it had, we set it to now so it is "expired" until they pay).
+            user.subscriptionExpiry = new Date(Date.now() - 1000); // Expire immediately so they must pay
+            await user.save();
+            return NextResponse.redirect(new URL('/login?verified=true&redirect=/packages', req.url));
+        }
+
+        // For true trials
         // Reset trial start date to NOW (so they get full 7 days from verification)
         const freshExpiry = new Date();
         freshExpiry.setDate(freshExpiry.getDate() + 7);
         user.subscriptionExpiry = freshExpiry;
-
         await user.save();
 
-        // Success redirect
+        // Default redirect for trial
         return NextResponse.redirect(new URL('/login?verified=true', req.url));
 
     } catch (error) {

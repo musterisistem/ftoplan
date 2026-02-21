@@ -14,10 +14,11 @@ declare module "next-auth" {
             storageLimit: number;
             studioName?: string;
             subscriptionExpiry?: string;
-            packageType?: 'trial' | 'starter' | 'pro' | 'premium' | 'corporate';
+            packageType?: 'trial' | 'standart' | 'kurumsal';
             panelSettings?: {
                 defaultView?: string;
             };
+            hasCompletedOnboarding?: boolean;
         } & DefaultSession["user"]
     }
 
@@ -30,10 +31,11 @@ declare module "next-auth" {
         storageLimit: number;
         studioName?: string;
         subscriptionExpiry?: string;
-        packageType?: 'trial' | 'starter' | 'pro' | 'premium' | 'corporate';
+        packageType?: 'trial' | 'standart' | 'kurumsal';
         panelSettings?: {
             defaultView?: string;
         };
+        hasCompletedOnboarding?: boolean;
     }
 }
 
@@ -47,9 +49,10 @@ declare module "next-auth/jwt" {
         storageLimit: number;
         studioName?: string;
         subscriptionExpiry?: string;
-        packageType?: 'trial' | 'starter' | 'pro' | 'premium' | 'corporate';
+        packageType?: 'trial' | 'standart' | 'kurumsal';
         panelSettings?: {
             defaultView?: string;
         };
+        hasCompletedOnboarding?: boolean;
     }
 }

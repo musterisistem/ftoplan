@@ -107,8 +107,8 @@ export default function Sidebar() {
 
     // --- LOGIC ---
     const isTrial = session?.user?.packageType === 'trial';
-    // Only 'corporate' package users (or superadmins potentially) can access website settings
-    const isCorporate = session?.user?.packageType === 'corporate';
+    // Only 'kurumsal' package users (or superadmins potentially) can access website settings
+    const isCorporate = session?.user?.packageType === 'kurumsal' || session?.user?.role === 'superadmin';
 
     // Calculate Storage Stats
     const usage = session?.user?.storageUsage || 0;
@@ -230,7 +230,7 @@ export default function Sidebar() {
                                             >
                                                 {/* Only wrap content in Link if NOT locked */}
                                                 {!isLocked ? (
-                                                    <Link href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-center flex-1 gap-3">
+                                                    <Link id={item.name === 'Müşteriler' ? 'tour-sidebar-customers' : item.name === 'Çekim Paketleri' ? 'tour-sidebar-packages' : item.name === 'Panel Ayarları' ? 'tour-sidebar-settings' : undefined} href={item.href} onClick={() => setMobileMenuOpen(false)} className="flex items-center flex-1 gap-3">
                                                         <item.icon className={`w-4 h-4 ${isActive ? 'text-[#ff4081]' : isLocked ? 'text-[#4a4a5e]' : 'text-[#7d7d91] group-hover:text-white'}`} />
                                                         <span className={`text-sm ${isActive ? 'font-medium text-white' : 'font-normal'}`}>
                                                             {item.name}
@@ -298,11 +298,11 @@ export default function Sidebar() {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="relative flex h-3 w-3">
-                                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${session?.user?.packageType === 'corporate' ? 'bg-purple-400' : 'bg-green-400'}`}></span>
-                                        <span className={`relative inline-flex rounded-full h-3 w-3 ${session?.user?.packageType === 'corporate' ? 'bg-purple-500' : 'bg-green-500'}`}></span>
+                                        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${session?.user?.packageType === 'kurumsal' ? 'bg-purple-400' : 'bg-green-400'}`}></span>
+                                        <span className={`relative inline-flex rounded-full h-3 w-3 ${session?.user?.packageType === 'kurumsal' ? 'bg-purple-500' : 'bg-green-500'}`}></span>
                                     </div>
                                     <span className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-wider">
-                                        {session?.user?.packageType === 'corporate' ? 'KURUMSAL' : 'STANDART'}
+                                        {session?.user?.packageType === 'kurumsal' ? 'KURUMSAL' : 'STANDART'}
                                     </span>
                                 </div>
                                 <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-[#ff4081]/10 text-[#ff4081] border border-[#ff4081]/20">

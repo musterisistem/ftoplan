@@ -12,6 +12,8 @@ export async function POST(req: Request) {
             email,
             password,
             phone,
+            intendedAction,
+            selectedPackage,
             billingInfo
         } = body;
 
@@ -69,7 +71,8 @@ export async function POST(req: Request) {
             password: hashedPassword,
             phone,
             role: 'admin',
-            packageType: 'trial',
+            packageType: selectedPackage || 'trial',
+            intendedAction: intendedAction || 'trial',
             storageLimit: 3221225472, // 3GB
             subscriptionExpiry,
             billingInfo: billingInfo || {}, // Save billing info

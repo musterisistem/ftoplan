@@ -93,6 +93,7 @@ export default function CustomersPage() {
                     <p className="text-sm text-gray-500 mt-1">{customers.length} kayıtlı müşteri</p>
                 </div>
                 <Link
+                    id="tour-new-customer-btn"
                     href="/admin/appointments/new"
                     className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
                 >
