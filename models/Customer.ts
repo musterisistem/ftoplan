@@ -118,9 +118,5 @@ const CustomerSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-// Delete cached model to force fresh schema in development
-if (mongoose.models.Customer) {
-    delete mongoose.models.Customer;
-}
-
-export default mongoose.model('Customer', CustomerSchema);
+const Customer = mongoose.models.Customer || mongoose.model('Customer', CustomerSchema);
+export default Customer;

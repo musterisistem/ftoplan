@@ -201,87 +201,87 @@ export default function PackagesPage() {
     };
 
     return (
-        <div className="p-8 max-w-[1920px] mx-auto min-h-screen space-y-8">
+        <div className="p-6 md:p-8 max-w-[1920px] mx-auto min-h-screen space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Çekim Paketleri</h2>
-                    <p className="text-gray-500 text-sm">Müşterilerinize sunacağınız paketleri oluşturun ve yönetin.</p>
+                    <h2 className="text-3xl font-black tracking-tight text-slate-900 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900">Çekim Paketleri</h2>
+                    <p className="text-sm font-medium text-slate-500 mt-1">Müşterilerinize sunacağınız paketleri oluşturun ve yönetin.</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="flex items-center gap-2 bg-[#6366F1] hover:bg-[#5558DD] text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-indigo-500/20"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-4 h-4" />
                     Yeni Paket Oluştur
                 </button>
             </div>
 
             {/* Packages Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-8">
                 {packages.map((pkg) => (
-                    <div key={pkg.id} className="group relative bg-white rounded-3xl p-6 border border-gray-100 hover:border-indigo-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300">
+                    <div key={pkg.id} className="group relative bg-white/80 backdrop-blur-xl rounded-3xl p-6 border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
                         {pkg.isPopular && (
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg shadow-orange-500/20">
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 rounded-full text-[10px] font-bold shadow-sm shadow-orange-500/20">
                                 EN ÇOK TERCİH EDİLEN
                             </div>
                         )}
 
-                        <div className="flex justify-between items-start mb-4">
+                        <div className="flex justify-between items-start mb-5">
                             <div>
-                                <h3 className="text-lg font-bold text-gray-900">{pkg.name}</h3>
-                                <p className="text-xs text-gray-500 mt-1">{pkg.tagline}</p>
+                                <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{pkg.name}</h3>
+                                <p className="text-xs font-medium text-slate-500 mt-1">{pkg.tagline}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-2xl font-bold text-[#6366F1]">
-                                    {pkg.price.toLocaleString('tr-TR')} <span className="text-sm text-gray-400">{pkg.currency}</span>
+                                <p className="text-2xl font-black text-indigo-600 tracking-tight">
+                                    {pkg.price.toLocaleString('tr-TR')} <span className="text-sm font-medium text-indigo-400">{pkg.currency}</span>
                                 </p>
                             </div>
                         </div>
 
-                        <div className="space-y-4 mb-6">
+                        <div className="space-y-3 mb-6 flex-1">
                             {/* Album Info */}
-                            <div className="bg-gray-50 rounded-xl p-3 flex items-start gap-3">
+                            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-start gap-3">
                                 <div className="p-2 bg-white rounded-lg shadow-sm">
                                     <ImageIcon className="w-4 h-4 text-indigo-500" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-gray-700">{pkg.features.albumSize}</p>
-                                    <p className="text-[10px] text-gray-500">{pkg.features.albumType} • {pkg.features.albumPages} Sayfa</p>
+                                    <p className="text-xs font-bold text-slate-700">{pkg.features.albumSize}</p>
+                                    <p className="text-[10px] font-medium text-slate-500">{pkg.features.albumType} • {pkg.features.albumPages} Sayfa</p>
                                 </div>
                             </div>
 
                             {/* Features List */}
-                            <ul className="space-y-2">
-                                <li className="flex items-center gap-2 text-xs text-gray-600">
-                                    <Users className="w-3.5 h-3.5 text-gray-400" />
+                            <ul className="space-y-2 mt-4">
+                                <li className="flex items-center gap-2 text-xs text-slate-600">
+                                    <Users className="w-3.5 h-3.5 text-slate-400" />
                                     <span>{pkg.features.familyAlbums} Adet Aile Albümü ({pkg.features.familyAlbumSize})</span>
                                 </li>
-                                <li className="flex items-center gap-2 text-xs text-gray-600">
-                                    <Image className="w-3.5 h-3.5 text-gray-400" />
+                                <li className="flex items-center gap-2 text-xs text-slate-600">
+                                    <Image className="w-3.5 h-3.5 text-slate-400" />
                                     <span>{pkg.features.posterCount} Adet Poster ({pkg.features.posterSize})</span>
                                 </li>
                                 {pkg.features.extras.map((extra, idx) => (
-                                    <li key={idx} className="flex items-center gap-2 text-xs text-gray-600">
-                                        <Check className="w-3.5 h-3.5 text-green-500" />
+                                    <li key={idx} className="flex items-center gap-2 text-xs text-slate-600">
+                                        <Check className="w-3.5 h-3.5 text-emerald-500" />
                                         <span>
                                             {extra.name}
-                                            {extra.price > 0 && <span className="text-gray-400 ml-1">({extra.price.toLocaleString()} TL)</span>}
+                                            {extra.price > 0 && <span className="text-slate-400 ml-1">({extra.price.toLocaleString()} TL)</span>}
                                         </span>
                                     </li>
                                 ))}
                             </ul>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 mt-auto pt-5 border-t border-slate-100/60">
                             <button
                                 onClick={() => handleOpenModal(pkg)}
-                                className="flex-1 flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                                className="flex-1 flex items-center justify-center gap-2 bg-slate-50 border border-transparent hover:bg-white hover:border-indigo-200 text-slate-700 hover:text-indigo-600 py-2.5 rounded-2xl text-sm font-bold transition-all shadow-[0_2px_10px_rgb(0,0,0,0.02)]"
                             >
                                 <Edit2 className="w-4 h-4" />
                                 Düzenle
                             </button>
-                            <button className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors">
+                            <button className="p-2.5 bg-slate-50 border border-transparent hover:bg-rose-50 hover:border-rose-200 text-slate-400 hover:text-rose-600 rounded-2xl transition-all shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
                                 <Trash2 className="w-5 h-5" />
                             </button>
                         </div>

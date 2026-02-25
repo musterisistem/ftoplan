@@ -65,42 +65,46 @@ export default function DashboardSlider() {
         );
     }
 
-    if (slides.length === 0) {
-        return null; // Don't show anything if no slides
-    }
+    // If no slides are available, show a fallback creative slide
+    const displaySlides = slides.length > 0 ? slides : [{
+        _id: 'default-fallback',
+        title: 'Weey.NET ile Stüdyonuzu Büyütün',
+        description: 'Tüm müşteri kayıtlarınızı, seçilecek fotoğrafları ve randevularınızı tek bir noktadan yöneterek zaman kazanın.',
+        imageUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=2670&auto=format&fit=crop', // A beautiful photography background
+        link: ''
+    }];
 
-    const currentSlide = slides[currentIndex];
+    const currentSlide = displaySlides[currentIndex] || displaySlides[0];
 
     return (
         <div
-            className="bg-white rounded-2xl border border-gray-100 overflow-hidden relative group shadow-lg hover:shadow-2xl transition-shadow duration-300"
+            className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 overflow-hidden relative group shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* Slides Stack with Fade */}
-            <div className="relative h-64 bg-gradient-to-br from-indigo-50 to-purple-50">
-                {slides.map((slide, index) => (
+            <div className="relative h-64 bg-gradient-to-br from-[#1E293B] to-[#0F172A]">
+                {displaySlides.map((slide, index) => (
                     <div
                         key={slide._id}
                         className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
                             }`}
                     >
-                        {/* Slide Image */}
+                        {/* Slide Image - Using standard img to avoid Next.js domain restrictions */}
                         {slide.imageUrl && (
-                            <Image
+                            <img
                                 src={slide.imageUrl}
                                 alt={slide.title}
-                                fill
-                                className="object-cover"
+                                className="object-cover w-full h-full opacity-60 mix-blend-overlay"
                             />
                         )}
 
                         {/* Overlay with Content */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end">
-                            <div className="p-6 text-white w-full">
-                                <h3 className="text-2xl font-semibold mb-2">{slide.title}</h3>
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/90 via-[#0F172A]/40 to-transparent flex items-end">
+                            <div className="p-8 text-white w-full">
+                                <h3 className="text-3xl font-bold mb-3 tracking-tight text-white/95">{slide.title}</h3>
                                 {slide.description && (
-                                    <p className="text-sm text-white/90 mb-3 line-clamp-2">
+                                    <p className="text-[15px] font-medium text-white/80 mb-4 line-clamp-2 max-w-2xl leading-relaxed">
                                         {slide.description}
                                     </p>
                                 )}
@@ -109,7 +113,7 @@ export default function DashboardSlider() {
                                         href={slide.link}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 text-sm font-medium bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg hover:bg-white/30 transition-colors"
+                                        className="inline-flex items-center gap-2 text-sm font-semibold bg-white/10 hover:bg-white/20 backdrop-blur-md px-5 py-2.5 rounded-xl border border-white/10 transition-all"
                                     >
                                         Detayları Gör <ExternalLink className="w-4 h-4" />
                                     </a>
@@ -121,19 +125,19 @@ export default function DashboardSlider() {
             </div>
 
             {/* Navigation Arrows - Always Visible on Hover */}
-            {slides.length > 1 && (
+            {displaySlides.length > 1 && (
                 <>
                     <button
                         onClick={prevSlide}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:scale-110 shadow-lg"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:text-gray-900 text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:scale-110 z-50"
                     >
-                        <ChevronLeft className="w-6 h-6 text-gray-800" />
+                        <ChevronLeft className="w-6 h-6 ml-[-2px]" />
                     </button>
                     <button
                         onClick={nextSlide}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:scale-110 shadow-lg"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:text-gray-900 text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:scale-110 z-50"
                     >
-                        <ChevronRight className="w-6 h-6 text-gray-800" />
+                        <ChevronRight className="w-6 h-6 mr-[-2px]" />
                     </button>
                 </>
             )}

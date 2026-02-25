@@ -1,10 +1,10 @@
 'use client';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { Home } from 'lucide-react';
 
-export default function HomepagePage() {
+function HomepageContent() {
     const { status } = useSession();
     const router = useRouter();
 
@@ -32,5 +32,13 @@ export default function HomepagePage() {
                 <p className="text-sm text-gray-400">Şimdilik ana sayfa içeriği tema tarafından otomatik oluşturulmaktadır.</p>
             </div>
         </div>
+    );
+}
+
+export default function HomepagePage() {
+    return (
+        <Suspense fallback={<div className="p-10 flex justify-center"><div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full" /></div>}>
+            <HomepageContent />
+        </Suspense>
     );
 }

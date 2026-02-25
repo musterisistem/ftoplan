@@ -62,6 +62,8 @@ export async function POST(req: Request) {
         const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
+        const Subscriber = (await import('@/models/Subscriber')).default;
+
         // Create User
         const newUser = await User.create({
             name,
@@ -79,6 +81,15 @@ export async function POST(req: Request) {
             isActive: false, // Inactive until verified
             verificationToken,
             verificationTokenExpiry
+        });
+
+        // Add to Subscriber table for bulk mailing
+        await Subscriber.create({
+            email: email.toLowerCase(),
+            name,
+            studioName,
+            packageType: selectedPackage || 'trial',
+            isActive: false // inactive until verified
         });
 
         // Send verification email

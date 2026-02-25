@@ -9,6 +9,10 @@ import mongoose from 'mongoose';
 
 export async function GET(req: Request) {
     try {
+        const { searchParams } = new URL(req.url);
+        const requestedMonth = searchParams.get('month'); // 1-12
+        const requestedYear = searchParams.get('year');
+
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -16,7 +20,11 @@ export async function GET(req: Request) {
 
         await dbConnect();
 
-        // 1. Get Admin User (Photographer) Info & Storage
+        // Target Date for Calendar/Activity
+        const now = new Date();
+        const targetMonth = requestedMonth ? parseInt(requestedMonth) - 1 : now.getMonth();
+        const targetYear = requestedYear ? parseInt(requestedYear) : now.getFullYear();
+
         const userId = session.user.id;
         const user = await User.findById(userId).select('storageUsage storageLimit name email panelLogo logo');
 
@@ -95,6 +103,32 @@ export async function GET(req: Request) {
             year: item._id.year
         }));
 
+        // 6.5. Monthly Shoots Aggregation (Last 6 Months)
+        const monthlyShootsCount = await Shoot.aggregate([
+            {
+                $match: {
+                    date: { $gte: sixMonthsAgo },
+                    status: { $ne: 'cancelled' }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        month: { $month: "$date" },
+                        year: { $year: "$date" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        const monthlyShootsChartData = monthlyShootsCount.map(item => ({
+            name: monthNames[item._id.month - 1],
+            value: item.count,
+            year: item._id.year
+        }));
+
         // 7. Staff & Active Shoots Count (This Month)
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
@@ -117,6 +151,15 @@ export async function GET(req: Request) {
         ]);
         const totalEarnings = earningStats[0]?.totalEarnings || 0;
 
+        // Pending Actions Counts
+        const pendingSelectionCount = await Customer.countDocuments({
+            appointmentStatus: 'fotograflar_yuklendi'
+        });
+
+        const pendingUploadsCount = await Customer.countDocuments({
+            appointmentStatus: { $in: ['cekim_yapilmadi', 'cekim_yapildi'] }
+        });
+
         const staffMembers = [
             {
                 id: user._id,
@@ -127,18 +170,15 @@ export async function GET(req: Request) {
             }
         ];
 
-        // 8. Calendar Data - Days with events this month
-        const startOfCurrentMonth = new Date();
-        startOfCurrentMonth.setDate(1);
-        startOfCurrentMonth.setHours(0, 0, 0, 0);
+        // 8. Calendar Data - Days with events for the requested month
+        const startOfCalendarMonth = new Date(targetYear, targetMonth, 1);
+        startOfCalendarMonth.setHours(0, 0, 0, 0);
 
-        const endOfCurrentMonth = new Date();
-        endOfCurrentMonth.setMonth(endOfCurrentMonth.getMonth() + 1);
-        endOfCurrentMonth.setDate(0);
-        endOfCurrentMonth.setHours(23, 59, 59, 999);
+        const endOfCalendarMonth = new Date(targetYear, targetMonth + 1, 0);
+        endOfCalendarMonth.setHours(23, 59, 59, 999);
 
         const shootsThisMonth = await Shoot.find({
-            date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
+            date: { $gte: startOfCalendarMonth, $lte: endOfCalendarMonth },
             status: { $ne: 'cancelled' }
         }).select('date type customerName location').populate('customerId', 'brideName groomName').lean();
 
@@ -176,10 +216,8 @@ export async function GET(req: Request) {
 
         const monthlyActivity = await Promise.all(
             weeksInMonth.map(async (week) => {
-                const weekStart = new Date(startOfCurrentMonth);
-                weekStart.setDate(week.start);
-                const weekEnd = new Date(startOfCurrentMonth);
-                weekEnd.setDate(week.end);
+                const weekStart = new Date(targetYear, targetMonth, week.start);
+                const weekEnd = new Date(targetYear, targetMonth, week.end);
                 weekEnd.setHours(23, 59, 59, 999);
 
                 const count = await Shoot.countDocuments({
@@ -194,8 +232,8 @@ export async function GET(req: Request) {
             })
         );
 
-        const currentMonthName = monthNames[new Date().getMonth()];
-        const currentYear = new Date().getFullYear();
+        const currentMonthName = monthNames[targetMonth];
+        const currentYear = targetYear;
 
         // 11. Active Albums (with photos uploaded)
         const activeAlbumsData = await Customer.find({
@@ -249,9 +287,12 @@ export async function GET(req: Request) {
                 deletedAlbums: deletedAlbums,
                 activeShootsMonth: activeShootsThisMonth,
                 activeCustomers: activeCustomers, // For "Total Contact" equivalent
-                totalRevenue: totalEarnings
+                totalRevenue: totalEarnings,
+                pendingSelection: pendingSelectionCount,
+                pendingUploads: pendingUploadsCount
             },
             revenueChart: revenueChartData,
+            monthlyShootsChart: monthlyShootsChartData,
             recentActivities,
             upcomingShoots, // Original format
             shootDistribution,

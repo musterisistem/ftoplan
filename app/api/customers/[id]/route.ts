@@ -136,8 +136,10 @@ export async function PUT(
         if (body.selectionCompleted !== undefined) updateData.selectionCompleted = body.selectionCompleted;
         if (body.canDownload !== undefined) updateData.canDownload = body.canDownload;
 
-        // Check if photo selection was just completed for notification
+        // Check if photo selection was just completed FOR THE FIRST TIME by the CUSTOMER
+        // (not triggered by admin panel saves - requires source: 'customer')
         const wasSelectionJustCompleted =
+            body.source === 'customer' &&
             body.selectionCompleted === true &&
             customer.selectionCompleted === false;
 

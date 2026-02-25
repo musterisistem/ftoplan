@@ -163,17 +163,17 @@ export default function PanelSettingsPage() {
     };
 
     return (
-        <div className="p-6 max-w-5xl mx-auto space-y-6 pb-20">
+        <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6 pb-20">
             {/* Page Header */}
-            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white px-6 py-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900">Panel Ayarları</h1>
-                    <p className="text-xs text-gray-500 font-medium">Sistemin genel işleyiş ve görünüm ayarları</p>
+                    <h1 className="text-xl font-bold text-gray-900 tracking-tight">Panel Ayarları</h1>
+                    <p className="text-sm text-gray-500 font-medium mt-1">Sistemin genel işleyiş ve görünüm ayarları</p>
                 </div>
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#7A70BA] text-white text-sm font-semibold rounded-xl hover:bg-[#7A70BA]/90 disabled:opacity-50 transition-all shadow-sm"
                 >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
@@ -181,9 +181,9 @@ export default function PanelSettingsPage() {
             </div>
             {/* Success Message Toast/Banner */}
             {isSuccess && (
-                <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top-2 fade-in duration-300">
-                    <div className="bg-white/20 p-1 rounded-full"><Save className="w-4 h-4" /></div>
-                    <span className="font-medium text-sm">Ayarlar başarıyla kaydedildi</span>
+                <div className="fixed top-4 right-4 z-50 bg-emerald-50 border border-emerald-100 text-emerald-700 px-6 py-3.5 rounded-2xl shadow-sm flex items-center gap-3 animate-in slide-in-from-top-2 fade-in duration-300">
+                    <div className="bg-emerald-100 p-1.5 rounded-xl"><Save className="w-4 h-4" /></div>
+                    <span className="font-bold text-sm">Ayarlar başarıyla kaydedildi</span>
                 </div>
             )}
 
@@ -191,27 +191,26 @@ export default function PanelSettingsPage() {
 
                 {/* Left Column - Branding (1/3) */}
                 <div className="space-y-6">
-                    <section className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                                <LayoutTemplate className="w-4 h-4 text-indigo-500" />
+                    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                        <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2.5">
+                                <LayoutTemplate className="w-5 h-5 text-gray-400" />
                                 İşletme Kimliği
                             </h2>
                         </div>
-                        <div className="p-4 space-y-4">
+                        <div className="p-6 md:p-8 space-y-6">
                             {/* Logo Upload */}
                             <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-2">Panel Logosu</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-3">Panel Logosu</label>
                                 <div className="flex justify-center">
                                     <div className="relative group w-full">
-                                        {/* Added bg-gray-800 to preview pane to simulate dark sidebar context */}
-                                        <div className={`aspect-[3/2] w-full rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center bg-gray-800 hover:bg-gray-700 transition-colors ${logoPreview ? 'border-solid border-gray-600' : ''}`}>
+                                        <div className={`aspect-[3/2] w-full rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors ${logoPreview ? 'border-solid border-gray-100 bg-white' : ''}`}>
                                             {logoPreview ? (
-                                                <Image src={logoPreview} alt="Logo" width={160} height={100} className="object-contain w-full h-full p-2" />
+                                                <Image src={logoPreview} alt="Logo" width={160} height={100} className="object-contain w-full h-full p-4" />
                                             ) : (
-                                                <div className="text-center p-4">
-                                                    <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                                    <span className="text-xs text-gray-400 font-medium">Logo Yükle</span>
+                                                <div className="text-center p-6">
+                                                    <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                                                    <span className="text-sm font-semibold text-gray-500">Logo Yükle</span>
                                                 </div>
                                             )}
                                             <input type="file" onChange={handleLogoUpload} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
@@ -219,37 +218,37 @@ export default function PanelSettingsPage() {
                                         {logoPreview && (
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setLogoPreview(null); setLogoFile(null); }}
-                                                className="absolute top-2 right-2 p-1.5 bg-white border border-gray-200 text-red-500 rounded-md shadow-sm hover:bg-red-50 transition-colors"
+                                                className="absolute top-3 right-3 p-2 bg-white/90 text-red-500 rounded-xl opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all hover:bg-red-50 shadow-sm hover:text-red-600"
                                             >
-                                                <Trash2 className="w-3.5 h-3.5" />
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         )}
                                     </div>
                                 </div>
-                                <p className="text-[10px] text-gray-400 mt-2 text-center">
-                                    Tavsiye: Koyu renkli panel menüsünde iyi görünmesi için <strong>beyaz/açık renkli</strong> ve şeffaf arka planlı bir logo tercih edin.
+                                <p className="text-xs font-semibold text-gray-400 mt-3 text-center">
+                                    Tavsiye: Koyu renkli panel menüsünde iyi görünmesi için <strong className="text-gray-700">beyaz/açık renkli</strong> ve şeffaf arka planlı bir logo tercih edin.
                                 </p>
                             </div>
 
                             {/* Inputs */}
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Stüdyo Adı</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Stüdyo Adı</label>
                                     <input
                                         type="text"
                                         value={studioName}
                                         onChange={(e) => setStudioName(e.target.value)}
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                        className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:border-[#7A70BA] focus:ring-4 focus:ring-[#7A70BA]/10 outline-none transition-all placeholder-gray-400 font-medium text-gray-900 shadow-sm"
                                         placeholder="Örn: Kadraj Medya"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Fotoğrafçı Adı</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fotoğrafçı Adı</label>
                                     <input
                                         type="text"
                                         value={photographerName}
                                         onChange={(e) => setPhotographerName(e.target.value)}
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                                        className="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:border-[#7A70BA] focus:ring-4 focus:ring-[#7A70BA]/10 outline-none transition-all placeholder-gray-400 font-medium text-gray-900 shadow-sm"
                                         placeholder="Örn: Ahmet Yılmaz"
                                     />
                                 </div>
@@ -257,36 +256,35 @@ export default function PanelSettingsPage() {
                         </div>
                     </section>
 
-                    {/* ... Rest of existing sections ... */}
                     {/* Archive Settings (Small) */}
-                    <section className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                            <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-indigo-500" />
+                    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                        <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2.5">
+                                <Clock className="w-5 h-5 text-gray-400" />
                                 Arşiv Ayarları
                             </h2>
                         </div>
-                        <div className="p-4">
+                        <div className="p-6 md:p-8">
                             <div className="flex items-start gap-3">
-                                <div className="pt-1">
+                                <div className="pt-1 flex items-center h-5">
                                     <input
                                         type="checkbox"
                                         id="autoDelete"
                                         checked={autoDelete}
                                         onChange={() => setAutoDelete(!autoDelete)}
-                                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                                        className="w-4 h-4 text-[#7A70BA] bg-white border-gray-300 rounded focus:ring-[#7A70BA] focus:ring-2 cursor-pointer"
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="autoDelete" className="block text-sm font-medium text-gray-900 cursor-pointer">
+                                    <label htmlFor="autoDelete" className="block text-sm font-semibold text-gray-900 cursor-pointer">
                                         Otomatik Temizlik (30 Gün)
                                     </label>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-xs font-semibold text-gray-500 mt-1">
                                         Teslim edilen albüm dosyalarını 1 ay sonra sunucudan otomatik olarak siler.
                                     </p>
                                     {autoDelete && (
-                                        <div className="mt-2 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-2 py-1.5 rounded-md border border-amber-100">
-                                            <AlertTriangle className="w-3.5 h-3.5" />
+                                        <div className="mt-3 flex items-center gap-2.5 text-xs font-bold text-amber-700 bg-amber-50 px-3 py-2.5 rounded-xl border border-amber-200">
+                                            <AlertTriangle className="w-4 h-4" />
                                             <span>Kalıcı olarak silinir!</span>
                                         </div>
                                     )}
@@ -300,15 +298,15 @@ export default function PanelSettingsPage() {
                 <div className="lg:col-span-2 space-y-6">
 
                     {/* Calendar Config */}
-                    <section className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                            <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                                <CalendarIcon className="w-4 h-4 text-indigo-500" />
+                    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+                        <div className="px-6 py-5 border-b border-gray-100 bg-white">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2.5">
+                                <CalendarIcon className="w-5 h-5 text-gray-400" />
                                 Takvim Görünümü
                             </h2>
                         </div>
-                        <div className="p-4">
-                            <div className="grid grid-cols-3 gap-3">
+                        <div className="p-6 md:p-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {[
                                     { id: 'month', label: 'Aylık Görünüm' },
                                     { id: 'week', label: 'Haftalık Görünüm' },
@@ -317,81 +315,81 @@ export default function PanelSettingsPage() {
                                     <button
                                         key={view.id}
                                         onClick={() => setDefaultView(view.id as any)}
-                                        className={`flex flex-col items-center justify-center p-3 rounded-lg border transition-all ${defaultView === view.id
-                                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700 font-medium'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                        className={`flex items-center justify-center p-3.5 rounded-xl border-2 transition-all ${defaultView === view.id
+                                            ? 'bg-white border-[#7A70BA] ring-2 ring-[#7A70BA]/10 text-[#7A70BA] font-bold shadow-sm'
+                                            : 'bg-white border-gray-100 text-gray-600 hover:border-gray-200 hover:bg-gray-50 font-semibold'
                                             }`}
                                     >
                                         <span className="text-sm">{view.label}</span>
                                     </button>
                                 ))}
                             </div>
-                            <p className="text-xs text-gray-400 mt-3 text-center">
+                            <p className="text-xs font-semibold text-gray-400 mt-4 text-center">
                                 Bu ayar, "Randevular" sayfasına girdiğinizde varsayılan olarak açılacak görünümü belirler.
                             </p>
                         </div>
                     </section>
 
                     {/* Status Management */}
-                    <section className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex-1">
-                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                                <ListFilter className="w-4 h-4 text-indigo-500" />
+                    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col flex-1">
+                        <div className="px-4 py-4 border-b border-gray-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2.5 ml-2">
+                                <ListFilter className="w-5 h-5 text-gray-400" />
                                 Durum Etiketleri
                             </h2>
-                            <div className="flex p-0.5 bg-gray-200/50 rounded-lg">
+                            <div className="flex p-1 bg-gray-50 rounded-xl border border-gray-200">
                                 <button
                                     onClick={() => setActiveStatusType('appointment')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeStatusType === 'appointment' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeStatusType === 'appointment' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 border border-transparent'}`}
                                 >
                                     Randevu
                                 </button>
                                 <button
                                     onClick={() => setActiveStatusType('album')}
-                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${activeStatusType === 'album' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                    className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${activeStatusType === 'album' ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50 border border-transparent'}`}
                                 >
                                     Albüm
                                 </button>
                             </div>
                         </div>
 
-                        <div className="p-4">
+                        <div className="p-6 md:p-8 flex flex-col gap-6">
                             {/* Add New Status */}
-                            <div className="flex gap-2 mb-4">
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <input
                                     type="text"
                                     value={newStatusInput}
                                     onChange={(e) => setNewStatusInput(e.target.value)}
                                     placeholder={activeStatusType === 'appointment' ? "Yeni randevu durumu..." : "Yeni albüm durumu..."}
-                                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none"
+                                    className="flex-1 px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:border-[#7A70BA] focus:ring-4 focus:ring-[#7A70BA]/10 outline-none transition-all placeholder-gray-400 font-medium text-gray-900 shadow-sm"
                                     onKeyPress={(e) => e.key === 'Enter' && handleAddStatus()}
                                 />
                                 <button
                                     onClick={handleAddStatus}
-                                    className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
+                                    className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm flex items-center justify-center gap-2"
                                 >
                                     <Plus className="w-4 h-4" /> Ekle
                                 </button>
                             </div>
 
                             {/* List */}
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {(activeStatusType === 'appointment' ? appointmentStatuses : albumStatuses).map((status) => (
-                                    <div key={status.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-lg group hover:bg-white hover:shadow-sm transition-all">
+                                    <div key={status.id} className="flex items-center justify-between px-5 py-4 bg-white border border-gray-100 rounded-2xl group hover:border-gray-200 hover:shadow-sm transition-all shadow-sm">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-2.5 h-2.5 rounded-full ${status.color}`}></div>
-                                            <span className="text-sm text-gray-700 font-medium">{status.label}</span>
+                                            <div className={`w-3 h-3 rounded-full ${status.color}`}></div>
+                                            <span className="text-sm text-gray-800 font-semibold">{status.label}</span>
                                         </div>
                                         <button
                                             onClick={() => handleRemoveStatus(status.id, activeStatusType)}
-                                            className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-1"
+                                            className="text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-2 bg-gray-50 rounded-xl hover:bg-red-50"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 ))}
                                 {(activeStatusType === 'appointment' ? appointmentStatuses : albumStatuses).length === 0 && (
-                                    <div className="text-center py-6 text-sm text-gray-400 italic">
+                                    <div className="text-center py-8 text-sm font-semibold text-gray-400 italic bg-white rounded-2xl border border-gray-200 border-dashed">
                                         Henüz bir durum etiketi eklenmemiş.
                                     </div>
                                 )}

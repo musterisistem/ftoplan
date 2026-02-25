@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Bell, Search, Globe, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, Image as ImageIcon, LayoutTemplate, MonitorSmartphone, Contact2, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, Search, Globe, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, Image as ImageIcon, LayoutTemplate, MonitorSmartphone, Contact2, FileText, Users, Camera, Loader2, X, Clock } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import UpgradeModal from '@/components/admin/UpgradeModal';
@@ -14,26 +15,166 @@ export default function Header() {
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+    const router = useRouter();
+
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const hour = currentTime.getHours();
+    const greeting = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi Günler' : 'İyi Akşamlar';
+    const dateStr = currentTime.toLocaleDateString('tr-TR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+    const timeStr = currentTime.toLocaleTimeString('tr-TR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+
+    // Debounced Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery.trim().length >= 2) {
+                performSearch(searchQuery);
+            } else {
+                setSearchResults([]);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const performSearch = async (query: string) => {
+        setIsSearching(true);
+        try {
+            const res = await fetch(`/api/admin/search?q=${encodeURIComponent(query)}`);
+            if (res.ok) {
+                const data = await res.json();
+                setSearchResults(Array.isArray(data) ? data : []);
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // Close search on click outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setIsSearchOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const getIcon = (iconName: string) => {
+        switch (iconName) {
+            case 'Users': return <Users className="w-5 h-5 text-blue-500" />;
+            case 'Camera': return <Camera className="w-5 h-5 text-indigo-500" />;
+            case 'LayoutTemplate': return <LayoutTemplate className="w-5 h-5 text-pink-500" />;
+            default: return <Search className="w-5 h-5 text-gray-400" />;
+        }
+    };
+
+    const handleResultClick = (url: string) => {
+        setIsSearchOpen(false);
+        setSearchQuery('');
+        router.push(url);
+    };
 
     return (
         <>
-            <header className="h-20 bg-[#F3F6FD] flex items-center justify-between px-8 sticky top-0 z-30">
-                {/* Search Bar - Transparent on Dashboard usually, or White Card */}
-                <div className="flex-1 max-w-xl">
-                    <div className="relative group">
+            <header className="h-20 bg-[#F3F6FD] flex items-center justify-between px-8 sticky top-0 z-30 shadow-md">
+                {/* Left Side: Search Bar & Greeting */}
+                <div className="flex-1 flex items-center gap-6 max-w-3xl">
+                    <div className="relative group w-full max-w-md" ref={searchRef}>
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-5 w-5 text-gray-400 group-focus-within:text-[#ff4081] transition-colors" />
                         </div>
                         <input
                             type="text"
-                            className="block w-full pl-10 pr-3 py-2.5 border-none rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4081]/20 shadow-sm transition-shadow"
-                            placeholder="Arama yap..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setIsSearchOpen(true);
+                            }}
+                            onFocus={() => setIsSearchOpen(true)}
+                            className="block w-full pl-10 pr-10 py-2.5 border-none rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff4081]/20 shadow-sm transition-shadow"
+                            placeholder="Müşteri adı, telefon, tarih veya menü ara..."
                         />
+                        {searchQuery && (
+                            <button
+                                onClick={() => { setSearchQuery(''); setIsSearchOpen(false); }}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        )}
+
+                        {/* Search Dropdown */}
+                        {isSearchOpen && (searchQuery.length >= 2) && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2 flex flex-col">
+                                {isSearching ? (
+                                    <div className="flex items-center justify-center py-6 text-gray-500 gap-2">
+                                        <Loader2 className="w-5 h-5 animate-spin text-[#ff4081]" />
+                                        <span>Aranıyor...</span>
+                                    </div>
+                                ) : searchResults.length > 0 ? (
+                                    <div className="flex flex-col">
+                                        <div className="px-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Arama Sonuçları</div>
+                                        {searchResults.map((res: any, idx: number) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleResultClick(res.url)}
+                                                className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors w-full text-left"
+                                            >
+                                                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 flex-shrink-0">
+                                                    {getIcon(res.icon)}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-sm font-semibold text-gray-900 truncate">{res.title}</span>
+                                                    <span className="text-xs text-gray-500 truncate">{res.subtitle}</span>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="py-6 text-center text-gray-500 flex flex-col items-center justify-center">
+                                        <Search className="w-8 h-8 text-gray-300 mb-2" />
+                                        <span className="text-sm">Sonuç bulunamadı</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Greeting & Date */}
+                    <div className="hidden xl:block whitespace-nowrap">
+                        <span className="text-[17px] font-extrabold tracking-tight text-slate-800 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900">{greeting}!</span>
+                        <span className="text-sm font-medium text-slate-500 ml-2">Bugün, {dateStr}</span>
                     </div>
                 </div>
 
                 {/* Right Actions */}
-                <div className="flex items-center gap-6 ml-4">
+                <div className="flex items-center gap-4 ml-4">
 
                     {/* Upgrade Button (Only for Trial Users) */}
                     {session?.user?.packageType === 'trial' && (
@@ -45,6 +186,18 @@ export default function Header() {
                             <span>Paketi Yükselt</span>
                         </button>
                     )}
+
+                    {/* Active & Time Widgets */}
+                    <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-xl shadow-sm border border-emerald-100">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                            <span className="text-xs font-bold text-emerald-700">Aktif</span>
+                        </div>
+                        <div className="px-3 py-1.5 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                            <span className="text-xs font-bold text-slate-700">{timeStr}</span>
+                        </div>
+                    </div>
 
                     {/* Help / Support WhatsApp Link */}
                     <a

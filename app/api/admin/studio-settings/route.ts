@@ -16,10 +16,6 @@ export async function GET() {
             return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
         }
 
-        if (session.user.role !== 'superadmin' && session.user.packageType !== 'kurumsal') {
-            return NextResponse.json({ error: 'Bu sayfaya erişim için Kurumsal Paket gereklidir.' }, { status: 403 });
-        }
-
         await dbConnect();
 
         const user = await User.findOne({ email: session.user.email, role: 'admin' })
@@ -45,10 +41,6 @@ export async function PUT(req: Request) {
 
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
-        }
-
-        if (session.user.role !== 'superadmin' && session.user.packageType !== 'kurumsal') {
-            return NextResponse.json({ error: 'Bu işlem için Kurumsal Paket gereklidir.' }, { status: 403 });
         }
 
         const body = await req.json();

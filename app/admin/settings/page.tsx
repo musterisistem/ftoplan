@@ -237,6 +237,13 @@ export default function SettingsPage() {
                                 placeholder="0532 xxx xx xx"
                             />
                         </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Mevcut Paketiniz</label>
+                            <div className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-purple-50 text-purple-700 font-medium flex items-center justify-between">
+                                <span className="capitalize">{session?.user?.packageType || 'Bilinmiyor'} Paket</span>
+                                <span className="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-md">Değiştirmek için iletişime geçin</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -312,8 +319,8 @@ export default function SettingsPage() {
                                     <div
                                         onClick={() => setSettings({ ...settings, siteTheme: 'warm' })}
                                         className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${settings.siteTheme === 'warm'
-                                                ? 'border-purple-500 ring-2 ring-purple-200'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-purple-500 ring-2 ring-purple-200'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <div className="h-28 bg-gradient-to-b from-sky-200 via-orange-100 to-orange-50 p-3">
@@ -337,8 +344,8 @@ export default function SettingsPage() {
                                     <div
                                         onClick={() => setSettings({ ...settings, siteTheme: 'playful' })}
                                         className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${settings.siteTheme === 'playful'
-                                                ? 'border-purple-500 ring-2 ring-purple-200'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-purple-500 ring-2 ring-purple-200'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <div className="h-28 bg-gradient-to-b from-blue-100 to-orange-50 p-3">
@@ -362,8 +369,8 @@ export default function SettingsPage() {
                                     <div
                                         onClick={() => setSettings({ ...settings, siteTheme: 'bold' })}
                                         className={`relative cursor-pointer rounded-2xl overflow-hidden border-2 transition-all hover:shadow-lg ${settings.siteTheme === 'bold'
-                                                ? 'border-purple-500 ring-2 ring-purple-200'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-purple-500 ring-2 ring-purple-200'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <div className="h-28 flex">

@@ -76,7 +76,7 @@ export async function PUT(
                 const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
                 const packageNames: Record<string, string> = {
-                    'trial': '7 Günlük Deneme',
+                    'trial': 'Ücretsiz Deneme',
                     'standart': 'Standart Paket',
                     'kurumsal': 'Kurumsal Paket'
                 };

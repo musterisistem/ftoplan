@@ -11,20 +11,20 @@ export function WaterFillStorage({ used, limit }: WaterFillStorageProps) {
     const limitGB = (limit / 1024 / 1024 / 1024).toFixed(2);
 
     return (
-        <div className="bg-white rounded-xl p-6 border border-gray-100 relative overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500 mb-6 relative z-10">Depolama Kullanımı</h3>
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 relative overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+            <h3 className="text-lg font-bold tracking-tight text-gray-900 mb-6 relative z-10">Depolama Kullanımı</h3>
 
             {/* Water Container */}
             <div className="relative w-32 h-32 mx-auto mb-4">
                 {/* Glass Container */}
-                <div className="absolute inset-0 rounded-full border-4 border-blue-200 bg-gradient-to-b from-blue-50/20 to-blue-50/40"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-indigo-100 bg-gradient-to-b from-indigo-50/30 to-indigo-50/60 shadow-inner"></div>
 
                 {/* Water Fill */}
                 <div
                     className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-1000 ease-out overflow-hidden"
                     style={{ height: `${percentage}%` }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-500 via-blue-400 to-blue-300">
+                    <div className="absolute inset-0 bg-gradient-to-t from-indigo-600 via-indigo-500 to-violet-400">
                         {/* Wave Animation */}
                         <div className="absolute inset-0 opacity-60">
                             <svg className="absolute w-full" style={{ bottom: '-5px' }} viewBox="0 0 1440 100" xmlns="http://www.w3.org/2000/svg">
@@ -64,9 +64,9 @@ export function WaterFillStorage({ used, limit }: WaterFillStorageProps) {
                 </div>
 
                 {/* Percentage Display */}
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-800">
+                <div className="absolute inset-0 flex items-center justify-center z-10 shadow-sm">
+                    <div className="text-center bg-white/40 backdrop-blur-md rounded-full w-16 h-16 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                        <div className="text-[1.1rem] font-black text-indigo-900 tracking-tighter">
                             {percentage.toFixed(1)}%
                         </div>
                     </div>
@@ -75,11 +75,11 @@ export function WaterFillStorage({ used, limit }: WaterFillStorageProps) {
 
             {/* Stats */}
             <div className="text-center space-y-1 relative z-10">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-[15px] font-bold text-gray-800">
                     {usedGB} GB / {limitGB} GB
                 </div>
-                <div className="text-xs text-gray-500">
-                    Kullanılabilir: {(parseFloat(limitGB) - parseFloat(usedGB)).toFixed(2)} GB
+                <div className="text-[11px] font-semibold text-gray-400 border border-gray-100 bg-gray-50 px-3 py-1 rounded-lg inline-block shadow-sm">
+                    Kalan: {(parseFloat(limitGB) - parseFloat(usedGB)).toFixed(2)} GB
                 </div>
             </div>
 

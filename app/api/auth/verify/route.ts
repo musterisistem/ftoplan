@@ -31,9 +31,11 @@ export async function GET(req: Request) {
         user.verificationTokenExpiry = null;
 
         if (user.intendedAction === 'purchase' || user.packageType !== 'trial') {
-            // For paid packages, we do NOT give 7 days. We just verify email.
-            // Expiry remains in the past (or whatever default it had, we set it to now so it is "expired" until they pay).
-            user.subscriptionExpiry = new Date(Date.now() - 1000); // Expire immediately so they must pay
+            // For paid packages, we no longer lock them out with a past date.
+            // We give them a brief 1-day grace period to login and select/pay their package properly.
+            const graceExpiry = new Date();
+            graceExpiry.setDate(graceExpiry.getDate() + 1); // 24 hours to complete payment
+            user.subscriptionExpiry = graceExpiry;
             await user.save();
             return NextResponse.redirect(new URL('/login?verified=true&redirect=/packages', req.url));
         }

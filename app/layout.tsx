@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 
-const jakarta = Plus_Jakarta_Sans({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-outfit",
   display: 'swap',
 });
 
@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Düğün ve dış çekim yönetim sistemi",
 };
 
+import NextTopLoader from 'nextjs-toploader';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,7 +24,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`${jakarta.variable} font-sans`} suppressHydrationWarning>
+      <body className={`${outfit.variable} font-sans bg-[#F2F4F7] text-[#2F2F3B]`} suppressHydrationWarning>
+        <NextTopLoader
+          color="#5d2b72"
+          initialPosition={0.08}
+          crawlSpeed={200}
+          height={3}
+          crawl={true}
+          showSpinner={false}
+          easing="ease"
+          speed={200}
+          shadow="0 0 10px #5d2b72,0 0 5px #5d2b72"
+        />
         <Providers>
           <AnalyticsTracker />
           {children}

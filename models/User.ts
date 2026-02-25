@@ -162,15 +162,17 @@ const UserSchema = new mongoose.Schema({
         url: { type: String },
         title: { type: String },
     }],
+    // Landing page images (managed from admin panel, shown on public homepage)
+    landingImages: [{
+        url: { type: String },
+        caption: { type: String, default: '' },
+        order: { type: Number, default: 0 },
+    }],
     hasCompletedOnboarding: {
         type: Boolean,
         default: false,
     },
 }, { timestamps: true });
 
-// Delete cached model to force fresh schema in development
-if (mongoose.models.User) {
-    delete mongoose.models.User;
-}
-
-export default mongoose.model('User', UserSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
+export default User;

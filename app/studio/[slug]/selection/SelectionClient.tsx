@@ -140,7 +140,8 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                     selectedPhotos,
                     selectionCompleted: true,
                     appointmentStatus: 'fotograflar_secildi',
-                    albumStatus: 'tasarim_asamasinda'
+                    albumStatus: 'tasarim_asamasinda',
+                    source: 'customer'   // Bildirim sadece müşteri aksiyonuyla tetiklenir
                 })
             });
 

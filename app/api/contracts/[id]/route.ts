@@ -2,27 +2,26 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Contract from '@/models/Contract';
 
-export async function PATCH(
+export async function DELETE(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     await dbConnect();
-    const { id } = await params;
-
     try {
-        const { isActive } = await req.json();
+        const { id } = params;
 
+        // Soft delete: set isActive to false
         const contract = await Contract.findByIdAndUpdate(
             id,
-            { isActive },
+            { isActive: false },
             { new: true }
         );
 
         if (!contract) {
-            return NextResponse.json({ error: 'Contract not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Sözleşme bulunamadı' }, { status: 404 });
         }
 
-        return NextResponse.json(contract);
+        return NextResponse.json({ message: 'Sözleşme başarıyla silindi' });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

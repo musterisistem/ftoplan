@@ -4,17 +4,38 @@ import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, CheckCircle, AlertCircle, Camera, Calendar, Image as ImageIcon, CreditCard, ArrowRight, Lock, User, Globe } from 'lucide-react';
+import {
+    Mail, Lock, Eye, EyeOff, Loader2,
+    ArrowRight, CheckCircle, AlertCircle,
+    Facebook, Twitter, Instagram
+} from 'lucide-react';
+
+/* ─── Components ──────────────────────────────── */
+
+function Nav() {
+    return (
+        <nav className="fixed top-0 inset-x-0 z-[100] px-6 py-6 bg-white/40 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2">
+                    <img src="/logoweey.png" alt="Weey Logo" className="h-8" />
+                    <span className="font-bold text-lg text-slate-900">Weey.NET</span>
+                </Link>
+                <div className="hidden md:flex items-center gap-6">
+                    <Link href="/" className="text-sm font-semibold text-slate-500 hover:text-slate-900">Home</Link>
+                    <Link href="/register" className="text-sm font-bold text-[#B066FE]">Sign Up</Link>
+                </div>
+            </div>
+        </nav>
+    );
+}
 
 function LoginContent() {
     const searchParams = useSearchParams();
     const registered = searchParams.get('registered');
     const verified = searchParams.get('verified');
-    const redirectParam = searchParams.get('redirect');
-    const errorParam = searchParams.get('error');
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -23,256 +44,104 @@ function LoginContent() {
         e.preventDefault();
         setLoading(true);
         setError('');
-
         try {
-            const result = await signIn('credentials', {
-                email,
-                password,
-                redirect: false,
-            });
-
+            const result = await signIn('credentials', { email, password, redirect: false });
             if (result?.error) {
-                setError('Giriş başarısız. Lütfen e-posta veya şifrenizi kontrol edin.');
+                setError('E-posta veya şifre hatalı.');
             } else {
-                // Fetch session to determine role-based redirect
-                const sessionRes = await fetch('/api/auth/session');
-                const session = await sessionRes.json();
-
-                if (session?.user?.role === 'superadmin') {
-                    router.push('/superadmin/dashboard');
-                } else if (session?.user?.role === 'admin') {
-                    if (redirectParam) {
-                        router.push(redirectParam);
-                    } else {
-                        router.push('/admin/dashboard');
-                    }
-                } else if (session?.user?.role === 'couple') {
-                    router.push('/client/dashboard');
-                } else {
-                    router.push('/admin/dashboard'); // Default fallback
-                }
+                router.push('/admin/dashboard');
             }
-        } catch (err) {
-            setError('Bir hata oluştu. Lütfen tekrar deneyin.');
+        } catch {
+            setError('Sistem hatası.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex bg-gray-50">
-            {/* Left Side - Visual & Info */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 to-purple-900/90 z-10" />
-                <div
-                    className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay"
-                    style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=2670&auto=format&fit=crop")' }}
-                />
+        <div className="min-h-screen bg-[#FDFCFE] text-slate-900 font-sans antialiased">
+            <Nav />
 
-                <div className="relative z-20 flex flex-col justify-between p-12 xl:p-20 w-full text-white">
-                    <div>
-                        <div className="flex items-center gap-4 mb-16">
-                            <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-xl">
-                                <Camera className="w-7 h-7 text-purple-300" />
-                            </div>
-                            <span className="text-3xl font-extrabold tracking-tight">Weey.NET</span>
-                        </div>
+            <div className="absolute top-[10%] right-[-10%] w-[450px] h-[450px] bg-purple-100/30 rounded-full blur-[100px] -z-10" />
+            <div className="absolute bottom-[10%] left-[-10%] w-[350px] h-[350px] bg-blue-50/20 rounded-full blur-[80px] -z-10" />
 
-                        <h1 className="text-4xl xl:text-5xl font-extrabold leading-tight mb-6">
-                            Fotoğraf Stüdyonuzu<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300">
-                                Tek Yerden Yönetin
-                            </span>
-                        </h1>
-
-                        <p className="text-lg text-gray-300 mb-12 max-w-lg leading-relaxed mix-blend-plus-lighter">
-                            Müşteri ilişkileri, randevu takibi, fotoğraf teslimi ve sanal pos ile ödeme alma süreçlerinizi baştan uca profesyonelleştirin.
-                        </p>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm shadow-inner flex items-center justify-center shrink-0 border border-white/10">
-                                    <Calendar className="w-6 h-6 text-purple-300" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white mb-1.5 flex items-center gap-2">Akıllı Randevu</h3>
-                                    <p className="text-sm text-gray-400 leading-snug">Ajandanızı dijitalleştirin, çakışmaları ve unutulmaları önleyin.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm shadow-inner flex items-center justify-center shrink-0 border border-white/10">
-                                    <ImageIcon className="w-6 h-6 text-pink-300" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white mb-1.5">Müşteri Galerisi</h3>
-                                    <p className="text-sm text-gray-400 leading-snug">Kolay toplu fotoğraf seçimi ve dijital yüksek hızlı teslimat.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm shadow-inner flex items-center justify-center shrink-0 border border-white/10">
-                                    <CreditCard className="w-6 h-6 text-indigo-300" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white mb-1.5">Online Tahsilat</h3>
-                                    <p className="text-sm text-gray-400 leading-snug">Müşterilerden kapora alın, bakiyeleri sanal pos ile güvenle tahsil edin.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm shadow-inner flex items-center justify-center shrink-0 border border-white/10">
-                                    <Globe className="w-6 h-6 text-blue-300" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white mb-1.5">Premium Web Sayfası</h3>
-                                    <p className="text-sm text-gray-400 leading-snug">Kurumsal markanıza özel portfolyo ve prestijli vitrin.</p>
-                                </div>
-                            </div>
-                        </div>
+            <div className="max-w-7xl mx-auto px-6 pt-40 pb-20 flex items-center justify-center">
+                <div className="w-full max-w-[480px] bg-white p-12 rounded-[50px] shadow-2xl border border-white/50 relative overflow-hidden">
+                    <div className="mb-12">
+                        <span className="inline-block px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-4">Welcome Back</span>
+                        <h1 className="text-4xl font-bold mb-3 tracking-tight">Login to Weey</h1>
+                        <p className="text-slate-500 font-medium">Access your studio management suite.</p>
                     </div>
 
-                    <div className="text-sm text-gray-400 mt-12 font-medium">
-                        © 2026 Weey.NET Fotoğrafçı Çözümleri
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-                {/* Mobile Background with subtle gradient */}
-                <div className="absolute inset-0 lg:hidden bg-gradient-to-b from-gray-50 to-gray-200 z-0" />
-
-                <div className="relative z-10 w-full max-w-[26rem] bg-white rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] border border-gray-50">
-                    <div className="text-center mb-8">
-                        <div className="lg:hidden flex justify-center mb-8">
-                            <div className="w-16 h-16 bg-gradient-to-br from-[#7B3FF2] to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-purple-500/20">
-                                <Camera className="w-8 h-8" />
-                            </div>
-                        </div>
-                        <h2 className="text-[28px] sm:text-[32px] font-black text-slate-900 tracking-tight lg:mb-2 mb-3">Tekrar Merhaba! 👋</h2>
-                        <p className="text-gray-500 text-sm font-medium">İşletmenizi yönetmek için panele giriş yapın.</p>
-                    </div>
-
-                    {registered && (
-                        <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl text-blue-800 text-sm flex items-start gap-3 shadow-sm">
-                            <Mail className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                            <div>
-                                <p className="font-bold text-blue-900">Kayıt Başarılı!</p>
-                                <p className="mt-1 opacity-90 leading-relaxed">
-                                    Hesabınızı oluşturduk. Sisteme giriş yapabilmek için lütfen mailinize gönderdiğimiz doğrulama linkine tıklayın.
-                                </p>
-                            </div>
+                    {/* Notifications */}
+                    {(registered || verified) && (
+                        <div className="mb-8 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700 text-sm font-bold flex gap-3">
+                            <CheckCircle className="w-5 h-5 shrink-0" />
+                            <span>{registered ? 'Registration successful! Check your email.' : 'Email verified! You can now login.'}</span>
                         </div>
                     )}
-
-                    {verified && (
-                        <div className="mb-6 p-4 bg-green-50 border border-green-100 rounded-2xl text-green-800 text-sm flex items-start gap-3 shadow-sm">
-                            <CheckCircle className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
-                            <div>
-                                <p className="font-bold text-green-900">E-posta Doğrulandı!</p>
-                                <p className="mt-1 opacity-90 leading-relaxed">Hesabınız başarıyla aktif edildi. Şimdi güvenle giriş yapabilirsiniz.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {errorParam === 'invalid_token' && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-800 text-sm flex items-start gap-3 shadow-sm">
-                            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                            <div>
-                                <p className="font-bold text-red-900">Geçersiz Link!</p>
-                                <p className="mt-1 opacity-90 leading-relaxed">Doğrulama bağlantısı geçersiz veya süresi dolmuş. Lütfen müşteri hizmetleri ile iletişime geçin.</p>
-                            </div>
-                        </div>
-                    )}
-
                     {error && (
-                        <div className="mb-8 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl text-red-800 text-sm font-medium animate-pulse">
-                            {error}
+                        <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-500 text-sm font-bold flex gap-3">
+                            <AlertCircle className="w-5 h-5 shrink-0" />
+                            <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-[13px] font-bold text-gray-700 mb-1.5 ml-1">
-                                E-posta Adresiniz
-                            </label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-[#7B3FF2] text-gray-400">
-                                    <User className="h-5 w-5" />
-                                </div>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-11 pr-4 py-3.5 bg-[#F4F6FB] hover:bg-[#EDF0F7] border border-transparent rounded-2xl focus:ring-4 focus:ring-[#7B3FF2]/10 focus:border-[#7B3FF2]/30 focus:bg-white text-gray-900 transition-all font-medium placeholder:font-normal placeholder:text-gray-400 text-[15px]"
-                                    placeholder="ornek@email.com"
-                                    required
-                                />
-                            </div>
+                            <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Email Address</label>
+                            <input
+                                type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800 placeholder:text-slate-400 text-[15px] font-medium focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#B066FE] focus:bg-white transition-all shadow-sm"
+                                placeholder="name@studio.com"
+                            />
                         </div>
-
                         <div>
-                            <div className="flex justify-between items-center mb-1.5 ml-1 mr-1">
-                                <label className="block text-[13px] font-bold text-gray-700">
-                                    Şifreniz
-                                </label>
-                                <Link href="#" className="text-[13px] font-bold text-[#7B3FF2] hover:text-[#5a28c4] transition-colors">
-                                    Şifremi Unuttum?
-                                </Link>
+                            <div className="flex justify-between mb-2 ml-1">
+                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest block">Password</label>
+                                <Link href="/forgot-password" size="sm" className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors">Forgot?</Link>
                             </div>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-[#7B3FF2] text-gray-400">
-                                    <Lock className="h-5 w-5" />
-                                </div>
+                            <div className="relative">
                                 <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-11 pr-4 py-3.5 bg-[#F4F6FB] hover:bg-[#EDF0F7] border border-transparent rounded-2xl focus:ring-4 focus:ring-[#7B3FF2]/10 focus:border-[#7B3FF2]/30 focus:bg-white text-gray-900 transition-all font-medium placeholder:font-normal placeholder:text-gray-400 tracking-widest text-[15px]"
+                                    type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-800 placeholder:text-slate-400 text-[15px] font-medium focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#B066FE] focus:bg-white transition-all shadow-sm"
                                     placeholder="••••••••"
-                                    required
                                 />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
-
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-2xl shadow-[0_8px_20px_-6px_rgba(123,63,242,0.4)] text-[15px] font-bold text-white bg-[#7B3FF2] hover:bg-[#6A32DE] focus:outline-none focus:ring-4 focus:ring-[#7B3FF2]/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
-                            >
-                                {loading ? (
-                                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <span className="flex items-center gap-2">
-                                        Panele Giriş Yap <ArrowRight className="w-4 h-4" />
-                                    </span>
-                                )}
-                            </button>
-                        </div>
+                        <button type="submit" disabled={loading} className="w-full py-5 bg-black text-white font-bold rounded-2xl shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+                            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Login <ArrowRight className="w-5 h-5" /></>}
+                        </button>
                     </form>
 
-                    <div className="mt-8 pt-6 border-t border-gray-100/60">
-                        <div className="bg-[#F8F9FF] border border-indigo-50 rounded-2xl p-5 text-center transition-colors hover:bg-indigo-50/50">
-                            <p className="text-[13px] text-gray-500 font-medium mb-3">
-                                Henüz Weey.NET dünyasıyla tanışmadınız mı?
-                            </p>
-                            <Link href="/register" className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-white border border-purple-100 text-[#7B3FF2] text-[14px] font-bold rounded-xl shadow-sm hover:border-[#7B3FF2]/30 hover:text-[#6A32DE] hover:shadow-md transition-all">
-                                Hemen Ücretsiz Hesap Oluşturun
-                            </Link>
-                        </div>
+                    <div className="mt-10 pt-10 border-t border-slate-50 text-center">
+                        <p className="text-sm text-slate-400 font-medium mb-4">Don't have an account?</p>
+                        <Link href="/register" className="inline-flex items-center gap-2 font-bold text-slate-900 hover:text-[#B066FE] transition-colors">
+                            Create Account <ArrowRight className="w-4 h-4" />
+                        </Link>
                     </div>
                 </div>
             </div>
+
+            <footer className="py-20 text-center border-t border-slate-100">
+                <div className="flex justify-center gap-6 mb-8 text-slate-300">
+                    <Facebook className="w-5 h-5 cursor-pointer hover:text-slate-900" />
+                    <Twitter className="w-5 h-5 cursor-pointer hover:text-slate-900" />
+                    <Instagram className="w-5 h-5 cursor-pointer hover:text-slate-900" />
+                </div>
+                <img src="/logoweey.png" alt="Logo" className="h-5 mx-auto mb-4 opacity-20" />
+                <p className="text-slate-400 text-xs font-bold">© 2026 Weey Digital Suite</p>
+            </footer>
         </div>
     );
 }
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
-            </div>
-        }>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="w-10 h-10 animate-spin text-[#B066FE]" /></div>}>
             <LoginContent />
         </Suspense>
     );

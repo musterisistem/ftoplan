@@ -83,7 +83,6 @@ export default function SuperAdminLoginPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-white placeholder-gray-600 transition-all font-mono text-sm"
-                            placeholder="musterisistem@gmail.com"
                             required
                         />
                     </div>
@@ -97,7 +96,6 @@ export default function SuperAdminLoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-white placeholder-gray-600 transition-all font-mono text-sm"
-                            placeholder="................"
                             required
                         />
                     </div>

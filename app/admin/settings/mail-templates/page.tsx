@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Mail, Save, RotateCcw, Send, Sparkles, Eye, Edit3, ShieldCheck, Layout, MessageSquare, Settings, Info, CheckCircle2 } from 'lucide-react';
+import { Mail, Save, RotateCcw, Send, Sparkles, Eye, Edit3, ShieldCheck, Layout, MessageSquare, Settings, Info, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 interface TemplateCustomization {
     logoUrl?: string;
@@ -239,43 +239,44 @@ export default function EmailTemplatesPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1400px] mx-auto min-h-screen bg-gray-50/50">
-            <div className="flex items-center justify-between mb-10">
+        <div className="p-6 md:p-8 max-w-[1400px] mx-auto min-h-screen">
+            <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
-                        <Mail className="h-8 w-8 text-blue-600" />
+                    <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2.5 tracking-tight">
+                        <Mail className="h-6 w-6 text-[#7A70BA]" />
                         E-posta Şablonları
                     </h1>
-                    <p className="text-gray-500 mt-2 font-medium">
+                    <p className="text-sm font-medium text-gray-500 mt-1">
                         Müşterilerinize giden otomatik bildirimleri kurumsal kimliğinize göre özelleştirin.
                     </p>
                 </div>
             </div>
 
             {successMessage && (
-                <div className="fixed top-8 right-8 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
+                <div className="fixed top-8 right-8 z-[100] animate-in slide-in-from-top-4 duration-300">
+                    <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-5 py-3.5 rounded-2xl shadow-sm flex items-center gap-3">
                         <CheckCircle2 className="h-5 w-5" />
-                        <span className="font-bold">{successMessage}</span>
+                        <span className="font-bold text-sm">{successMessage}</span>
                     </div>
                 </div>
             )}
             {errorMessage && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-sm font-bold flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5" />
                     {errorMessage}
                 </div>
             )}
 
             {!selectedType ? (
-                <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gray-50/50 border-b border-gray-100">
-                                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider w-1/3">Şablon Türü</th>
-                                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider w-1/3">Açıklama</th>
-                                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider">Durum</th>
-                                    <th className="px-8 py-5 text-sm font-bold text-gray-400 uppercase tracking-wider text-right">İşlem</th>
+                                <tr className="bg-white border-b border-gray-100">
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-1/3">Şablon Türü</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-1/3">Açıklama</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Durum</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">İşlem</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -283,37 +284,37 @@ export default function EmailTemplatesPage() {
                                     const info = TEMPLATE_INFO[template.type];
                                     const Icon = info.icon;
                                     return (
-                                        <tr key={template.type} className="hover:bg-blue-50/30 transition-colors group">
-                                            <td className="px-8 py-6">
+                                        <tr key={template.type} className="hover:bg-gray-50/50 transition-colors group">
+                                            <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 group-hover:bg-blue-600 transition-colors flex items-center justify-center">
-                                                        <Icon className="h-6 w-6 text-gray-500 group-hover:text-white transition-colors" />
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-50 group-hover:bg-[#7A70BA]/10 transition-colors flex items-center justify-center border border-gray-100 group-hover:border-[#7A70BA]/20">
+                                                        <Icon className="h-5 w-5 text-gray-500 group-hover:text-[#7A70BA] transition-colors" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-gray-900 text-base">{info.name}</h3>
-                                                        <span className="text-xs font-medium text-gray-400 font-mono">{template.type}</span>
+                                                        <h3 className="font-bold text-gray-900 text-sm">{info.name}</h3>
+                                                        <span className="text-[11px] font-semibold text-gray-400 font-mono mt-0.5 inline-block">{template.type}</span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6 text-sm text-gray-500 font-medium leading-relaxed">
+                                            <td className="px-6 py-4 text-sm text-gray-500 font-medium">
                                                 {info.description}
                                             </td>
-                                            <td className="px-8 py-6">
+                                            <td className="px-6 py-4">
                                                 {template.isCustom ? (
-                                                    <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold bg-blue-50 text-blue-600">
-                                                        <Sparkles className="h-3 w-3" />
+                                                    <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-bold bg-[#7A70BA]/10 text-[#7A70BA] border border-[#7A70BA]/20">
+                                                        <Sparkles className="h-3.5 w-3.5" />
                                                         Özelleştirilmiş
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold bg-gray-100 text-gray-500">
+                                                    <span className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-lg text-xs font-bold bg-gray-50 text-gray-500 border border-gray-100">
                                                         Varsayılan
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-8 py-6 text-right">
+                                            <td className="px-6 py-4 text-right">
                                                 <button
                                                     onClick={() => setSelectedType(template.type)}
-                                                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-blue-600 transition-all hover:shadow-lg hover:shadow-blue-200"
+                                                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-semibold hover:border-gray-300 hover:text-gray-900 transition-all shadow-sm"
                                                 >
                                                     <Edit3 className="h-4 w-4" />
                                                     Düzenle
@@ -327,72 +328,72 @@ export default function EmailTemplatesPage() {
                     </div>
                 </div>
             ) : (
-                <div className="animate-in fade-in duration-500">
-                    <div className="flex items-center justify-between mb-8">
+                <div className="animate-in fade-in duration-300">
+                    <div className="flex items-center justify-between mb-6">
                         <button
                             onClick={() => setSelectedType(null)}
-                            className="bg-white border border-gray-200 px-6 py-3 rounded-2xl text-gray-600 hover:text-gray-900 flex items-center gap-2 font-bold text-sm shadow-sm transition-all"
+                            className="bg-white border border-gray-200 px-5 py-2.5 rounded-xl text-gray-600 hover:text-gray-900 hover:border-gray-300 focus:ring-4 focus:ring-gray-100 flex items-center gap-2 font-semibold text-sm shadow-sm transition-all"
                         >
                             ← Geri Dön
                         </button>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={handleSendTest}
-                                className="px-6 py-3 rounded-2xl font-bold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all text-sm shadow-sm flex items-center gap-2"
+                                className="px-5 py-2.5 rounded-xl font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all text-sm shadow-sm flex items-center gap-2"
                             >
-                                <Send className="h-4 w-4 text-blue-500" />
-                                Test Maili Gönder
+                                <Send className="h-4 w-4 text-[#7A70BA]" />
+                                Test Gönder
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="px-8 py-3 rounded-2xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition-all text-sm shadow-lg shadow-blue-200 flex items-center gap-2 disabled:opacity-50"
+                                className="px-6 py-2.5 rounded-xl font-semibold bg-[#7A70BA] text-white hover:bg-[#7A70BA]/90 transition-all text-sm shadow-sm flex items-center gap-2 disabled:opacity-50"
                             >
-                                <Save className="h-4 w-4" />
-                                {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
                             </button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-8 items-start">
-                        <div className="col-span-5 space-y-6">
-                            <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                        <div className="md:col-span-5 space-y-6">
+                            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-50">
+                                    <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100">
                                         {(() => {
                                             const Icon = TEMPLATE_INFO[selectedType].icon;
-                                            return <Icon className="h-7 w-7 text-blue-600" />;
+                                            return <Icon className="h-6 w-6 text-[#7A70BA]" />;
                                         })()}
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">{TEMPLATE_INFO[selectedType].name}</h2>
-                                        <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">{selectedType}</p>
+                                        <h2 className="text-lg font-bold text-gray-900 tracking-tight">{TEMPLATE_INFO[selectedType].name}</h2>
+                                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mt-0.5">{selectedType}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
+                                <div className="space-y-5">
                                     {getFields().map(field => (
                                         <div key={field}>
                                             <div className="flex items-center justify-between mb-2">
-                                                <label className="text-sm font-bold text-gray-600">{FIELD_LABELS[field]}</label>
+                                                <label className="text-sm font-semibold text-gray-700">{FIELD_LABELS[field]}</label>
                                             </div>
 
                                             {field === 'logoUrl' ? (
                                                 <div className="relative group">
                                                     <label className="block w-full cursor-pointer">
-                                                        <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 group-hover:border-blue-500 group-hover:bg-blue-50/30 transition-all text-center">
+                                                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-5 hover:border-[#7A70BA]/50 hover:bg-gray-50/50 transition-all text-center">
                                                             {uploading ? (
-                                                                <div className="animate-pulse text-blue-600 font-bold">Yükleniyor...</div>
+                                                                <div className="animate-pulse text-[#7A70BA] font-semibold text-sm">Yükleniyor...</div>
                                                             ) : customization[field] ? (
                                                                 <div className="flex items-center justify-center gap-4">
                                                                     <img src={customization[field]} alt="Logo" className="max-h-12 object-contain" />
                                                                     <div className="text-left">
-                                                                        <div className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Mevcut Logo</div>
-                                                                        <div className="text-[10px] text-blue-500 font-bold">Değiştirmek için tıklayın</div>
+                                                                        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Mevcut Logo</div>
+                                                                        <div className="text-[10px] text-[#7A70BA] font-semibold mt-0.5">Değiştirmek için tıklayın</div>
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="text-sm text-gray-400 font-bold">Logo dosyası seçin</div>
+                                                                <div className="text-sm text-gray-400 font-semibold">Logo dosyası seçin</div>
                                                             )}
                                                         </div>
                                                         <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleImageUpload(file); }} disabled={uploading} />
@@ -401,36 +402,36 @@ export default function EmailTemplatesPage() {
                                             ) : field === 'primaryColor' ? (
                                                 <div className="flex gap-3">
                                                     <div className="relative">
-                                                        <input type="color" value={customization[field] || '#6366f1'} onChange={(e) => updateField(field, e.target.value)} className="w-16 h-12 rounded-xl border border-gray-100 cursor-pointer overflow-hidden p-0" />
+                                                        <input type="color" value={customization[field] || '#7A70BA'} onChange={(e) => updateField(field, e.target.value)} className="w-14 h-11 rounded-lg border border-gray-200 cursor-pointer overflow-hidden p-0 block" />
                                                     </div>
-                                                    <input type="text" value={customization[field] || ''} onChange={(e) => updateField(field, e.target.value)} className="flex-1 bg-gray-50 border-none rounded-xl px-4 font-mono text-sm focus:ring-2 focus:ring-blue-500 font-bold" placeholder="#000000" />
+                                                    <input type="text" value={customization[field] || ''} onChange={(e) => updateField(field, e.target.value)} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 font-mono text-sm focus:border-[#7A70BA] focus:ring-4 focus:ring-[#7A70BA]/10 font-semibold text-gray-900 transition-all outline-none" placeholder="#000000" />
                                                 </div>
                                             ) : field === 'bodyText' || field === 'footerText' ? (
-                                                <textarea value={customization[field] || ''} onChange={(e) => updateField(field, e.target.value)} rows={4} className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-blue-500" placeholder={`${FIELD_LABELS[field]} giriniz...`} />
+                                                <textarea value={customization[field] || ''} onChange={(e) => updateField(field, e.target.value)} rows={4} className="w-full bg-white border border-gray-200 rounded-xl p-3.5 text-sm font-medium focus:border-[#7A70BA] focus:ring-4 focus:ring-[#7A70BA]/10 text-gray-900 transition-all outline-none" placeholder={`${FIELD_LABELS[field]} giriniz...`} />
                                             ) : (
-                                                <input type="text" value={customization[field] || ''} onChange={(e) => updateField(field, e.target.value)} className="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500" placeholder={`${FIELD_LABELS[field]} giriniz...`} />
+                                                <input type="text" value={customization[field] || ''} onChange={(e) => updateField(field, e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold focus:border-[#7A70BA] focus:ring-4 focus:ring-[#7A70BA]/10 text-gray-900 transition-all outline-none" placeholder={`${FIELD_LABELS[field]} giriniz...`} />
                                             )}
                                         </div>
                                     ))}
                                 </div>
 
                                 {TEMPLATE_VARIABLES[selectedType] && (
-                                    <div className="mt-10 p-6 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-                                        <div className="flex items-center gap-2 mb-4 text-blue-600">
+                                    <div className="mt-8 p-5 bg-gray-50 rounded-xl border border-gray-100">
+                                        <div className="flex items-center gap-2 mb-3 text-gray-700">
                                             <Info className="h-4 w-4" />
-                                            <span className="text-xs font-black uppercase tracking-widest">Değişken Rehberi</span>
+                                            <span className="text-xs font-bold uppercase tracking-wider">Değişken Rehberi</span>
                                         </div>
-                                        <p className="text-xs text-blue-700/70 mb-4 font-medium leading-relaxed">Aşağıdaki kodları metin içinde kullanarak dinamik veriler gelmesini sağlayabilirsiniz:</p>
+                                        <p className="text-xs text-gray-500 mb-3 font-medium leading-relaxed">Aşağıdaki kodları metin içinde kullanarak dinamik veriler gelmesini sağlayabilirsiniz:</p>
                                         <div className="flex flex-wrap gap-2">
                                             {TEMPLATE_VARIABLES[selectedType].map(variable => (
-                                                <code key={variable} className="px-2 py-1 bg-white border border-blue-200 text-blue-600 rounded-lg text-[10px] font-black">{variable}</code>
+                                                <code key={variable} className="px-2 py-1 bg-white border border-gray-200 text-[#7A70BA] rounded text-[11px] font-bold shadow-sm">{variable}</code>
                                             ))}
                                         </div>
                                     </div>
                                 )}
 
                                 {isCustom && (
-                                    <button onClick={handleReset} className="w-full mt-6 py-4 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <button onClick={handleReset} className="w-full mt-6 py-3 rounded-xl border border-red-100 text-red-600 hover:text-red-700 hover:bg-red-50 transition-all text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2">
                                         <RotateCcw className="h-4 w-4" />
                                         Fabrika Ayarlarına Sıfırla
                                     </button>
@@ -438,29 +439,29 @@ export default function EmailTemplatesPage() {
                             </div>
                         </div>
 
-                        <div className="col-span-7 sticky top-6">
-                            <div className="bg-gray-200/50 rounded-[40px] p-8 border border-gray-200">
-                                <div className="flex items-center justify-between mb-6 px-4">
+                        <div className="md:col-span-7 sticky top-6">
+                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                                <div className="flex items-center justify-between mb-4 px-2">
                                     <div className="flex gap-1.5">
-                                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                        <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
                                     </div>
-                                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-4">Canlı Önizleme Paneli</span>
+                                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest ml-4">Canlı Önizleme Paneli</span>
                                 </div>
 
-                                <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100" style={{ height: 'calc(100vh - 280px)' }}>
+                                <div className="bg-white rounded-xl shadow-inner overflow-hidden border border-gray-200" style={{ height: 'calc(100vh - 280px)' }}>
                                     {/* Virtual Header for Subject */}
-                                    <div className="bg-gray-50 border-b border-gray-100 p-4">
+                                    <div className="bg-gray-50 border-b border-gray-200 p-3.5">
                                         <div className="flex gap-2 text-xs">
-                                            <span className="text-gray-400 font-bold">Konu:</span>
-                                            <span className="text-gray-900 font-black">{customization.subject || (templates.find(t => t.type === selectedType)?.customization.subject)}</span>
+                                            <span className="text-gray-500 font-semibold">Konu:</span>
+                                            <span className="text-gray-900 font-bold">{customization.subject || (templates.find(t => t.type === selectedType)?.customization.subject)}</span>
                                         </div>
                                     </div>
                                     {previewHtml ? (
                                         <iframe srcDoc={previewHtml} className="w-full h-full border-0" title="Preview" />
                                     ) : (
-                                        <div className="flex items-center justify-center h-full"><div className="text-center animate-pulse"><Eye className="h-10 w-10 text-gray-200 mx-auto mb-2" /><p className="text-sm text-gray-300 font-bold uppercase tracking-widest">Yükleniyor</p></div></div>
+                                        <div className="flex items-center justify-center h-full"><div className="text-center animate-pulse"><Eye className="h-8 w-8 text-gray-300 mx-auto mb-2" /><p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Yükleniyor</p></div></div>
                                     )}
                                 </div>
                             </div>

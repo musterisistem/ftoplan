@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 
-export default function AnalyticsTracker() {
+function AnalyticsTrackerContent() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const { data: session } = useSession();
@@ -19,4 +19,12 @@ export default function AnalyticsTracker() {
     }, [pathname, searchParams, session, trackView]);
 
     return null;
+}
+
+export default function AnalyticsTracker() {
+    return (
+        <Suspense fallback={null}>
+            <AnalyticsTrackerContent />
+        </Suspense>
+    );
 }

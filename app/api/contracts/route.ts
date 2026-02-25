@@ -5,16 +5,9 @@ import Contract from '@/models/Contract';
 export async function GET() {
     await dbConnect();
     try {
-        // Only show these specific contracts for appointment selection
-        const allowedContracts = [
-            'Dış Çekim Sözleşmesi',
-            'Video Çekim Sözleşmesi'
-        ];
-
         const contracts = await Contract.find({
-            isActive: true,
-            name: { $in: allowedContracts }
-        }).sort({ name: 1 }); // Sort by name for consistent UI
+            isActive: { $ne: false }
+        }).sort({ createdAt: -1 });
 
         return NextResponse.json(contracts);
     } catch (error: any) {
@@ -26,8 +19,22 @@ export async function POST(req: Request) {
     await dbConnect();
     try {
         const body = await req.json();
-        const contract = await Contract.create(body);
-        return NextResponse.json(contract, { status: 201 });
+        const { _id, ...updateData } = body;
+
+        if (_id) {
+            const updatedContract = await Contract.findByIdAndUpdate(
+                _id,
+                { $set: updateData },
+                { new: true, runValidators: true }
+            );
+            if (!updatedContract) {
+                return NextResponse.json({ error: 'Sözleşme bulunamadı' }, { status: 404 });
+            }
+            return NextResponse.json(updatedContract);
+        } else {
+            const contract = await Contract.create(body);
+            return NextResponse.json(contract, { status: 201 });
+        }
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }

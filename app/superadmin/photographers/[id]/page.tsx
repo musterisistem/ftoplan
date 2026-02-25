@@ -272,13 +272,25 @@ export default function EditPhotographerPage() {
                     <div>
                         <label className="block text-sm text-gray-400 mb-2">Paket Tipi</label>
                         <select
-                            value={photographer.packageType || 'starter'}
-                            onChange={(e) => setPhotographer({ ...photographer, packageType: e.target.value })}
+                            value={photographer.packageType || 'standart'}
+                            onChange={(e) => {
+                                const newPackage = e.target.value;
+                                // Automatically adjust storage limits on package change
+                                const newStorage = newPackage === 'kurumsal'
+                                    ? 30 * 1024 * 1024 * 1024 // 30 GB
+                                    : 10 * 1024 * 1024 * 1024; // 10 GB
+
+                                setPhotographer({
+                                    ...photographer,
+                                    packageType: newPackage,
+                                    storageLimit: newStorage
+                                });
+                            }}
                             className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
-                            <option value="starter">Başlangıç (20GB)</option>
-                            <option value="pro">Pro (50GB)</option>
-                            <option value="premium">Premium (100GB)</option>
+                            <option value="trial">Ücretsiz Deneme (14 Günlük)</option>
+                            <option value="standart">Standart Paket (10GB)</option>
+                            <option value="kurumsal">Kurumsal Paket (30GB)</option>
                         </select>
                     </div>
                     <div>

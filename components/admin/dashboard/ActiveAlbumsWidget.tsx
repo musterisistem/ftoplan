@@ -22,11 +22,11 @@ interface ActiveAlbumsWidgetProps {
 export function ActiveAlbumsWidget({ albums }: ActiveAlbumsWidgetProps) {
     if (!albums || albums.length === 0) {
         return (
-            <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-shadow">
-                <h3 className="text-sm font-medium text-gray-500 mb-4">Aktif Albümler</h3>
-                <div className="text-center py-8 text-gray-400">
-                    <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Henüz fotoğraf yüklenmemiş</p>
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight w-full text-left mb-6">Aktif Albümler</h3>
+                <div className="py-8 text-gray-400">
+                    <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-40 text-gray-500" />
+                    <p className="text-sm font-semibold">Henüz fotoğraf yüklenmemiş</p>
                 </div>
             </div>
         );
@@ -46,24 +46,24 @@ export function ActiveAlbumsWidget({ albums }: ActiveAlbumsWidgetProps) {
     };
 
     return (
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-gray-500">Aktif Albümler</h3>
-                <span className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-medium">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-bold text-gray-900 tracking-tight">Aktif Albümler</h3>
+                <span className="text-xs bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full font-semibold shadow-sm border border-gray-200">
                     {albums.length} albüm
                 </span>
             </div>
 
-            <div className="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 max-h-[320px] overflow-y-auto custom-scrollbar pr-1 pb-1">
                 {albums.map((album) => (
                     <Link
                         key={album.customerId}
                         href={`/admin/customers/${album.customerId}/manage`}
                         className="block group"
                     >
-                        <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all">
+                        <div className="flex items-center gap-4 p-3 pr-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all duration-300">
                             {/* Thumbnail */}
-                            <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white border border-gray-200">
                                 {album.thumbnailUrl ? (
                                     <Image
                                         src={album.thumbnailUrl}
@@ -73,24 +73,24 @@ export function ActiveAlbumsWidget({ albums }: ActiveAlbumsWidgetProps) {
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                        <ImageIcon className="w-6 h-6 text-gray-300" />
+                                        <ImageIcon className="w-5 h-5 text-gray-300" />
                                     </div>
                                 )}
                             </div>
 
                             {/* Info */}
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center justify-between gap-2">
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
+                                        <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-gray-950">
                                             {album.brideName} & {album.groomName}
                                         </p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs text-gray-500">
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-xs font-semibold text-gray-500">
                                                 {album.photoCount} fotoğraf
                                             </span>
-                                            <span className="text-xs text-gray-300">•</span>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] text-gray-300">•</span>
+                                            <span className="text-xs font-medium text-gray-400">
                                                 {formatDate(album.latestPhotoDate)}
                                             </span>
                                         </div>
@@ -99,14 +99,14 @@ export function ActiveAlbumsWidget({ albums }: ActiveAlbumsWidgetProps) {
                                     {/* Selection Status Icon */}
                                     <div className="flex-shrink-0">
                                         {album.hasSelection ? (
-                                            <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                            <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl shadow-sm">
                                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                                <span className="text-xs font-medium">Seçildi</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wide">Seçildi</span>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-1 text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
+                                            <div className="flex items-center gap-1.5 text-gray-600 bg-white border border-gray-200 px-3 py-1 rounded-xl shadow-sm">
                                                 <Clock className="w-3.5 h-3.5" />
-                                                <span className="text-xs font-medium">Bekliyor</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-wide">Bekliyor</span>
                                             </div>
                                         )}
                                     </div>

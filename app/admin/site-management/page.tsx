@@ -22,8 +22,9 @@ import {
     Loader2
 } from 'lucide-react';
 import { uploadToBunny } from '@/lib/bunny'; // We can't use server action directly here, using API route logic in handleSave
+import { Suspense } from 'react';
 
-export default function SiteManagementPage() {
+function SiteManagementContent() {
     const { data: session, status } = useSession();
     const searchParams = useSearchParams();
     const tabFromUrl = searchParams.get('tab') || 'general';
@@ -64,7 +65,12 @@ export default function SiteManagementPage() {
     const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
     const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const landingInputRef = useRef<HTMLInputElement>(null);
     const isFetched = useRef(false);
+
+    // Landing Page Images
+    const [landingImages, setLandingImages] = useState<Array<{ url: string; caption: string }>>([]);
+    const [landingUploading, setLandingUploading] = useState(false);
 
     // Sync tab with URL parameter
     useEffect(() => {
@@ -75,16 +81,17 @@ export default function SiteManagementPage() {
     useEffect(() => {
         if (status === 'authenticated' && !isFetched.current) {
             isFetched.current = true;
-            fetch('/api/admin/studio-settings')
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.error) {
-                        setSettings(prev => ({ ...prev, ...data }));
-                        if (data.logo) setLogoPreview(data.logo);
-                        if (data.bannerImage) setBannerPreview(data.bannerImage);
-                    }
-                })
-                .finally(() => setLoading(false));
+            Promise.all([
+                fetch('/api/admin/studio-settings').then(r => r.json()),
+                fetch('/api/admin/landing-images').then(r => r.json()),
+            ]).then(([settingsData, landingData]) => {
+                if (!settingsData.error) {
+                    setSettings(prev => ({ ...prev, ...settingsData }));
+                    if (settingsData.logo) setLogoPreview(settingsData.logo);
+                    if (settingsData.bannerImage) setBannerPreview(settingsData.bannerImage);
+                }
+                if (!landingData.error) setLandingImages(landingData.landingImages || []);
+            }).finally(() => setLoading(false));
         } else if (status !== 'loading') {
             setLoading(false);
         }
@@ -225,7 +232,45 @@ export default function SiteManagementPage() {
         { id: 'content', label: 'İçerik Yönetimi', icon: FileText },
         { id: 'contact', label: 'İletişim & Sosyal', icon: Globe },
         { id: 'gallery', label: 'Galeri', icon: ImageIcon },
+        { id: 'landing', label: 'Ana Sayfa Görselleri', icon: ImageIcon },
     ];
+
+    // Landing image upload handler
+    const handleLandingImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        setLandingUploading(true);
+        try {
+            for (const file of files) {
+                const url = await uploadFileToApi(file, 'studio/landing');
+                if (url) {
+                    const res = await fetch('/api/admin/landing-images', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url, caption: '' }),
+                    });
+                    const data = await res.json();
+                    if (!data.error) setLandingImages(data.landingImages);
+                }
+            }
+            setMessage({ type: 'success', text: '✅ Görseller ana sayfaya eklendi!' });
+        } catch {
+            setMessage({ type: 'error', text: '❌ Görsel yükleme başarısız.' });
+        } finally {
+            setLandingUploading(false);
+            if (landingInputRef.current) landingInputRef.current.value = '';
+        }
+    };
+
+    const removeLandingImage = async (url: string) => {
+        const res = await fetch('/api/admin/landing-images', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        if (!data.error) setLandingImages(data.landingImages);
+    };
 
     return (
         <div className="min-h-screen bg-gray-50/50 p-6">
@@ -534,9 +579,79 @@ export default function SiteManagementPage() {
                                 )}
                             </div>
                         )}
+
+                        {/* ANA SAYFA GÖRSELLERİ */}
+                        {activeTab === 'landing' && (
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                            <ImageIcon className="w-5 h-5 text-violet-600" /> Ana Sayfa Görselleri
+                                        </h2>
+                                        <p className="text-sm text-gray-500 mt-1">Bu bölüme yüklediğiniz görseller sitenin ana sayfasında otomatik olarak görünür.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => landingInputRef.current?.click()}
+                                        disabled={landingUploading}
+                                        className="flex items-center gap-2 px-4 py-2 bg-violet-50 text-violet-700 rounded-lg hover:bg-violet-100 transition-all font-medium text-sm disabled:opacity-50"
+                                    >
+                                        {landingUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                        {landingUploading ? 'Yükleniyor...' : 'Görsel Ekle'}
+                                    </button>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        ref={landingInputRef}
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleLandingImageUpload}
+                                    />
+                                </div>
+
+                                {landingImages.length === 0 ? (
+                                    <div className="text-center py-16 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                                        <p className="font-medium">Henüz görsel eklenmemiş</p>
+                                        <p className="text-sm mt-1">"Görsel Ekle" butonuna tıklayarak ana sayfanıza görsel ekleyin.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                        {landingImages.map((img, idx) => (
+                                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                                                <img src={img.url} className="w-full h-full object-cover" alt={img.caption || 'Landing'} />
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-2 p-2">
+                                                    <button
+                                                        onClick={() => removeLandingImage(img.url)}
+                                                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                    <span className="text-white text-[11px] text-center truncate w-full px-1">{img.caption || 'İsimsiz'}</span>
+                                                </div>
+                                                <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">{idx + 1}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {landingImages.length > 0 && (
+                                    <p className="mt-4 text-xs text-gray-400 text-center">
+                                        {landingImages.length} görsel • Ana sayfanızda otomatik gösteriliyor
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SiteManagementPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-purple-600" /></div>}>
+            <SiteManagementContent />
+        </Suspense>
     );
 }

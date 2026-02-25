@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import Package from '@/models/Package';
 
 export async function POST(req: Request) {
     try {
@@ -14,11 +15,12 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { packageCode, paymentMethod } = body;
 
-        if (!['standart', 'kurumsal'].includes(packageCode)) {
+        await dbConnect();
+
+        const selectedPackage = await Package.findOne({ id: packageCode });
+        if (!selectedPackage) {
             return NextResponse.json({ error: 'Geçersiz paket seçimi' }, { status: 400 });
         }
-
-        await dbConnect();
 
         const user = await User.findById(session.user.id);
         if (!user) {
@@ -26,9 +28,8 @@ export async function POST(req: Request) {
         }
 
         // Set Storage Limits based on Package
-        // Standart: 10 GB = 10 * 1024 * 1024 * 1024 = 10737418240 bytes
-        // Kurumsal: 30 GB = 30 * 1024 * 1024 * 1024 = 32212254720 bytes
-        const storageLimit = packageCode === 'kurumsal' ? 32212254720 : 10737418240;
+        // Convert GB to Bytes (GB * 1024 * 1024 * 1024)
+        const storageLimit = selectedPackage.storage * 1073741824;
 
         // One year expiry
         const subscriptionExpiry = new Date();

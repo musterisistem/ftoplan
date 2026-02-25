@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { CreditCard, Lock, Building, CheckCircle, ArrowRight } from 'lucide-react';
 
-const PACKAGES = {
-    standart: { name: 'Standart Paket', price: '4.999 ₺', code: 'standart' },
-    kurumsal: { name: 'Kurumsal Paket', price: '9.999 ₺', code: 'kurumsal' }
-};
-
-export default function CheckoutPage() {
+function CheckoutContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const packageCode = searchParams.get('package') as keyof typeof PACKAGES;
-    const selectedPackage = PACKAGES[packageCode];
+    const packageCode = searchParams.get('package');
+
+    const [packagesData, setPackagesData] = useState<any[]>([]);
+    const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
 
     const [paymentMethod, setPaymentMethod] = useState<'cc' | 'transfer'>('cc');
     const [loading, setLoading] = useState(false);
@@ -29,13 +26,40 @@ export default function CheckoutPage() {
     const [ccCvv, setCcCvv] = useState('');
 
     useEffect(() => {
+        const fetchPackages = async () => {
+            try {
+                const res = await fetch('/api/packages');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPackagesData(data);
+                }
+            } catch (err) {
+                console.error('Failed to load packages', err);
+            }
+        };
+        fetchPackages();
+    }, []);
+
+    useEffect(() => {
+        if (packagesData.length > 0 && packageCode) {
+            const foundPackage = packagesData.find(p => p.id === packageCode);
+            if (foundPackage) {
+                // Formatting it like before to keep UI consistent
+                setSelectedPackage({
+                    name: foundPackage.name,
+                    price: `₺${foundPackage.price.toLocaleString('tr-TR')}`,
+                    code: foundPackage.id
+                });
+            }
+        }
+    }, [packagesData, packageCode]);
+
+    useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login?redirect=/checkout?package=' + packageCode);
         }
-        if (status === 'authenticated' && !selectedPackage) {
-            router.push('/packages');
-        }
-    }, [status, selectedPackage, router, packageCode]);
+        // if (status === 'authenticated' && !selectedPackage) is omitted here because selectedPackage is null until packagesData loads
+    }, [status, router, packageCode]);
 
     if (!selectedPackage || status === 'loading') {
         return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div></div>;
@@ -61,10 +85,10 @@ export default function CheckoutPage() {
 
             if (res.ok) {
                 setSuccess(true);
-                // Redirect to dashboard after 3 seconds
+                // Redirect to dashboard after 10 seconds (visual panel preparation)
                 setTimeout(() => {
                     router.push('/admin/dashboard');
-                }, 3000);
+                }, 10000);
             } else {
                 setError(data.error || 'Ödeme işlemi başarısız oldu.');
             }
@@ -77,16 +101,55 @@ export default function CheckoutPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-                <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10 text-green-600 animate-bounce" />
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFBFF] p-6 relative overflow-hidden">
+                {/* Background ambient glows */}
+                <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-[100px] animate-pulse" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+
+                <div className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-12 text-center border border-white relative z-10 transition-all duration-700 ease-out transform scale-100 opacity-100">
+                    <div className="relative mx-auto w-28 h-28 mb-8">
+                        {/* Outer rotating ring */}
+                        <div className="absolute inset-0 border-4 border-transparent border-t-[#7B3FF2] border-r-indigo-500 rounded-full animate-spin" style={{ animationDuration: '3s' }}></div>
+                        {/* Inner rotating ring */}
+                        <div className="absolute inset-2 border-4 border-transparent border-b-pink-500 border-l-purple-400 rounded-full animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+                        {/* Center Checkmark */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50 rounded-full shadow-inner m-4">
+                            <CheckCircle className="w-10 h-10 text-[#7B3FF2] animate-bounce" />
+                        </div>
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Ödeme Başarılı!</h2>
-                    <p className="text-gray-600 mb-8 leading-relaxed">
-                        Tebrikler, <strong>{selectedPackage.name}</strong> aboneliğiniz aktif edildi. Yönetim paneline yönlendiriliyorsunuz...
-                    </p>
-                    <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto" />
+
+                    <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-700 mb-4 tracking-tight">
+                        Harika! Ödeme Onaylandı
+                    </h2>
+
+                    <div className="space-y-3 mb-8">
+                        <p className="text-slate-500 font-medium text-[15px] leading-relaxed">
+                            <strong className="text-[#7B3FF2]">{selectedPackage.name}</strong> aboneliğiniz saniyeler içinde aktif edildi.
+                        </p>
+                        <div className="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100">
+                            <p className="text-indigo-900/80 font-bold text-[14px] flex flex-col items-center gap-2">
+                                <span className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping"></span>
+                                    Lütfen bu sayfayı kapatmayın!
+                                </span>
+                                <span className="font-normal opacity-90">Size özel yönetim panelinizi hazırlıyoruz...</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
+                        <div className="h-full bg-gradient-to-r from-[#7B3FF2] via-pink-500 to-indigo-500 rounded-full animate-[progress_10s_ease-in-out_forwards]" style={{ width: '0%' }}></div>
+                    </div>
+                    <style jsx>{`
+                        @keyframes progress {
+                            0% { width: 0%; }
+                            20% { width: 40%; }
+                            60% { width: 70%; }
+                            80% { width: 90%; }
+                            100% { width: 100%; }
+                        }
+                    `}</style>
                 </div>
             </div>
         );
@@ -225,5 +288,13 @@ export default function CheckoutPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" /></div>}>
+            <CheckoutContent />
+        </Suspense>
     );
 }

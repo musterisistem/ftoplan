@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Camera, Users, Calendar, DollarSign, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { Camera, Users, Calendar, DollarSign, TrendingUp, TrendingDown, Clock, Image as ImageIcon, UploadCloud } from 'lucide-react';
+import { ComposedChart, Area, Bar, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import DashboardSlider from '@/components/admin/dashboard/DashboardSlider';
-import { SchedulePanel } from '@/components/admin/dashboard/DashboardComponents';
+import { SchedulePanel, MetricCard } from '@/components/admin/dashboard/DashboardComponents';
 import { WaterFillStorage } from '@/components/admin/dashboard/WaterFillStorage';
 import { ActiveAlbumsWidget } from '@/components/admin/dashboard/ActiveAlbumsWidget';
 import { UpcomingShootsWidget } from '@/components/admin/dashboard/UpcomingShootsWidget';
 
 // --- Data Fetching ---
-async function getDashboardStats() {
+async function getDashboardStats(month?: number, year?: number) {
     try {
-        const res = await fetch('/api/admin/dashboard/stats', { cache: 'no-store' });
+        const url = new URL('/api/admin/dashboard/stats', window.location.origin);
+        if (month) url.searchParams.set('month', month.toString());
+        if (year) url.searchParams.set('year', year.toString());
+
+        const res = await fetch(url.toString(), { cache: 'no-store' });
         if (!res.ok) throw new Error('Failed to fetch dashboard stats');
         return res.json();
     } catch (error) {
@@ -23,21 +28,28 @@ async function getDashboardStats() {
 export default function DashboardPage() {
     const [stats, setStats] = React.useState<any>(null);
     const [loading, setLoading] = React.useState(true);
-    const [currentTime, setCurrentTime] = React.useState(new Date());
+    const [viewDate, setViewDate] = React.useState(new Date());
+
+    const fetchStats = async (date: Date) => {
+        setLoading(true);
+        const data = await getDashboardStats(date.getMonth() + 1, date.getFullYear());
+        if (data) setStats(data);
+        setLoading(false);
+    };
 
     React.useEffect(() => {
-        getDashboardStats().then(data => {
-            if (data) setStats(data);
-            setLoading(false);
-        });
+        fetchStats(viewDate);
+    }, [viewDate]);
 
-        // Update time every minute
-        const interval = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 60000);
+    const handlePrevMonth = () => {
+        const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
+        setViewDate(newDate);
+    };
 
-        return () => clearInterval(interval);
-    }, []);
+    const handleNextMonth = () => {
+        const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+        setViewDate(newDate);
+    };
 
     if (loading) {
         return (
@@ -51,125 +63,144 @@ export default function DashboardPage() {
         return <div className="p-6 text-red-500">Veri yüklenemedi.</div>;
     }
 
-    // Get greeting based on time
-    const hour = currentTime.getHours();
-    const greeting = hour < 12 ? 'Günaydın' : hour < 18 ? 'İyi Günler' : 'İyi Akşamlar';
-
-    // Format date
-    const dateStr = currentTime.toLocaleDateString('tr-TR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    });
-
-    const timeStr = currentTime.toLocaleTimeString('tr-TR', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-white border-b border-gray-100 px-8 py-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-gray-900">{greeting}!</h1>
-                        <p className="text-sm text-gray-500 mt-1">Bugün, {dateStr}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium text-green-700">Aktif</span>
-                        </div>
-                        <div className="px-4 py-2 bg-blue-50 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-blue-600" />
-                                <span className="text-sm font-medium text-blue-700">{timeStr}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="min-h-screen bg-slate-50 font-sans">
 
             {/* Main Content */}
-            <div className="p-8 space-y-6">
+            <div className="p-8 space-y-8">
                 {/* Main Grid: Left (Slider + Metrics) and Right (Calendar) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column - Slider + Metrics (2 columns) */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-8">
                         {/* Slider */}
                         <DashboardSlider />
 
-                        {/* 4 Compact Metrics - 2x2 Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* Metric 1 - Photos */}
-                            <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-blue-300 transition-all shadow-lg hover:shadow-xl group">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                                        <Camera className="w-5 h-5 text-blue-600" />
+                        {/* Activity Graph and Metrics Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                            {/* Monthly Shoots Chart (Spans 4 columns on lg) */}
+                            <div className="sm:col-span-2 lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors pointer-events-none"></div>
+                                <div className="flex items-center justify-between mb-6 relative z-10">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-800">Aylık Çekim Performansı</h3>
+                                        <p className="text-sm text-slate-500 font-medium">Son 6 ayın istatistiği</p>
                                     </div>
-                                    <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                        +12%
-                                    </span>
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                                        <TrendingUp className="w-5 h-5 text-indigo-600" />
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="text-xs font-medium text-gray-500">Toplam Fotoğraf</div>
-                                    <div className="text-2xl font-semibold text-gray-900">{stats.counts.photos.toLocaleString('tr-TR')}</div>
-                                    <div className="text-xs text-gray-400">Son 30 gün</div>
+
+                                <div className="h-48 w-full mt-4 relative z-10">
+                                    {stats?.monthlyShootsChart?.length > 0 ? (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={stats.monthlyShootsChart} margin={{ top: 20, right: 10, left: -25, bottom: 0 }}>
+                                                <defs>
+                                                    <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+                                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                                    </linearGradient>
+                                                    <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#818cf8" stopOpacity={0.6} />
+                                                        <stop offset="100%" stopColor="#c7d2fe" stopOpacity={0.1} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                                <XAxis
+                                                    dataKey="name"
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
+                                                    dy={10}
+                                                />
+                                                <YAxis
+                                                    axisLine={false}
+                                                    tickLine={false}
+                                                    tick={{ fill: '#94a3b8', fontSize: 11 }}
+                                                />
+                                                <RechartsTooltip
+                                                    cursor={{ fill: 'rgba(241, 245, 249, 0.5)' }}
+                                                    contentStyle={{
+                                                        borderRadius: '14px',
+                                                        border: '1px solid #e2e8f0',
+                                                        boxShadow: '0 12px 24px rgba(0,0,0,0.06)',
+                                                        fontWeight: '500',
+                                                        fontSize: '13px',
+                                                        padding: '10px 14px'
+                                                    }}
+                                                    itemStyle={{ color: '#4f46e5', fontWeight: '600' }}
+                                                    labelStyle={{ color: '#1e293b', marginBottom: '4px', fontWeight: '700' }}
+                                                    formatter={(value) => [`${value} Çekim`, 'Aylık Toplam']}
+                                                />
+                                                <Area
+                                                    tooltipType="none"
+                                                    type="monotone"
+                                                    dataKey="value"
+                                                    fill="url(#colorArea)"
+                                                    stroke="none"
+                                                    animationDuration={2000}
+                                                />
+                                                <Bar
+                                                    tooltipType="none"
+                                                    dataKey="value"
+                                                    barSize={24}
+                                                    fill="url(#colorBar)"
+                                                    radius={[4, 4, 4, 4]}
+                                                    animationDuration={2000}
+                                                >
+                                                    {stats.monthlyShootsChart.map((entry: any, index: number) => (
+                                                        <Cell key={`cell-${index}`} fill={index === stats.monthlyShootsChart.length - 1 ? '#6366f1' : 'url(#colorBar)'} />
+                                                    ))}
+                                                </Bar>
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="value"
+                                                    stroke="#6366f1"
+                                                    strokeWidth={2.5}
+                                                    dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: '#6366f1' }}
+                                                    activeDot={{ r: 6, strokeWidth: 0, fill: '#4f46e5', stroke: '#fff' }}
+                                                    animationDuration={2000}
+                                                />
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-slate-400 text-sm font-medium">Henüz yeterli veri bulunmuyor.</div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Metric 2 - Customers */}
-                            <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-purple-300 transition-all shadow-lg hover:shadow-xl group">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="p-2 rounded-lg bg-purple-50 group-hover:bg-purple-100 transition-colors">
-                                        <Users className="w-5 h-5 text-purple-600" />
-                                    </div>
-                                    <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                        +8%
-                                    </span>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-xs font-medium text-gray-500">Aktif Müşteriler</div>
-                                    <div className="text-2xl font-semibold text-gray-900">{stats.counts.activeCustomers.toLocaleString('tr-TR')}</div>
-                                    <div className="text-xs text-gray-400">Toplam müşteri</div>
-                                </div>
-                            </div>
-
-                            {/* Metric 3 - Shoots */}
-                            <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-green-300 transition-all shadow-lg hover:shadow-xl group">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="p-2 rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
-                                        <Calendar className="w-5 h-5 text-green-600" />
-                                    </div>
-                                    <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
-                                        Bu ay
-                                    </span>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-xs font-medium text-gray-500">Bu Ayki Çekimler</div>
-                                    <div className="text-2xl font-semibold text-gray-900">{stats.counts.activeShootsMonth}</div>
-                                    <div className="text-xs text-gray-400">{stats.todaySchedule?.length || 0} bugün</div>
-                                </div>
-                            </div>
-
-                            {/* Metric 4 - Revenue */}
-                            <div className="bg-white rounded-xl p-5 border border-gray-200 hover:border-orange-300 transition-all shadow-lg hover:shadow-xl group">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="p-2 rounded-lg bg-orange-50 group-hover:bg-orange-100 transition-colors">
-                                        <DollarSign className="w-5 h-5 text-orange-600" />
-                                    </div>
-                                    <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
-                                        -5%
-                                    </span>
-                                </div>
-                                <div className="space-y-1">
-                                    <div className="text-xs font-medium text-gray-500">Toplam Gelir</div>
-                                    <div className="text-2xl font-semibold text-gray-900">₺{stats.counts.totalRevenue.toLocaleString('tr-TR')}</div>
-                                    <div className="text-xs text-gray-400">Tüm zamanlar</div>
-                                </div>
-                            </div>
+                            <MetricCard
+                                icon={Calendar}
+                                iconBg="bg-gradient-to-br from-emerald-400 to-teal-500"
+                                iconColor="text-white"
+                                title="Planlanan Çekim İşleri"
+                                value={stats.counts.activeShootsMonth}
+                                subtext={`Yalnızca bu aya ait programlanmış çekim sayısıdır. (${stats.todaySchedule?.length || 0} tanesi bugün)`}
+                            />
+                            <MetricCard
+                                icon={DollarSign}
+                                iconBg="bg-gradient-to-br from-amber-400 to-orange-500"
+                                iconColor="text-white"
+                                title="Toplam Elde Edilen Gelir"
+                                value={`₺${stats.counts.totalRevenue.toLocaleString('tr-TR')}`}
+                                subtext="Sisteme işlenen kayıtlı müşteri sözleşmelerinden elde edilmiş tüm zamanların brüt geliridir."
+                            />
+                            <MetricCard
+                                icon={ImageIcon}
+                                iconBg="bg-gradient-to-br from-purple-500 to-fuchsia-500"
+                                iconColor="text-white"
+                                title="Müşteri Albüm Onayı Bekleyenler"
+                                value={stats.counts.pendingSelection || 0}
+                                subtext="Fotoğraflar yüklenip, randevu durumu 'Albüm Bekleniyor' olan sipariş sayısı."
+                            />
+                            <MetricCard
+                                icon={UploadCloud}
+                                iconBg="bg-gradient-to-br from-blue-400 to-indigo-500"
+                                iconColor="text-white"
+                                title="Fotoğraf Yüklenmesi Beklenenler"
+                                value={stats.counts.pendingUploads || 0}
+                                subtext="Çekimi tamamlanan fakat sisteme henüz fotoğraf yüklemesi yapılmayan müşteriler."
+                            />
                         </div>
                     </div>
 
@@ -178,6 +209,9 @@ export default function DashboardPage() {
                         <SchedulePanel
                             calendar={stats.calendar || { currentMonth: 'Aralık 2025', daysWithEvents: [] }}
                             schedule={stats.todaySchedule || []}
+                            onPrevMonth={handlePrevMonth}
+                            onNextMonth={handleNextMonth}
+                            viewDate={viewDate}
                         />
                     </div>
                 </div>

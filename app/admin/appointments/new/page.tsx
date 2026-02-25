@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAlert } from '@/context/AlertContext';
+import { Suspense } from 'react';
 
 // Mock Data (In a real app, these would come from APIs)
 const PACKAGES = [
@@ -28,7 +29,7 @@ const PACKAGES = [
     { id: '3', name: 'Standart Video Klip', price: 5000 },
 ];
 
-export default function NewAppointmentPage() {
+function NewAppointmentContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { showAlert } = useAlert();
@@ -314,35 +315,34 @@ export default function NewAppointmentPage() {
     return (
         <div className="p-4 lg:p-6 max-w-[1920px] mx-auto h-screen flex flex-col overflow-hidden">
             {/* Compact Header */}
-            <div className="bg-white px-4 py-3 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between mb-4 flex-shrink-0">
+            <div className="bg-white/80 backdrop-blur-xl px-5 py-3.5 rounded-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between mb-6 flex-shrink-0">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => router.back()} className="p-1.5 hover:bg-gray-50 rounded-lg transition-colors">
-                        <ChevronLeft className="w-5 h-5 text-gray-400" />
+                    <button onClick={() => router.back()} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+                        <ChevronLeft className="w-5 h-5 text-slate-400" />
                     </button>
-                    <h1 className="text-lg font-bold text-gray-900">Yeni Randevu Oluştur</h1>
+                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Yeni Randevu Oluştur</h1>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button className="px-4 py-2 text-sm bg-white border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50">Taslak</button>
-                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-4 py-2 text-sm bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-1.5 disabled:opacity-50">
+                <div className="flex items-center gap-3">
+                    <button className="px-4 py-2 text-sm bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm shadow-slate-200/50">Taslak</button>
+                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-5 py-2 text-sm bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
                         {isSubmitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
                         {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
                     </button>
                 </div>
             </div>
 
-            {/* Main Content - 3 Column Grid */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 overflow-auto">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-auto px-1 pb-6 custom-scrollbar">
 
                 {/* Column 1: Customer Info */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit">
+                    <div className="px-5 py-4 border-b border-white/40 bg-white/40 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                             <User className="w-4 h-4 text-indigo-500" />
                             Müşteri Bilgileri
                         </h3>
-                        <div className="flex bg-gray-200/50 p-0.5 rounded-md">
-                            <button onClick={() => setCustomerType('new')} className={`px-2 py-1 text-xs font-medium rounded ${customerType === 'new' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}>Yeni</button>
-                            <button onClick={() => { setCustomerType('existing'); setNoAppointment(false); }} className={`px-2 py-1 text-xs font-medium rounded ${customerType === 'existing' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}>Mevcut</button>
+                        <div className="flex bg-slate-100/80 p-1 rounded-lg">
+                            <button onClick={() => setCustomerType('new')} className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${customerType === 'new' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-800'}`}>Yeni</button>
+                            <button onClick={() => { setCustomerType('existing'); setNoAppointment(false); }} className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${customerType === 'existing' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-800'}`}>Mevcut</button>
                         </div>
                     </div>
                     <div className="p-4 space-y-3">
@@ -462,9 +462,9 @@ export default function NewAppointmentPage() {
                 </div>
 
                 {/* Column 2: Shoot Details */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit">
+                    <div className="px-5 py-4 border-b border-white/40 bg-white/40 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                             <Camera className="w-4 h-4 text-indigo-500" />
                             Çekim Detayları
                         </h3>
@@ -550,11 +550,11 @@ export default function NewAppointmentPage() {
                 </div>
 
                 {/* Column 3: Financial & Contract */}
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {/* Financial Card */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                        <div className="px-5 py-4 border-b border-white/40 bg-white/40">
+                            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <CreditCard className="w-4 h-4 text-indigo-500" />
                                 Ödeme
                             </h3>
@@ -593,9 +593,9 @@ export default function NewAppointmentPage() {
                     </div>
 
                     {/* Contract Card */}
-                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                        <div className="px-5 py-4 border-b border-white/40 bg-white/40">
+                            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-indigo-500" />
                                 Sözleşme
                             </h3>
@@ -642,5 +642,13 @@ export default function NewAppointmentPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function NewAppointmentPage() {
+    return (
+        <Suspense fallback={<div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" /></div>}>
+            <NewAppointmentContent />
+        </Suspense>
     );
 }

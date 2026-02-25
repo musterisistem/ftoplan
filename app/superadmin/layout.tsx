@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -39,10 +39,13 @@ export default function SuperAdminLayout({
 }) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    const isLoginPage = pathname === '/superadmin/login';
+
     useEffect(() => {
-        if (status === 'loading') return;
+        if (status === 'loading' || isLoginPage) return;
 
         if (!session) {
             router.push('/login');
@@ -53,7 +56,7 @@ export default function SuperAdminLayout({
             router.push('/admin/dashboard');
             return;
         }
-    }, [session, status, router]);
+    }, [session, status, router, isLoginPage]);
 
     if (status === 'loading') {
         return (
@@ -63,8 +66,12 @@ export default function SuperAdminLayout({
         );
     }
 
+    if (isLoginPage) {
+        return <>{children}</>;
+    }
+
     if (!session || session.user.role !== 'superadmin') {
-        return null;
+        return null; // Return null if not superadmin, since useEffect will handle the redirect
     }
 
     return (
