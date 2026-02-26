@@ -13,41 +13,76 @@ export async function GET() {
 
         await dbConnect();
 
-        // Seed default packages if none exist
-        const count = await Package.countDocuments();
-        if (count === 0) {
-            await Package.insertMany([
-                {
-                    id: 'standart',
-                    name: 'Standart Paket',
-                    price: 2999,
-                    storage: 10,
-                    popular: false,
-                    features: [
-                        '10 GB Depolama',
-                        'Sınırsız Müşteri Ekleme',
-                        'Online Albüm Teslimatı',
-                        'Temel E-posta Desteği',
-                        'Standart Galeri Tasarımları'
-                    ]
-                },
-                {
-                    id: 'kurumsal',
-                    name: 'Kurumsal Paket',
-                    price: 4999,
-                    storage: 30,
-                    popular: true,
-                    features: [
-                        '30 GB Depolama',
-                        'Sınırsız Müşteri Ekleme',
-                        'Online Albüm Teslimatı',
-                        'Öncelikli 7/24 Destek',
-                        'Premium Galeri Tasarımları',
-                        'Kendi Logonuzla White Label',
-                        'İşletmeye Özel Kurumsal E-Posta'
-                    ]
-                }
-            ]);
+        // Default packages updated according to user requirements
+        const defaultPackages = [
+            {
+                id: 'trial',
+                name: 'Deneme Paketi',
+                price: 0,
+                storage: 0.5,
+                maxCustomers: 1,
+                maxPhotos: 30,
+                maxAppointments: 1,
+                hasWatermark: true,
+                hasWebsite: false,
+                supportType: 'E-posta',
+                popular: false,
+                description: '3 gün sonunda hesabınız pasif duruma geçer.',
+                features: [
+                    '500 MB Depolama Alanı',
+                    '1 Aktif Müşteri',
+                    'Maksimum 30 Fotoğraf Yükleme',
+                    '1 Aktif Randevu',
+                    'Albüm Fotoğraf Yükleme',
+                    'Yüklenen fotoğraflar filigranlıdır'
+                ]
+            },
+            {
+                id: 'standart',
+                name: 'Standart Paket',
+                price: 9499,
+                storage: 10,
+                maxCustomers: -1,
+                maxPhotos: -1,
+                maxAppointments: -1,
+                hasWatermark: false,
+                hasWebsite: false,
+                supportType: 'E-posta',
+                popular: true,
+                description: 'Profesyonel stüdyolar için tüm yönetim araçları.',
+                features: [
+                    '10 GB Depolama Alanı',
+                    'Sınırsız Müşteri Ekleme',
+                    'Randevu Hatırlatma Sistemi'
+                ]
+            },
+            {
+                id: 'kurumsal',
+                name: 'Kurumsal Paket',
+                price: 19999,
+                storage: 30,
+                maxCustomers: -1,
+                maxPhotos: -1,
+                maxAppointments: -1,
+                hasWatermark: false,
+                hasWebsite: true,
+                supportType: '7/24 Öncelikli',
+                popular: false,
+                description: 'Kurumsal web sitesi ve özel hizmetler.',
+                features: [
+                    '30 GB Depolama Alanı',
+                    'Firmanıza Özel Web Sitesi',
+                    '7/24 Öncelikli Destek'
+                ]
+            }
+        ];
+
+        for (const pkg of defaultPackages) {
+            await Package.findOneAndUpdate(
+                { id: pkg.id },
+                { $setOnInsert: pkg },
+                { upsert: true, new: true }
+            );
         }
 
         const packages = await Package.find().sort({ price: 1 });
@@ -66,7 +101,11 @@ export async function PUT(req: Request) {
         }
 
         const data = await req.json();
-        const { id, name, price, storage, features, popular } = data;
+        const {
+            id, name, price, storage, features, popular,
+            maxCustomers, maxPhotos, maxAppointments,
+            hasWatermark, hasWebsite, supportType, description
+        } = data;
 
         if (!id || !name || price === undefined || storage === undefined) {
             return NextResponse.json({ error: 'Eksik bilgi gönderildi' }, { status: 400 });
@@ -76,7 +115,11 @@ export async function PUT(req: Request) {
 
         const updatedPackage = await Package.findOneAndUpdate(
             { id },
-            { name, price, storage, features, popular },
+            {
+                name, price, storage, features, popular,
+                maxCustomers, maxPhotos, maxAppointments,
+                hasWatermark, hasWebsite, supportType, description
+            },
             { new: true, upsert: true }
         );
 

@@ -1,9 +1,6 @@
 import NextAuth, { DefaultSession } from "next-auth"
 
 declare module "next-auth" {
-    /**
-     * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
-     */
     interface Session {
         user: {
             id: string;
@@ -19,6 +16,8 @@ declare module "next-auth" {
                 defaultView?: string;
             };
             hasCompletedOnboarding?: boolean;
+            isActive?: boolean;
+            isEmailVerified?: boolean;
         } & DefaultSession["user"]
     }
 
@@ -36,6 +35,8 @@ declare module "next-auth" {
             defaultView?: string;
         };
         hasCompletedOnboarding?: boolean;
+        isActive?: boolean;
+        isEmailVerified?: boolean;
     }
 }
 
@@ -54,5 +55,7 @@ declare module "next-auth/jwt" {
             defaultView?: string;
         };
         hasCompletedOnboarding?: boolean;
+        isActive?: boolean;
+        isEmailVerified?: boolean;
     }
 }

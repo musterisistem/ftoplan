@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import AutoCleanupScheduler from '@/components/admin/AutoCleanupScheduler';
 import SubscriptionGuard from '@/components/admin/SubscriptionGuard';
 import OnboardingTour from '@/components/admin/OnboardingTour';
+import EmailVerificationGate from '@/components/admin/EmailVerificationGate';
 
 export default function AdminLayout({
     children,
@@ -20,7 +21,9 @@ export default function AdminLayout({
                 <div className="flex-1 flex flex-col md:ml-[260px] transition-all duration-300">
                     <Header />
                     <main className="flex-1 overflow-y-auto h-full p-6 md:p-8">
-                        {children}
+                        <EmailVerificationGate>
+                            {children}
+                        </EmailVerificationGate>
                     </main>
                 </div>
             </div>

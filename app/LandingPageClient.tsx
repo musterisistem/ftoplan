@@ -19,15 +19,16 @@ const SLOGANS = [
         description: "Yüzlerce stüdyo sahibi ile konuştuk, her birinin aynı sorunları yaşadığını gördük. Çözümü sadece fotoğrafçılar için tasarladık."
     },
     {
-        line1: "İşinizi Büyütmek İçin",
-        line2: "Doğru Planı Seçin",
-        description: "Esnek ve şeffaf paketlerimizle maliyetlerinizi kontrol altında tutu, stüdyonuzu dijital dünyaya taşıyın."
+        line1: "Tüm Stüdyonuzu",
+        line2: "Dijitale Taşıyın.",
+        description: "Randevodan sözleşmeye, fotoğraf seçiminden ödeme takibine kadar tüm iş süreçleriniz artık tek ekranda ve tamamen otomatik."
     }
 ];
 
 export default function LandingPageClient() {
     const [index, setIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [videoReady, setVideoReady] = useState(false);
 
     useEffect(() => {
         if (isPaused) return;
@@ -45,12 +46,13 @@ export default function LandingPageClient() {
             {/* ── HERO ── */}
             <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden px-6 pt-40 pb-40 lg:pt-56 lg:pb-56 text-center">
                 {/* BG Video and Overlay */}
-                <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 bg-[#f8faff]">
                     <iframe
-                        className="absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2 opacity-40 grayscale-[20%] brightness-[90%]"
+                        className={`absolute top-1/2 left-1/2 w-[100vw] h-[56.25vw] min-h-[100vh] min-w-[177.77vh] -translate-x-1/2 -translate-y-1/2 grayscale-[20%] brightness-[90%] transition-opacity duration-1000 ${videoReady ? 'opacity-40' : 'opacity-0'}`}
                         src="https://www.youtube.com/embed/XKbh5CpkLDQ?autoplay=1&mute=1&loop=1&playlist=XKbh5CpkLDQ&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1"
                         allow="autoplay; encrypted-media"
                         frameBorder="0"
+                        onLoad={() => setVideoReady(true)}
                     />
                     {/* Gradient Overlay for Readability */}
                     <div className="absolute inset-0 bg-gradient-to-br from-[#f7eefa]/40 via-white/20 to-[#f7eefa]/40" />
@@ -105,8 +107,8 @@ export default function LandingPageClient() {
                     </div>
 
                     <div className="relative z-20 flex flex-col sm:flex-row items-center justify-center gap-6 mt-8">
-                        <Link href="/register" className="w-full sm:w-auto px-10 py-5 bg-[#5d2b72] rounded-full font-bold text-white text-[16px] hover:bg-[#4a2260] transition-all shadow-2xl shadow-[#c490d8]/60 flex items-center justify-center gap-2 hover:-translate-y-0.5">
-                            14 Gün Ücretsiz Dene <ArrowRight className="w-5 h-5" />
+                        <Link href="/packages" className="w-full sm:w-auto px-10 py-5 bg-[#5d2b72] rounded-full font-bold text-white text-[16px] hover:bg-[#4a2260] transition-all shadow-2xl shadow-[#c490d8]/60 flex items-center justify-center gap-2 hover:-translate-y-0.5">
+                            3 Gün Ücretsiz Dene <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link href="/ozellikler" className="w-full sm:w-auto px-10 py-5 bg-white/80 backdrop-blur-md border-2 border-gray-100 rounded-full font-bold text-gray-700 text-[16px] hover:bg-white hover:border-gray-200 transition-all shadow-sm flex items-center justify-center gap-2">
                             Özellikleri Keşfet

@@ -99,13 +99,22 @@ export async function POST(req: Request) {
         console.log('POST Shoot - Request body:', body);
 
         // Get photographer ID
-        const photographerId = await getPhotographerId(session);
-        console.log('POST Shoot - Session email:', session.user.email);
-        console.log('POST Shoot - Photographer ID:', photographerId);
+        const user = await User.findOne({ email: session.user.email, role: 'admin' });
+        const photographerId = user?._id || null;
 
         if (!photographerId) {
             console.error('POST Shoot - ERROR: No photographer ID found!');
             return NextResponse.json({ error: 'Fotoğrafçı bilgisi bulunamadı' }, { status: 400 });
+        }
+
+        // Limit Enforcement for Trial Users
+        if (user?.packageType === 'trial') {
+            const shootCount = await Shoot.countDocuments({ photographerId });
+            if (shootCount >= 1) {
+                return NextResponse.json({
+                    error: 'Deneme paketinde sadece 1 aktif randevu/çekim ekleyebilirsiniz. Lütfen paketinizi yükseltin.'
+                }, { status: 403 });
+            }
         }
 
         const { customerId, date, type, location, notes, city, packageId, contractId, agreedPrice, deposit } = body;

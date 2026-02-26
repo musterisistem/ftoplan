@@ -94,10 +94,8 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Hesabınız engellenmiştir. Lütfen fotoğrafçınız ile iletişime geçin.');
                 }
 
-                // Check Email Verification (Only for Admin/Photographers)
-                if (user.role === 'admin' && !user.isEmailVerified) {
-                    throw new Error('Lütfen e-posta adresinizi doğrulayın. Doğrulama linki mail adresinize gönderildi.');
-                }
+                // Note: Email verification is now handled by the in-panel EmailVerificationGate overlay
+                // Users can log in with isActive:false and will see the gate in their dashboard
 
                 // Standard password check with bcrypt for admin/superadmin users
                 const isPasswordMatch = await bcrypt.compare(credentials.password, user.password);
@@ -129,11 +127,12 @@ export const authOptions: NextAuthOptions = {
                     storageLimit: user.storageLimit || 21474836480,
                     studioName: user.studioName,
                     subscriptionExpiry: user.subscriptionExpiry ? new Date(user.subscriptionExpiry).toISOString() : undefined,
-                    packageType: user.packageType || 'starter',
-                    // Logic: Use panelLogo if available, otherwise fallback to logo
+                    packageType: user.packageType || 'trial',
                     image: user.panelLogo || user.logo || '',
                     panelSettings: user.panelSettings || undefined,
                     hasCompletedOnboarding: user.hasCompletedOnboarding || false,
+                    isActive: user.isActive !== false,
+                    isEmailVerified: user.isEmailVerified === true,
                 };
             }
         })
@@ -152,6 +151,8 @@ export const authOptions: NextAuthOptions = {
                 token.picture = user.image;
                 token.panelSettings = user.panelSettings;
                 token.hasCompletedOnboarding = user.hasCompletedOnboarding;
+                token.isActive = user.isActive;
+                token.isEmailVerified = user.isEmailVerified;
             }
 
             // REFRESH DATA ON NAVIGATION/UPDATE
@@ -161,18 +162,20 @@ export const authOptions: NextAuthOptions = {
 
                 if (token.email && token.role === 'admin') {
                     // Update: Select panelLogo and panelSettings
-                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings');
+                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings isActive isEmailVerified');
 
                     if (adminUser) {
                         token.storageUsage = adminUser.storageUsage || 0;
                         token.storageLimit = adminUser.storageLimit || 21474836480;
                         token.studioName = adminUser.studioName || '';
                         token.subscriptionExpiry = adminUser.subscriptionExpiry?.toISOString() || null;
-                        token.packageType = adminUser.packageType || 'starter';
+                        token.packageType = adminUser.packageType || 'trial';
                         // Logic: Use panelLogo if available, otherwise fallback to logo
                         token.picture = adminUser.panelLogo || adminUser.logo || '';
                         token.panelSettings = adminUser.panelSettings || undefined;
                         token.hasCompletedOnboarding = adminUser.hasCompletedOnboarding || false;
+                        token.isActive = adminUser.isActive !== false;
+                        token.isEmailVerified = adminUser.isEmailVerified === true;
                     }
                 }
             } catch (error) {
@@ -194,6 +197,8 @@ export const authOptions: NextAuthOptions = {
                 session.user.image = token.picture; // Explicitly map image
                 session.user.panelSettings = token.panelSettings;
                 session.user.hasCompletedOnboarding = token.hasCompletedOnboarding;
+                session.user.isActive = token.isActive;
+                session.user.isEmailVerified = token.isEmailVerified;
             }
             return session;
         }

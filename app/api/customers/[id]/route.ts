@@ -14,12 +14,19 @@ export async function GET(
     const { id } = await params;
 
     try {
-        console.log('Fetching customer with ID:', id);
+        const session = await getServerSession(authOptions);
         const customer = await Customer.findById(id);
         if (!customer) {
             return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
         }
-        console.log(`GET Customer ${id}, photos count: ${customer.photos?.length || 0}`);
+
+        // Ownership check for admin users
+        if (session?.user?.role === 'admin') {
+            const adminUser = await User.findOne({ email: session.user.email, role: 'admin' });
+            if (!adminUser || customer.photographerId?.toString() !== adminUser._id.toString()) {
+                return NextResponse.json({ error: 'Bu müşteriye erişim yetkiniz yok' }, { status: 403 });
+            }
+        }
 
         // Get user info if exists
         let userInfo = null;
@@ -79,12 +86,21 @@ export async function PUT(
     const { id } = await params;
 
     try {
+        const session = await getServerSession(authOptions);
         const body = await req.json();
         const { brideName, groomName, phone, email, notes, status, appointmentStatus, albumStatus, tcId } = body;
 
         const customer = await Customer.findById(id);
         if (!customer) {
             return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
+        }
+
+        // Ownership check for admin users
+        if (session?.user?.role === 'admin') {
+            const adminUser = await User.findOne({ email: session.user.email, role: 'admin' });
+            if (!adminUser || customer.photographerId?.toString() !== adminUser._id.toString()) {
+                return NextResponse.json({ error: 'Bu müşteriye erişim yetkiniz yok' }, { status: 403 });
+            }
         }
 
         // Check email uniqueness if changed
@@ -264,9 +280,18 @@ export async function DELETE(
     const { id } = await params;
 
     try {
+        const session = await getServerSession(authOptions);
         const customer = await Customer.findById(id);
         if (!customer) {
             return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
+        }
+
+        // Ownership check for admin users
+        if (session?.user?.role === 'admin') {
+            const adminUser = await User.findOne({ email: session.user.email, role: 'admin' });
+            if (!adminUser || customer.photographerId?.toString() !== adminUser._id.toString()) {
+                return NextResponse.json({ error: 'Bu müşteriye erişim yetkiniz yok' }, { status: 403 });
+            }
         }
 
         // Delete linked User first

@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function AboutPage() {
     return (
-        <div className="min-h-screen bg-[#FDFCFE] text-slate-900 font-sans antialiased">
+        <div className="min-h-screen bg-[#f2f4f7] bg-gradient-to-b from-purple-50 to-[#f2f4f7] text-slate-900 font-sans antialiased">
             <PublicHeader />
             <section className="pt-40 pb-20 px-6 max-w-4xl mx-auto">
                 <span className="inline-block px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-xs font-black uppercase tracking-widest mb-6">Our Story</span>

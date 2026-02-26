@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import CreativeLoader from '@/components/ui/CreativeLoader';
 import {
     Home,
     Calendar,
@@ -36,6 +37,7 @@ import {
     Globe,
     ShieldAlert
 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface MenuItem {
     name: string;
@@ -142,8 +144,27 @@ export default function Sidebar() {
 
     const panelLogoUrl = session?.user?.image;
 
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [logoutMessage, setLogoutMessage] = useState('Çıkış yapılıyor...');
+
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        setLogoutMessage('Çıkış yapılıyor...');
+
+        await new Promise(r => setTimeout(r, 1500));
+        setLogoutMessage('Güvenli çıkış yapıldı.');
+
+        await new Promise(r => setTimeout(r, 1000));
+        signOut({ callbackUrl: '/' });
+    };
+
     const SidebarContent = () => (
         <div className="flex flex-col h-full bg-[#0B0F19] text-slate-400 font-sans tracking-wide relative overflow-hidden">
+            <CreativeLoader
+                isVisible={isLoggingOut}
+                message={logoutMessage}
+                subMessage={logoutMessage === 'Çıkış yapılıyor...' ? 'Oturumunuz güvenli bir şekilde kapatılıyor.' : 'Yönlendiriliyorsunuz...'}
+            />
             {/* Ambient Background Glows */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-[#7A70BA]/10 rounded-full blur-[80px] pointer-events-none"></div>
             <div className="absolute bottom-0 right-0 w-64 h-64 bg-violet-600/10 rounded-full blur-[80px] pointer-events-none"></div>
@@ -303,9 +324,19 @@ export default function Sidebar() {
                         {/* Header: Pro Badge & Days Left */}
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-1.5">
-                                <div className={`w-1.5 h-1.5 rounded-full ${session?.user?.packageType === 'kurumsal' ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]' : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'}`}></div>
-                                <span className={`text-[10px] font-bold tracking-[0.15em] uppercase ${session?.user?.packageType === 'kurumsal' ? 'text-amber-400' : 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'}`}>
-                                    {session?.user?.packageType === 'kurumsal' ? 'KURUMSAL' : 'STANDART'}
+                                <div className={`w-1.5 h-1.5 rounded-full ${session?.user?.packageType === 'kurumsal'
+                                        ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                                        : session?.user?.packageType === 'trial'
+                                            ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]'
+                                            : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                                    }`}></div>
+                                <span className={`text-[10px] font-bold tracking-[0.15em] uppercase ${session?.user?.packageType === 'kurumsal'
+                                        ? 'text-amber-400'
+                                        : session?.user?.packageType === 'trial'
+                                            ? 'text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]'
+                                            : 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'
+                                    }`}>
+                                    {session?.user?.packageType === 'kurumsal' ? 'KURUMSAL' : session?.user?.packageType === 'trial' ? 'DENEME' : 'STANDART'}
                                 </span>
                             </div>
                             <div className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-black/40 border border-white/10 text-white shadow-inner">
@@ -345,7 +376,7 @@ export default function Sidebar() {
                 {/* Tooltip removed from here to prevent overflow clipping; moved to main return block */}
 
                 <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    onClick={handleLogout}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-colors group border border-transparent hover:border-rose-500/20 relative overflow-hidden"
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 to-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>

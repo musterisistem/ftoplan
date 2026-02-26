@@ -20,6 +20,34 @@ const PackageSchema = new mongoose.Schema({
         required: true,
         default: 20
     },
+    maxCustomers: {
+        type: Number,
+        default: -1 // -1 for unlimited
+    },
+    maxPhotos: {
+        type: Number,
+        default: -1
+    },
+    maxAppointments: {
+        type: Number,
+        default: -1
+    },
+    hasWatermark: {
+        type: Boolean,
+        default: false
+    },
+    hasWebsite: {
+        type: Boolean,
+        default: false
+    },
+    supportType: {
+        type: String,
+        default: 'E-posta' // or '7/24 Öncelikli'
+    },
+    description: {
+        type: String,
+        default: ''
+    },
     features: [{
         type: String
     }],

@@ -26,18 +26,29 @@ export default async function StudioLayout({
     // CHECK EXPIRY
     const isExpired = photographer.subscriptionExpiry ? new Date(photographer.subscriptionExpiry) < new Date() : false;
 
-    if (isExpired) {
+    if (isExpired || photographer.packageType === 'trial') {
+        const isTrial = photographer.packageType === 'trial';
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
                 <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl text-center border border-gray-200">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    <div className={`w-16 h-16 ${isTrial ? 'bg-amber-100' : 'bg-red-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                        {isTrial ? (
+                            <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        )}
                     </div>
-                    <h1 className="text-xl font-bold text-gray-900 mb-2">Hizmet Süresi Dolmuştur</h1>
+                    <h1 className="text-xl font-bold text-gray-900 mb-2">
+                        {isTrial ? 'Web Sitesi Henüz Yayında Değil' : 'Hizmet Süresi Dolmuştur'}
+                    </h1>
                     <p className="text-gray-600 mb-6">
-                        Bu web sitesinin yayın süresi sona ermiştir. Lütfen stüdyo yetkilisi ile iletişime geçiniz.
+                        {isTrial
+                            ? 'Web sitesi özelliği deneme paketinde kapalıdır. Lütfen paketinizi yükselterek sitenizi yayına alın.'
+                            : 'Bu web sitesinin yayın süresi sona ermiştir. Lütfen stüdyo yetkilisi ile iletişime geçiniz.'}
                     </p>
                     <div className="text-xs text-gray-400">
                         {photographer.studioName}

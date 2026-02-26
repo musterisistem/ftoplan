@@ -13,7 +13,7 @@ const COL_COMPANY = [
     { href: '/kurumsal', label: 'Hakkımızda' },
     { href: '/iletisim', label: 'İletişim' },
     { href: '/login', label: 'Giriş Yap' },
-    { href: '/register', label: 'Üye Ol' },
+    { href: '/packages', label: 'Üye Ol' },
 ];
 
 const COL_LEGAL = [

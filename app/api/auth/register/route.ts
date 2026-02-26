@@ -12,6 +12,7 @@ export async function POST(req: Request) {
             email,
             password,
             phone,
+            address,
             intendedAction,
             selectedPackage,
             billingInfo
@@ -54,15 +55,53 @@ export async function POST(req: Request) {
         // Hash Password
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Calculate Expiry (7 Days for Trial)
+        // Package Type & Duration (Trial: 3 days, Others: 365 days)
+        const pkgType = selectedPackage || 'trial';
         const subscriptionExpiry = new Date();
-        subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 7);
+        if (pkgType === 'trial') {
+            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 3);
+        } else {
+            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 365);
+        }
 
         // Generate Verification Token
         const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         const Subscriber = (await import('@/models/Subscriber')).default;
+
+        // Package limits based on selected package type
+        const packageLimits: Record<string, any> = {
+            trial: {
+                storageLimit: 524288000, // 500MB in bytes
+                maxCustomers: 1,
+                maxPhotos: 30,
+                maxAppointments: 1,
+                hasWatermark: true,
+                hasWebsite: false,
+                supportType: 'E-posta',
+            },
+            standart: {
+                storageLimit: 10737418240, // 10GB in bytes
+                maxCustomers: -1,
+                maxPhotos: -1,
+                maxAppointments: -1,
+                hasWatermark: false,
+                hasWebsite: false,
+                supportType: 'E-posta',
+            },
+            kurumsal: {
+                storageLimit: 32212254720, // 30GB in bytes
+                maxCustomers: -1,
+                maxPhotos: -1,
+                maxAppointments: -1,
+                hasWatermark: false,
+                hasWebsite: true,
+                supportType: '7/24 Öncelikli',
+            }
+        };
+
+        const limits = packageLimits[pkgType] || packageLimits['trial'];
 
         // Create User
         const newUser = await User.create({
@@ -72,13 +111,20 @@ export async function POST(req: Request) {
             email,
             password: hashedPassword,
             phone,
+            address: address || billingInfo?.address || '',
             role: 'admin',
-            packageType: selectedPackage || 'trial',
+            packageType: pkgType,
             intendedAction: intendedAction || 'trial',
-            storageLimit: 3221225472, // 3GB
+            ...limits,
             subscriptionExpiry,
-            billingInfo: billingInfo || {}, // Save billing info
-            isActive: false, // Inactive until verified
+            billingInfo: {
+                companyType: billingInfo?.companyType || 'individual',
+                address: billingInfo?.address || address || '',
+                taxOffice: billingInfo?.taxOffice || '',
+                taxNumber: billingInfo?.taxNumber || '',
+                identityNumber: billingInfo?.identityNumber || '',
+            },
+            isActive: false,
             verificationToken,
             verificationTokenExpiry
         });
@@ -96,7 +142,7 @@ export async function POST(req: Request) {
         const { sendEmailWithTemplate } = await import('@/lib/resend');
         const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
-        const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+        const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
         await sendEmailWithTemplate({
             to: email,

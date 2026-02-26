@@ -24,18 +24,28 @@ export async function GET(req: Request) {
             return NextResponse.redirect(new URL('/login?error=invalid_token', req.url));
         }
 
-        // Activate User and Clear Token
-        user.isActive = true;
+        // Capture original isActive state
+        const originalIsActive = user.isActive;
+
+        // Mark as verified
         user.isEmailVerified = true;
         user.verificationToken = null;
         user.verificationTokenExpiry = null;
 
+        // If user has already paid (isActive: true), preserve their 365-day expiry
+        if (originalIsActive) {
+            user.isActive = true;
+            await user.save();
+            return NextResponse.redirect(new URL('/login?verified=true&redirect=/admin/dashboard', req.url));
+        }
+
+        // If user hasn't paid yet but has purchase intent
         if (user.intendedAction === 'purchase' || user.packageType !== 'trial') {
-            // For paid packages, we no longer lock them out with a past date.
-            // We give them a brief 1-day grace period to login and select/pay their package properly.
+            // Give a 1-day grace period to complete payment if not already active
             const graceExpiry = new Date();
-            graceExpiry.setDate(graceExpiry.getDate() + 1); // 24 hours to complete payment
+            graceExpiry.setDate(graceExpiry.getDate() + 1);
             user.subscriptionExpiry = graceExpiry;
+            user.isActive = true; // Activate for login
             await user.save();
             return NextResponse.redirect(new URL('/login?verified=true&redirect=/packages', req.url));
         }
@@ -45,6 +55,7 @@ export async function GET(req: Request) {
         const freshExpiry = new Date();
         freshExpiry.setDate(freshExpiry.getDate() + 7);
         user.subscriptionExpiry = freshExpiry;
+        user.isActive = true;
         await user.save();
 
         // Default redirect for trial

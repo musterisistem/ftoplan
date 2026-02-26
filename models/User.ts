@@ -33,6 +33,30 @@ const UserSchema = new mongoose.Schema({
         type: Number,
         default: 21474836480, // 20GB in bytes
     },
+    maxCustomers: {
+        type: Number,
+        default: -1
+    },
+    maxPhotos: {
+        type: Number,
+        default: -1
+    },
+    maxAppointments: {
+        type: Number,
+        default: -1
+    },
+    hasWatermark: {
+        type: Boolean,
+        default: false
+    },
+    hasWebsite: {
+        type: Boolean,
+        default: false
+    },
+    supportType: {
+        type: String,
+        default: 'E-posta'
+    },
     // Subscription Management
     intendedAction: {
         type: String,

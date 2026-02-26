@@ -158,6 +158,51 @@ export default function PhotoUpload({ customerId, onUploadComplete, initialPhoto
         }
     };
 
+    const addWatermark = async (file: File): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    resolve(file); // Fallback
+                    return;
+                }
+
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // Watermark Settings
+                const fontSize = Math.max(20, img.width / 15);
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Shadow for visibility
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+
+                // Rotate and draw in center
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(-Math.PI / 4); // -45 degrees
+                ctx.fillText('WEEYNET DEMO', 0, 0);
+                ctx.restore();
+
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error('Canvas toBlob failed'));
+                }, 'image/jpeg', 0.85);
+            };
+            img.onerror = reject;
+            img.src = URL.createObjectURL(file);
+        });
+    };
+
     const compressImage = async (file: File) => {
         const options = {
             maxSizeMB: 0.2,
@@ -168,9 +213,16 @@ export default function PhotoUpload({ customerId, onUploadComplete, initialPhoto
         };
 
         try {
-            return await imageCompression(file, options);
+            let processedFile: File | Blob = await imageCompression(file, options);
+
+            // Apply Watermark if Trial
+            if (session?.user?.packageType === 'trial') {
+                processedFile = await addWatermark(new File([processedFile], file.name, { type: 'image/jpeg' }));
+            }
+
+            return processedFile;
         } catch (error) {
-            console.error('Compression error:', error);
+            console.error('Compression/Watermark error:', error);
             throw error;
         }
     };
@@ -189,6 +241,16 @@ export default function PhotoUpload({ customerId, onUploadComplete, initialPhoto
         if (usage + estimatedTotalSize > limit) {
             alert('Depolama kotanız yetersiz. Lütfen alan açın veya daha az fotoğraf yükleyin.');
             return;
+        }
+
+        // Photo Count Limit for Trial
+        if (session?.user?.packageType === 'trial') {
+            const currentTotalPhotos = existingPhotos.length;
+            const newPhotosCount = pendingFiles.length;
+            if (currentTotalPhotos + newPhotosCount > 30) {
+                alert(`Deneme paketinde toplam maksimum 30 fotoğraf yükleyebilirsiniz. Şu anki: ${currentTotalPhotos}, Eklenmek istenen: ${newPhotosCount}. Lütfen paketinizi yükseltin.`);
+                return;
+            }
         }
 
         setIsGlobalUploading(true);

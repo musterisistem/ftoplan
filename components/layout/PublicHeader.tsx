@@ -9,8 +9,6 @@ const navLinks = [
     { href: '/ozellikler', label: 'Özellikler' },
     { href: '/neden-biz', label: 'Neden Biz?' },
     { href: '/paketler', label: 'Paketler' },
-    { href: '/yorumlar', label: 'Yorumlar' },
-    { href: '/sss', label: 'SSS' },
     { href: '/iletisim', label: 'İletişim' },
 ];
 
@@ -78,7 +76,7 @@ export default function PublicHeader({ variant = 'transparent' }: PublicHeaderPr
                         >
                             Giriş Yap
                         </Link>
-                        <Link href="/register" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white shadow-lg shadow-[#7a3a94]/25 hover:from-[#4a2260] hover:to-[#4a2260] transition-all">
+                        <Link href="/packages" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white shadow-lg shadow-[#7a3a94]/25 hover:from-[#4a2260] hover:to-[#4a2260] transition-all">
                             Ücretsiz Başla <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
@@ -111,7 +109,7 @@ export default function PublicHeader({ variant = 'transparent' }: PublicHeaderPr
                             <Link href="/login" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 text-center transition-all">
                                 Giriş Yap
                             </Link>
-                            <Link href="/register" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white text-center">
+                            <Link href="/packages" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white text-center">
                                 Kayıt Ol
                             </Link>
                         </div>

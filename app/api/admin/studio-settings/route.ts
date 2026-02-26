@@ -19,7 +19,7 @@ export async function GET() {
         await dbConnect();
 
         const user = await User.findOne({ email: session.user.email, role: 'admin' })
-            .select('name email studioName slug logo bannerImage primaryColor siteTheme aboutText phone address instagram facebook whatsapp portfolioPhotos heroTitle heroSubtitle selectionSuccessMessage');
+            .select('name email studioName slug logo bannerImage primaryColor siteTheme aboutText phone address billingInfo instagram facebook whatsapp portfolioPhotos heroTitle heroSubtitle selectionSuccessMessage');
 
         console.log('Studio Settings - User found:', user ? { email: user.email, slug: user.slug } : 'NOT FOUND');
 

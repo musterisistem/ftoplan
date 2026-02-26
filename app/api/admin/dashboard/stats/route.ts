@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
-        const requestedMonth = searchParams.get('month'); // 1-12
+        const requestedMonth = searchParams.get('month');
         const requestedYear = searchParams.get('year');
 
         const session = await getServerSession(authOptions);
@@ -20,7 +20,6 @@ export async function GET(req: Request) {
 
         await dbConnect();
 
-        // Target Date for Calendar/Activity
         const now = new Date();
         const targetMonth = requestedMonth ? parseInt(requestedMonth) - 1 : now.getMonth();
         const targetYear = requestedYear ? parseInt(requestedYear) : now.getFullYear();
@@ -28,33 +27,43 @@ export async function GET(req: Request) {
         const userId = session.user.id;
         const user = await User.findById(userId).select('storageUsage storageLimit name email panelLogo logo');
 
-        // 2. Aggregate counts
-        // Photos: Sum of all photos in Customer.photos + Customer.selectedPhotos
+        if (!user) {
+            return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
+        }
+
+        // ── CRITICAL: All queries must be scoped to this photographer ──────────
+        const photographerId = new mongoose.Types.ObjectId(userId);
+        const pgFilter = { photographerId };
+
+        // Photo stats (only this photographer's customers)
         const photoStats = await Customer.aggregate([
+            { $match: pgFilter },
             {
                 $group: {
                     _id: null,
-                    totalPhotos: { $sum: { $size: { $ifNull: ["$photos", []] } } },
-                    totalSelected: { $sum: { $size: { $ifNull: ["$selectedPhotos", []] } } }
+                    totalPhotos: { $sum: { $size: { $ifNull: ['$photos', []] } } },
+                    totalSelected: { $sum: { $size: { $ifNull: ['$selectedPhotos', []] } } }
                 }
             }
         ]);
         const totalPhotos = (photoStats[0]?.totalPhotos || 0) + (photoStats[0]?.totalSelected || 0);
 
         // Album Counts
-        const totalAlbums = await Customer.countDocuments({ status: { $ne: 'archived' } });
-        const deletedAlbums = await Customer.countDocuments({ status: 'archived' });
+        const totalAlbums = await Customer.countDocuments({ ...pgFilter, status: { $ne: 'archived' } });
+        const deletedAlbums = await Customer.countDocuments({ ...pgFilter, status: 'archived' });
 
-        // 3. Recent Activities (Album Approvals)
+        // Recent Activities
         const recentActivities = await Customer.find({
+            ...pgFilter,
             selectionApprovedAt: { $ne: null }
         })
             .select('brideName groomName selectionApprovedAt')
             .sort({ selectionApprovedAt: -1 })
             .limit(10);
 
-        // 4. Upcoming Shoots
+        // Upcoming Shoots
         const upcomingShoots = await Shoot.find({
+            ...pgFilter,
             date: { $gte: new Date() },
             status: 'planned'
         })
@@ -62,65 +71,45 @@ export async function GET(req: Request) {
             .limit(5)
             .populate('customerId', 'brideName groomName email phone');
 
-        // 5. Shoot Distribution (for Chart)
+        // Shoot Distribution
         const shootDistribution = await Shoot.aggregate([
-            {
-                $group: {
-                    _id: "$type",
-                    count: { $sum: 1 }
-                }
-            }
+            { $match: pgFilter },
+            { $group: { _id: '$type', count: { $sum: 1 } } }
         ]);
 
-        // 6. Monthly Revenue Aggregation (Last 6 Months)
+        // Monthly Revenue (Last 6 Months)
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-        sixMonthsAgo.setDate(1); // Start of month
+        sixMonthsAgo.setDate(1);
 
         const monthlyRevenue = await Shoot.aggregate([
-            {
-                $match: {
-                    date: { $gte: sixMonthsAgo }
-                }
-            },
+            { $match: { ...pgFilter, date: { $gte: sixMonthsAgo } } },
             {
                 $group: {
-                    _id: {
-                        month: { $month: "$date" },
-                        year: { $year: "$date" }
-                    },
-                    revenue: { $sum: "$agreedPrice" }
+                    _id: { month: { $month: '$date' }, year: { $year: '$date' } },
+                    revenue: { $sum: '$agreedPrice' }
                 }
             },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
+            { $sort: { '_id.year': 1, '_id.month': 1 } }
         ]);
 
-        // Format for Chart: [{ name: 'Jan', value: 5000 }, ...]
-        const monthNames = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+        const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
         const revenueChartData = monthlyRevenue.map(item => ({
             name: monthNames[item._id.month - 1],
             value: item.revenue,
             year: item._id.year
         }));
 
-        // 6.5. Monthly Shoots Aggregation (Last 6 Months)
+        // Monthly Shoots Count
         const monthlyShootsCount = await Shoot.aggregate([
-            {
-                $match: {
-                    date: { $gte: sixMonthsAgo },
-                    status: { $ne: 'cancelled' }
-                }
-            },
+            { $match: { ...pgFilter, date: { $gte: sixMonthsAgo }, status: { $ne: 'cancelled' } } },
             {
                 $group: {
-                    _id: {
-                        month: { $month: "$date" },
-                        year: { $year: "$date" }
-                    },
+                    _id: { month: { $month: '$date' }, year: { $year: '$date' } },
                     count: { $sum: 1 }
                 }
             },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
+            { $sort: { '_id.year': 1, '_id.month': 1 } }
         ]);
 
         const monthlyShootsChartData = monthlyShootsCount.map(item => ({
@@ -129,74 +118,66 @@ export async function GET(req: Request) {
             year: item._id.year
         }));
 
-        // 7. Staff & Active Shoots Count (This Month)
+        // Active Shoots This Month
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         const activeShootsThisMonth = await Shoot.countDocuments({
+            ...pgFilter,
             date: { $gte: startOfMonth },
             status: { $ne: 'cancelled' }
         });
 
-        // Active Customers (Total)
-        const activeCustomers = await Customer.countDocuments({ status: 'active' });
+        // Active Customers
+        const activeCustomers = await Customer.countDocuments({ ...pgFilter, status: 'active' });
 
         // Total Earnings
         const earningStats = await Shoot.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    totalEarnings: { $sum: "$agreedPrice" }
-                }
-            }
+            { $match: pgFilter },
+            { $group: { _id: null, totalEarnings: { $sum: '$agreedPrice' } } }
         ]);
         const totalEarnings = earningStats[0]?.totalEarnings || 0;
 
-        // Pending Actions Counts
+        // Pending Counts
         const pendingSelectionCount = await Customer.countDocuments({
+            ...pgFilter,
             appointmentStatus: 'fotograflar_yuklendi'
         });
-
         const pendingUploadsCount = await Customer.countDocuments({
+            ...pgFilter,
             appointmentStatus: { $in: ['cekim_yapilmadi', 'cekim_yapildi'] }
         });
 
-        const staffMembers = [
-            {
-                id: user._id,
-                name: user.name || 'Yönetici',
-                username: user.email?.split('@')[0],
-                isOnline: true,
-                role: 'Admin'
-            }
-        ];
+        const staffMembers = [{
+            id: user._id,
+            name: user.name || 'Yönetici',
+            username: user.email?.split('@')[0],
+            isOnline: true,
+            role: 'Admin'
+        }];
 
-        // 8. Calendar Data - Days with events for the requested month
+        // Calendar Data
         const startOfCalendarMonth = new Date(targetYear, targetMonth, 1);
         startOfCalendarMonth.setHours(0, 0, 0, 0);
-
         const endOfCalendarMonth = new Date(targetYear, targetMonth + 1, 0);
         endOfCalendarMonth.setHours(23, 59, 59, 999);
 
         const shootsThisMonth = await Shoot.find({
+            ...pgFilter,
             date: { $gte: startOfCalendarMonth, $lte: endOfCalendarMonth },
             status: { $ne: 'cancelled' }
         }).select('date type customerName location').populate('customerId', 'brideName groomName').lean();
 
         const daysWithEvents = [...new Set(shootsThisMonth.map(shoot => new Date(shoot.date).getDate()))];
 
-        // 9. Today's Schedule
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
+        // Today's Schedule
+        const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(); endOfToday.setHours(23, 59, 59, 999);
 
         const todayShoots = await Shoot.find({
+            ...pgFilter,
             date: { $gte: startOfToday, $lte: endOfToday },
             status: { $ne: 'cancelled' }
-        })
-            .sort({ date: 1 })
-            .populate('customerId', 'brideName groomName')
-            .lean();
+        }).sort({ date: 1 }).populate('customerId', 'brideName groomName').lean();
 
         const todaySchedule = todayShoots.map(shoot => ({
             time: new Date(shoot.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
@@ -206,7 +187,7 @@ export async function GET(req: Request) {
             duration: '2h'
         }));
 
-        // 10. Monthly Activity (Shoots per week)
+        // Monthly Activity
         const weeksInMonth = [
             { name: 'Hft 1', start: 1, end: 7 },
             { name: 'Hft 2', start: 8, end: 14 },
@@ -219,24 +200,18 @@ export async function GET(req: Request) {
                 const weekStart = new Date(targetYear, targetMonth, week.start);
                 const weekEnd = new Date(targetYear, targetMonth, week.end);
                 weekEnd.setHours(23, 59, 59, 999);
-
                 const count = await Shoot.countDocuments({
+                    ...pgFilter,
                     date: { $gte: weekStart, $lte: weekEnd },
                     status: { $ne: 'cancelled' }
                 });
-
-                return {
-                    name: week.name,
-                    count
-                };
+                return { name: week.name, count };
             })
         );
 
-        const currentMonthName = monthNames[targetMonth];
-        const currentYear = targetYear;
-
-        // 11. Active Albums (with photos uploaded)
+        // Active Albums
         const activeAlbumsData = await Customer.find({
+            ...pgFilter,
             status: { $ne: 'archived' },
             appointmentStatus: { $in: ['fotograflar_yuklendi', 'fotograflar_secildi', 'album_bekleniyor', 'teslim_edildi'] },
             photos: { $exists: true, $ne: [] }
@@ -252,19 +227,16 @@ export async function GET(req: Request) {
             groomName: customer.groomName || '',
             photoCount: customer.photos?.length || 0,
             latestPhotoDate: customer.photos?.[customer.photos.length - 1]?.uploadedAt || new Date(),
-            hasSelection: customer.appointmentStatus === 'fotograflar_secildi' || customer.appointmentStatus === 'album_bekleniyor' || customer.appointmentStatus === 'teslim_edildi',
+            hasSelection: ['fotograflar_secildi', 'album_bekleniyor', 'teslim_edildi'].includes(customer.appointmentStatus),
             thumbnailUrl: customer.photos?.[0]?.url || ''
         }));
 
-        // 12. Upcoming Shoots Detailed (with customer info)
+        // Upcoming Shoots Detailed
         const upcomingShootsDetailed = await Shoot.find({
+            ...pgFilter,
             date: { $gte: new Date() },
             status: 'planned'
-        })
-            .sort({ date: 1 })
-            .limit(5)
-            .populate('customerId', 'brideName groomName')
-            .lean();
+        }).sort({ date: 1 }).limit(5).populate('customerId', 'brideName groomName').lean();
 
         const upcomingShootsFormatted = upcomingShootsDetailed.map((shoot: any) => ({
             id: shoot._id.toString(),
@@ -279,14 +251,14 @@ export async function GET(req: Request) {
         return NextResponse.json({
             storage: {
                 used: user.storageUsage || 0,
-                limit: user.storageLimit || 21474836480, // Default 20GB
+                limit: user.storageLimit || 21474836480,
             },
             counts: {
                 photos: totalPhotos,
-                albums: totalAlbums, // Total active albums
-                deletedAlbums: deletedAlbums,
+                albums: totalAlbums,
+                deletedAlbums,
                 activeShootsMonth: activeShootsThisMonth,
-                activeCustomers: activeCustomers, // For "Total Contact" equivalent
+                activeCustomers,
                 totalRevenue: totalEarnings,
                 pendingSelection: pendingSelectionCount,
                 pendingUploads: pendingUploadsCount
@@ -294,16 +266,12 @@ export async function GET(req: Request) {
             revenueChart: revenueChartData,
             monthlyShootsChart: monthlyShootsChartData,
             recentActivities,
-            upcomingShoots, // Original format
+            upcomingShoots,
             shootDistribution,
-            earnings: {
-                total: totalEarnings,
-                currency: '₺'
-            },
+            earnings: { total: totalEarnings, currency: '₺' },
             staffMembers,
-            // NEW: Calendar and Schedule Data
             calendar: {
-                currentMonth: `${currentMonthName} ${currentYear}`,
+                currentMonth: `${monthNames[targetMonth]} ${targetYear}`,
                 daysWithEvents,
                 eventDetails: shootsThisMonth.map(shoot => ({
                     day: new Date(shoot.date).getDate(),
@@ -315,7 +283,6 @@ export async function GET(req: Request) {
             },
             todaySchedule,
             monthlyActivity,
-            // NEW: Detailed Data for Widgets
             activeAlbums,
             upcomingShootsDetailed: upcomingShootsFormatted
         });

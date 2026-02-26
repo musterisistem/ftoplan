@@ -226,7 +226,7 @@ export const DEFAULT_TEMPLATES: Record<EmailTemplateTypeValue, {
                     </table>
                 </div>
                 <div style="text-align: center; margin-bottom: 24px;">
-                    <a href="http://localhost:3000/login" style="display: inline-block; background: linear-gradient(to right, #4f46e5, #9333ea); color: #ffffff; padding: 16px 32px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
+                    <a href="http://localhost:3001/login" style="display: inline-block; background: linear-gradient(to right, #4f46e5, #9333ea); color: #ffffff; padding: 16px 32px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
                         Panelime Giriş Yap
                     </a>
                 </div>

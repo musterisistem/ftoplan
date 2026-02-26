@@ -3,6 +3,8 @@
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import CreativeLoader from '@/components/ui/CreativeLoader';
 
 export default function SubscriptionGuard({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -19,8 +21,14 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
         }
 
         if (session?.user) {
-            // Superadmins and customers bypass this check
-            if (session.user.role === 'superadmin' || session.user.role === 'couple') {
+            // Superadmins should be in their own panel
+            if (session.user.role === 'superadmin') {
+                router.replace('/superadmin/dashboard');
+                return;
+            }
+
+            // Customers bypass this check
+            if (session.user.role === 'couple') {
                 setIsChecking(false);
                 return;
             }
@@ -46,12 +54,10 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
 
     if (isChecking) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-[#F3F6FD]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <p className="text-gray-500 font-medium animate-pulse">Üyelik kontrol ediliyor...</p>
-                </div>
-            </div>
+            <CreativeLoader
+                message="Hesabınız Doğrulanıyor"
+                subMessage="Üyelik durumu ve yetkiler kontrol ediliyor..."
+            />
         );
     }
 
