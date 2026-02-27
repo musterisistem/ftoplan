@@ -115,6 +115,8 @@ export async function POST(req: Request) {
             role: 'admin',
             packageType: pkgType,
             intendedAction: intendedAction || 'trial',
+            heroTitle: studioName,
+            heroSubtitle: phone,
             ...limits,
             subscriptionExpiry,
             billingInfo: {

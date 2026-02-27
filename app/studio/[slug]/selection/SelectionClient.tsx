@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Grid, Heart, Check, Image as ImageIcon, Layout, BookOpen, AlertCircle, Loader2, ArrowRight, X, ZoomIn, Info, Lock, Download } from 'lucide-react';
+import { Grid, Heart, Check, Image as ImageIcon, Layout, BookOpen, AlertCircle, Loader2, ArrowRight, X, ZoomIn, ZoomOut, Info, Lock, Download, ChevronLeft, ChevronRight, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -24,7 +26,16 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
     const [submitting, setSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'selected'>('all');
     const [activeCategory, setActiveCategory] = useState<CategoryType>('album');
-    const [lightboxPhoto, setLightboxPhoto] = useState<any | null>(null);
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+    const [downloadProgress, setDownloadProgress] = useState(0);
+
+    // Get the photos being currently viewed (all or selected)
+    const displayedPhotos = useMemo(() => {
+        return activeTab === 'all' 
+            ? photos 
+            : photos.filter(p => selectedPhotos.find(s => s.url === p.url && s.type === activeCategory));
+    }, [activeTab, photos, selectedPhotos, activeCategory]);
     const [popup, setPopup] = useState<{
         isOpen: boolean;
         type: 'warning' | 'confirm' | 'success' | 'error';
@@ -127,6 +138,56 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
             filename: photo.filename,
             type: targetType
         }]);
+    };
+
+    const handleDownloadZip = async () => {
+        if (photos.length === 0) return;
+        setIsDownloadingZip(true);
+        setDownloadProgress(0);
+
+        try {
+            const zip = new JSZip();
+            const folder = zip.folder("Album_Fotograflari");
+
+            const fetchPhoto = async (photo: any, idx: number) => {
+                try {
+                    const response = await fetch(photo.url);
+                    const blob = await response.blob();
+                    const filename = photo.filename || `foto_${idx + 1}.jpg`;
+                    folder?.file(filename, blob);
+                } catch (err) {
+                    console.error("Fotoğraf indirilemedi:", photo.url, err);
+                }
+            };
+
+            const chunkSize = 5; // Download 5 photos at a time to prevent memory issues
+            for (let i = 0; i < photos.length; i += chunkSize) {
+                const chunk = photos.slice(i, i + chunkSize);
+                await Promise.all(chunk.map((photo, idx) => fetchPhoto(photo, i + idx)));
+                setDownloadProgress(Math.round(((i + chunk.length) / photos.length) * 100));
+            }
+
+            const zipContent = await zip.generateAsync({ type: "blob" });
+            saveAs(zipContent, `album_fotograflari.zip`);
+            
+            setPopup({
+                isOpen: true,
+                type: 'success',
+                title: 'İndirme Tamamlandı',
+                message: 'Tüm fotoğraflar başarıyla indirildi.',
+            });
+        } catch (error) {
+            console.error("ZIP oluşturma hatası:", error);
+            setPopup({
+                isOpen: true,
+                type: 'error',
+                title: 'Hata',
+                message: 'Fotoğraflar indirilirken bir hata oluştu.',
+            });
+        } finally {
+            setIsDownloadingZip(false);
+            setDownloadProgress(0);
+        }
     };
 
     const handleConfirmSubmit = async () => {
@@ -238,26 +299,44 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                         })}
                     </div>
 
-                    <div className={`flex items-center justify-between border-t pt-4 ${isPink ? 'border-pink-200/50' : 'border-white/5'}`}>
-                        <div className={`flex p-1 rounded-xl border ${subActionBg}`}>
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'all' ? filterBtnActive : filterBtnInactive}`}
-                            >
-                                Hepsi
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('selected')}
-                                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'selected' ? filterBtnActive : filterBtnInactive}`}
-                            >
-                                Seçilenler
-                            </button>
+                    <div className={`flex flex-col md:flex-row items-center justify-between border-t pt-4 gap-4 ${isPink ? 'border-pink-200/50' : 'border-white/5'}`}>
+                        <div className="flex flex-wrap gap-3 items-center justify-center w-full md:w-auto">
+                            <div className={`flex p-1 rounded-xl border w-full sm:w-auto ${subActionBg}`}>
+                                <button
+                                    onClick={() => setActiveTab('all')}
+                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all ${activeTab === 'all' ? filterBtnActive : filterBtnInactive}`}
+                                >
+                                    Hepsi
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('selected')}
+                                    className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all ${activeTab === 'selected' ? filterBtnActive : filterBtnInactive}`}
+                                >
+                                    Seçilenler
+                                </button>
+                            </div>
+                            {customer.canDownload && (
+                                <button
+                                    onClick={handleDownloadZip}
+                                    disabled={isDownloadingZip}
+                                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all border shadow-sm ${
+                                        isPink 
+                                        ? 'bg-white border-pink-200 text-[#831843] hover:bg-pink-50 hover:border-pink-300' 
+                                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                    {isDownloadingZip ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
+                                    <span>
+                                        {isDownloadingZip ? `İndiriliyor... ${downloadProgress}%` : 'Tüm Albümü İndir'}
+                                    </span>
+                                </button>
+                            )}
                         </div>
 
                         <button
                             onClick={handleSubmit}
                             disabled={!isValid || submitting}
-                            className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${isValid
+                            className={`w-full md:w-auto px-6 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all ${isValid
                                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105'
                                 : (isPink ? 'bg-pink-50 text-pink-300 cursor-not-allowed border border-pink-100' : 'bg-white/5 text-gray-500 cursor-not-allowed border border-white/5')
                                 }`}
@@ -270,41 +349,54 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {(activeTab === 'all' ? photos : photos.filter(p => selectedPhotos.find(s => s.url === p.url))).map((photo, i) => {
+                {displayedPhotos.map((photo, i) => {
                     const photoSelections = selectedPhotos.filter(s => s.url === photo.url);
                     const isSelected = photoSelections.length > 0;
                     const isSelectedInActiveCat = photoSelections.some(s => s.type === activeCategory);
 
                     return (
-                        <div
-                            key={i}
-                            onClick={() => setLightboxPhoto(photo)}
-                            className={`group relative aspect-[2/3] md:aspect-square ${gridItemBg} rounded-2xl overflow-hidden cursor-zoom-in transition-all duration-300 ${isSelectedInActiveCat
-                                ? `ring-2 ring-offset-2 ${isPink ? 'ring-offset-[#FFFBF0]' : 'ring-offset-black'} ${activeCategory === 'album' ? 'ring-green-500' :
-                                    activeCategory === 'cover' ? 'ring-purple-500' : 'ring-orange-500'
-                                }`
-                                : `hover:opacity-90 hover:ring-1 ${gridItemRingHover}`}`}
-                        >
-                            <img src={photo.url} alt="Photo" loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div key={i} className="flex flex-col gap-2">
+                            <div
+                                onClick={() => setLightboxIndex(i)}
+                                className={`group relative aspect-[2/3] md:aspect-square ${gridItemBg} rounded-2xl overflow-hidden cursor-zoom-in transition-all duration-300 ${isSelectedInActiveCat
+                                    ? `ring-2 ring-offset-2 ${isPink ? 'ring-offset-[#FFFBF0]' : 'ring-offset-black'} ${activeCategory === 'album' ? 'ring-green-500' :
+                                        activeCategory === 'cover' ? 'ring-purple-500' : 'ring-orange-500'
+                                    }`
+                                    : `hover:opacity-90 hover:ring-1 ${gridItemRingHover}`}`}
+                            >
+                                <img src={photo.url} alt="Seçim" loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
 
-                            <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-                                {photoSelections.map((sel, idx) => (
-                                    <div key={idx} className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase text-white shadow-lg backdrop-blur-md flex items-center gap-1 ${sel.type === 'album' ? 'bg-gradient-to-r from-green-600 to-emerald-600' :
-                                        sel.type === 'cover' ? 'bg-gradient-to-r from-purple-600 to-indigo-600' : 'bg-gradient-to-r from-orange-600 to-red-600'
-                                        }`}>
-                                        <Check className="w-3 h-3" />
-                                        {sel.type}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {isSelectedInActiveCat && (
-                                <div className={`absolute inset-0 bg-black/20 flex items-center justify-center`}>
-                                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                                        <Check className="w-6 h-6 text-white" />
-                                    </div>
+                                <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
+                                    {photoSelections.map((sel, idx) => (
+                                        <div key={idx} className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase text-white shadow-lg backdrop-blur-md flex items-center gap-1 ${sel.type === 'album' ? 'bg-gradient-to-r from-green-600 to-emerald-600' :
+                                            sel.type === 'cover' ? 'bg-gradient-to-r from-purple-600 to-indigo-600' : 'bg-gradient-to-r from-orange-600 to-red-600'
+                                            }`}>
+                                            <Check className="w-3 h-3" />
+                                            {sel.type}
+                                        </div>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
+                            
+                            {/* Fast Selection Toggle Button under image */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSelection(photo, activeCategory);
+                                }}
+                                className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all ${
+                                    isSelectedInActiveCat
+                                        ? `bg-gradient-to-r ${currentCatConfig.gradient} text-white shadow-lg shadow-${currentCatConfig.color}-500/25`
+                                        : (isPink ? 'bg-white border border-pink-100 text-[#831843]/70 hover:bg-pink-50' : 'bg-[#111] text-gray-400 border border-white/5 hover:bg-white/5 hover:text-white')
+                                }`}
+                            >
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                    isSelectedInActiveCat ? 'border-white/30 bg-white/20' : (isPink ? 'border-pink-200' : 'border-gray-600')
+                                }`}>
+                                    {isSelectedInActiveCat && <Check className="w-3 h-3 text-white" />}
+                                </div>
+                                {isSelectedInActiveCat ? 'Seçildi' : 'Seç'}
+                            </button>
                         </div>
                     )
                 })}
@@ -374,54 +466,154 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
 
             {/* Lightbox Implementation */}
             <AnimatePresence>
-                {lightboxPhoto && (
+                {lightboxIndex !== null && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[2000] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4"
                     >
-                        <button
-                            onClick={() => setLightboxPhoto(null)}
-                            className="absolute top-6 right-6 p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all backdrop-blur-md z-10"
-                        >
-                            <X className="w-8 h-8" />
-                        </button>
+                        {/* Top Controls */}
+                        <div className="absolute top-6 left-0 right-0 px-6 flex justify-between items-start z-50">
+                            <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 text-white font-mono text-sm">
+                                {lightboxIndex + 1} / {displayedPhotos.length}
+                            </div>
+                            <button
+                                onClick={() => setLightboxIndex(null)}
+                                className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all backdrop-blur-md"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
 
+                        {/* Navigation Arrows */}
+                        {lightboxIndex > 0 && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-black/80 rounded-full text-white transition-all backdrop-blur-md z-50 hidden md:flex"
+                            >
+                                <ChevronLeft className="w-8 h-8" />
+                            </button>
+                        )}
+                        {lightboxIndex < displayedPhotos.length - 1 && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-black/80 rounded-full text-white transition-all backdrop-blur-md z-50 hidden md:flex"
+                            >
+                                <ChevronRight className="w-8 h-8" />
+                            </button>
+                        )}
+
+                        {/* Photo Container with Zoom */}
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
+                            key={lightboxIndex}
+                            initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="relative max-w-5xl w-full max-h-[75vh] flex items-center justify-center"
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="relative w-full h-[65vh] md:h-[75vh] flex items-center justify-center my-auto mt-16 md:mt-auto"
+                            // Swipe Support for mobile
+                            drag="x"
+                            dragConstraints={{ left: 0, right: 0 }}
+                            dragElastic={0.2}
+                            onDragEnd={(e, { offset, velocity }) => {
+                                const swipe = Math.abs(offset.x) * velocity.x;
+                                if (swipe < -100 && lightboxIndex < displayedPhotos.length - 1) {
+                                    setLightboxIndex(lightboxIndex + 1);
+                                } else if (swipe > 100 && lightboxIndex > 0) {
+                                    setLightboxIndex(lightboxIndex - 1);
+                                }
+                            }}
                         >
-                            <img
-                                src={lightboxPhoto.url}
-                                alt="Seçim"
-                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10"
-                            />
+                            <TransformWrapper
+                                initialScale={1}
+                                minScale={1}
+                                maxScale={4}
+                                centerOnInit
+                                wheel={{ step: 0.1 }}
+                            >
+                                {({ zoomIn, zoomOut, resetTransform }) => (
+                                    <>
+                                        {/* Zoom Controls */}
+                                        <div className="absolute top-4 right-4 md:top-1/2 md:-translate-y-1/2 md:right-24 flex flex-col gap-2 z-50">
+                                            <button onClick={() => zoomIn(0.5)} className="p-2.5 md:p-3 bg-black/50 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all">
+                                                <ZoomIn className="w-4 h-4 md:w-5 md:h-5" />
+                                            </button>
+                                            <button onClick={() => resetTransform()} className="p-2.5 md:p-3 bg-black/50 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all font-mono text-[10px] md:text-xs font-bold leading-none flex items-center justify-center">
+                                                1X
+                                            </button>
+                                            <button onClick={() => zoomOut(0.5)} className="p-2.5 md:p-3 bg-black/50 hover:bg-white/20 text-white rounded-xl backdrop-blur-md border border-white/10 transition-all">
+                                                <ZoomOut className="w-4 h-4 md:w-5 md:h-5" />
+                                            </button>
+                                        </div>
+                                        <TransformComponent wrapperClass="w-full h-full flex items-center justify-center" contentClass="w-full h-full flex items-center justify-center">
+                                            <div className="w-full h-full px-4 md:px-12 pb-24 md:pb-0 flex items-center justify-center">
+                                                <img
+                                                    src={displayedPhotos[lightboxIndex].url}
+                                                    alt="Seçim Önizleme"
+                                                    className="max-w-[95%] max-h-[95%] md:max-w-[85%] md:max-h-[85%] object-contain rounded-lg drop-shadow-2xl select-none"
+                                                    draggable={false}
+                                                />
+                                            </div>
+                                        </TransformComponent>
+                                    </>
+                                )}
+                            </TransformWrapper>
                         </motion.div>
 
-                        <div className="mt-12 flex flex-col sm:flex-row gap-4 items-center">
-                            {customer.canDownload && (
-                                <a
-                                    href={lightboxPhoto.url}
-                                    download={lightboxPhoto.filename || "foto-plan.jpg"}
-                                    onClick={(e) => {
-                                        // Stop propagation to prevent closing lightbox
-                                        e.stopPropagation();
-                                    }}
-                                    className="flex items-center gap-3 px-10 py-4 bg-white text-black font-black rounded-2xl hover:bg-gray-100 transition-all shadow-2xl shadow-white/10 active:scale-95 uppercase tracking-widest text-sm"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    Fotoğrafı İndir
-                                </a>
-                            )}
-                            <button
-                                onClick={() => setLightboxPhoto(null)}
-                                className="px-10 py-4 bg-white/5 text-white/70 font-bold rounded-2xl hover:bg-white/10 hover:text-white transition-all border border-white/10 backdrop-blur-md"
-                            >
-                                Pencereyi Kapat
-                            </button>
+                        {/* Bottom Actions */}
+                        <div className="absolute bottom-6 md:bottom-8 left-0 right-0 flex justify-center z-50 px-4 pb-safe">
+                            <div className="bg-black/80 md:bg-black/60 backdrop-blur-xl border border-white/10 p-2 md:p-2 rounded-2xl md:rounded-3xl flex gap-2 items-center w-full sm:w-auto overflow-x-auto scrollbar-hide">
+                                {(() => {
+                                    const currentPhoto = displayedPhotos[lightboxIndex];
+                                    const isSelectedInActiveCat = selectedPhotos.some(s => s.url === currentPhoto.url && s.type === activeCategory);
+                                    
+                                    return (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleSelection(currentPhoto, activeCategory);
+                                            }}
+                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-[11px] md:text-sm uppercase tracking-widest transition-all whitespace-nowrap ${
+                                                isSelectedInActiveCat
+                                                    ? `bg-gradient-to-r ${currentCatConfig.gradient} text-white shadow-lg shadow-${currentCatConfig.color}-500/30`
+                                                    : 'bg-white text-black hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            <div className={`w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                                isSelectedInActiveCat ? 'border-white/50 bg-white/20' : 'border-black/20'
+                                            }`}>
+                                                <Check className={`w-2.5 h-2.5 md:w-3 md:h-3 ${isSelectedInActiveCat ? 'text-white' : 'text-transparent'}`} />
+                                            </div>
+                                            {isSelectedInActiveCat ? `${currentCatConfig.label} SEÇİLDİ` : `${currentCatConfig.label} SEÇ`}
+                                        </button>
+                                    );
+                                })()}
+                                
+                                {customer.canDownload && (
+                                    <button
+                                        onClick={async (e) => {
+                                            e.stopPropagation();
+                                            try {
+                                                const url = displayedPhotos[lightboxIndex].url;
+                                                const filename = displayedPhotos[lightboxIndex].filename || "foto-plan.jpg";
+                                                
+                                                // Fetch the file directly as a Blob to enforce download without opening new tab
+                                                const response = await fetch(url);
+                                                const blob = await response.blob();
+                                                saveAs(blob, filename);
+                                                
+                                            } catch (error) {
+                                                console.error("Single file download failed", error);
+                                            }
+                                        }}
+                                        className="flex-shrink-0 flex items-center justify-center w-12 h-12 md:w-14 md:h-14 bg-white/10 border border-white/10 text-white hover:bg-white/20 rounded-xl md:rounded-2xl transition-all"
+                                        title="Bu Fotoğrafı İndir"
+                                    >
+                                        <Download className="w-4 h-4 md:w-5 md:h-5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 )}

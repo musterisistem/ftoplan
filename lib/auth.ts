@@ -161,8 +161,8 @@ export const authOptions: NextAuthOptions = {
                 await dbConnect();
 
                 if (token.email && token.role === 'admin') {
-                    // Update: Select panelLogo and panelSettings
-                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings isActive isEmailVerified');
+                    // Update: Select panelLogo and panelSettings AND name
+                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings isActive isEmailVerified name');
 
                     if (adminUser) {
                         token.storageUsage = adminUser.storageUsage || 0;
@@ -170,6 +170,7 @@ export const authOptions: NextAuthOptions = {
                         token.studioName = adminUser.studioName || '';
                         token.subscriptionExpiry = adminUser.subscriptionExpiry?.toISOString() || null;
                         token.packageType = adminUser.packageType || 'trial';
+                        token.name = adminUser.name || '';
                         // Logic: Use panelLogo if available, otherwise fallback to logo
                         token.picture = adminUser.panelLogo || adminUser.logo || '';
                         token.panelSettings = adminUser.panelSettings || undefined;
@@ -189,6 +190,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = token.role;
                 session.user.customerId = token.customerId;
                 session.user.id = token.id;
+                session.user.name = token.name; // Keep name in sync
                 session.user.storageUsage = token.storageUsage;
                 session.user.storageLimit = token.storageLimit;
                 session.user.studioName = token.studioName;

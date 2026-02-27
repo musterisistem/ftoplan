@@ -4,9 +4,35 @@ import WhatsAppButton from '@/components/studio/WhatsAppButton';
 import StudioTopNav from '@/components/studio/StudioTopNav';
 import { notFound } from 'next/navigation';
 import { CustomerAuthProvider } from '@/contexts/CustomerAuthContext';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const photographer = await getPhotographer(slug);
+
+    if (!photographer) return { title: 'Site Bulunamadı' };
+
+    const title = `${photographer.studioName} - fotoğrafçı dış çekim dış mekan çekimleri`;
+    const description = photographer.aboutText || `${photographer.studioName} Resmi Web Sayfası. Fotoğrafçı, dış çekim ve profesyonel fotoğrafçılık hizmetleri.`;
+
+    return {
+        title: {
+            template: `%s | ${photographer.studioName}`,
+            default: title,
+        },
+        description,
+        keywords: ['fotoğrafçı', 'dış çekim', 'dış çekim fiyatları', 'foto', 'fotoğrafçılık', 'dış çekim fotoğrafçı'],
+        openGraph: {
+            title,
+            description,
+            siteName: photographer.studioName,
+            images: photographer.bannerImage ? [photographer.bannerImage] : [],
+        }
+    };
+}
 
 export default async function StudioLayout({
     children,

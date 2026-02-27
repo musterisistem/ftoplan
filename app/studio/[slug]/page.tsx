@@ -14,9 +14,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!photographer) return { title: 'Site Bulunamadı' };
 
+    const title = `${photographer.studioName} - fotoğrafçı dış çekim dış mekan çekimleri`;
+
     return {
-        title: photographer.studioName,
-        description: photographer.aboutText || `${photographer.studioName} Resmi Web Sayfası`,
+        title,
+        description: photographer.aboutText || title,
+        keywords: ['fotoğrafçı', 'dış çekim', 'dış çekim fiyatları', 'foto', 'fotoğrafçılık', 'dış çekim fotoğrafçı'],
+        openGraph: {
+            title,
+            description: photographer.aboutText || title,
+        }
     };
 }
 

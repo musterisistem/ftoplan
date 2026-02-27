@@ -45,7 +45,7 @@ export async function PUT(req: Request) {
 
         const body = await req.json();
         console.log('Studio Settings PUT Body:', JSON.stringify(body, null, 2));
-        const { studioName, logo, bannerImage, primaryColor, siteTheme, aboutText, phone, address, instagram, facebook, whatsapp, portfolioPhotos, heroTitle, heroSubtitle, selectionSuccessMessage } = body;
+        const { name, studioName, logo, bannerImage, primaryColor, siteTheme, aboutText, phone, address, instagram, facebook, whatsapp, portfolioPhotos, heroTitle, heroSubtitle, selectionSuccessMessage } = body;
 
         await dbConnect();
 
@@ -53,6 +53,7 @@ export async function PUT(req: Request) {
             { email: session.user.email, role: 'admin' },
             {
                 $set: {
+                    name,
                     studioName,
                     logo,
                     bannerImage,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Search, Globe, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, Image as ImageIcon, LayoutTemplate, MonitorSmartphone, Contact2, FileText, Users, Camera, Loader2, X, Clock } from 'lucide-react';
+import { Bell, Search, Globe, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, Image as ImageIcon, LayoutTemplate, MonitorSmartphone, Contact2, FileText, Users, Camera, Loader2, X, Clock, Lock } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -263,24 +263,46 @@ export default function Header() {
                                     </div>
 
                                     <div className="px-2 space-y-1">
-                                        <Link href="/admin/settings/general" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors">
-                                            <Settings className="w-[18px] h-[18px]" /> Genel Ayarlar
-                                        </Link>
-                                        <Link href="/admin/settings/contact" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors">
-                                            <Contact2 className="w-[18px] h-[18px]" /> İletişim Bilgileri
-                                        </Link>
-                                        <Link href="/admin/settings/gallery" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors">
-                                            <ImageIcon className="w-[18px] h-[18px]" /> Galeri Ayarları
-                                        </Link>
-                                        <Link href="/admin/settings/theme" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors">
-                                            <LayoutTemplate className="w-[18px] h-[18px]" /> Tema Ayarları
-                                        </Link>
-                                        <Link href="/admin/settings/content" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors">
-                                            <FileText className="w-[18px] h-[18px]" /> İçerik Yönetimi
-                                        </Link>
-                                        <Link href="/admin/settings/panel" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors">
-                                            <MonitorSmartphone className="w-[18px] h-[18px]" /> Panel Bilgileri
-                                        </Link>
+                                        {[
+                                            { href: "/admin/settings/general", label: "Genel Ayarlar", icon: Settings },
+                                            { href: "/admin/settings/contact", label: "İletişim Bilgileri", icon: Contact2 },
+                                            { href: "/admin/settings/gallery", label: "Galeri Ayarları", icon: ImageIcon },
+                                            { href: "/admin/settings/theme", label: "Tema Ayarları", icon: LayoutTemplate },
+                                            { href: "/admin/settings/content", label: "İçerik Yönetimi", icon: FileText },
+                                            { href: "/admin/settings/panel", label: "Panel Bilgileri", icon: MonitorSmartphone },
+                                        ].map((item) => {
+                                            const isLocked = session?.user?.packageType === 'trial' && item.href !== '/admin/settings/panel';
+
+                                            if (isLocked) {
+                                                return (
+                                                    <button
+                                                        key={item.href}
+                                                        onClick={() => {
+                                                            setProfileOpen(false);
+                                                            setUpgradeModalOpen(true);
+                                                        }}
+                                                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-slate-400 transition-colors group"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <item.icon className="w-[18px] h-[18px] text-slate-300" />
+                                                            {item.label}
+                                                        </div>
+                                                        <Lock className="w-3.5 h-3.5 text-slate-400" />
+                                                    </button>
+                                                );
+                                            }
+
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    onClick={() => setProfileOpen(false)}
+                                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors"
+                                                >
+                                                    <item.icon className="w-[18px] h-[18px]" /> {item.label}
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
 
                                     <div className="border-t border-gray-50 mt-2 pt-2 px-2">

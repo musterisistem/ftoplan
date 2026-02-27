@@ -67,12 +67,14 @@ export default function MarqueePortfolio({ photos, isLight }: MarqueePortfolioPr
             setRow1(shuffled.slice(0, mid));
             setRow2(shuffled.slice(mid));
         } else {
-            // Fallback placeholders if no photos
-            const placeholders = Array(10).fill(null).map((_, i) => ({
-                url: `https://picsum.photos/seed/${i + 100}/400/600`
+            // Fallback placeholders using the 15 custom demo images
+            const defaultDemoImages = Array.from({ length: 15 }, (_, i) => ({
+                url: `https://fotoplan.b-cdn.net/demo/demof_${i + 1}.png`
             }));
-            setRow1(placeholders.slice(0, 5));
-            setRow2(placeholders.slice(5));
+            const shuffled = shuffleArray(defaultDemoImages);
+            const mid = Math.ceil(shuffled.length / 2);
+            setRow1(shuffled.slice(0, mid));
+            setRow2(shuffled.slice(mid));
         }
     }, [photos]);
 

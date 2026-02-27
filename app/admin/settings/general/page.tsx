@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { Save, User, Mail, Phone, Building, Loader2, Check, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function GeneralSettingsPage() {
-    const { status } = useSession();
+    const { status, update } = useSession();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -87,6 +87,7 @@ export default function GeneralSettingsPage() {
 
             if (res.ok) {
                 setMessage({ type: 'success', text: 'Bilgiler başarıyla kaydedildi!' });
+                await update(); // Refresh session to reflect name & studioName changes in header/sidebar
             } else {
                 throw new Error('Kaydetme başarısız');
             }

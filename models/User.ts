@@ -153,11 +153,11 @@ const UserSchema = new mongoose.Schema({
     },
     heroTitle: {
         type: String,
-        default: 'Catch Your Life Moment',
+        default: '',
     },
     heroSubtitle: {
         type: String,
-        default: 'Photography & Cinema',
+        default: '',
     },
     selectionSuccessMessage: {
         type: String,

@@ -22,9 +22,11 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Format slider images
+    const defaultDemoImages = Array.from({ length: 15 }, (_, i) => `https://fotoplan.b-cdn.net/demo/demof_${i + 1}.png`);
+
     const images = sliderImages && sliderImages.length > 0
         ? sliderImages.map(img => img.url).slice(0, 5)
-        : [bannerImage || 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2071&auto=format&fit=crop'];
+        : (bannerImage ? [bannerImage] : defaultDemoImages.slice(0, 5));
 
     useEffect(() => {
         images.forEach(src => {
@@ -101,7 +103,7 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
                     </h1>
 
                     <h2 className="text-5xl md:text-8xl font-bold tracking-tighter mb-8 font-syne drop-shadow-sm">
-                        {heroTitle || "Anları Yakala"}
+                        {heroTitle || studioName}
                     </h2>
 
                     <p className={`text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed mb-12 ${subTextColor}`}>

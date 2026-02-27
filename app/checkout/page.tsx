@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { CreditCard, Lock, Building, CheckCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
 
 function CheckoutContent() {
     const { data: session, status } = useSession();
@@ -238,127 +239,13 @@ function CheckoutContent() {
 
 /* ─── Success Flow Component ────────────────────────── */
 function SuccessFlow({ selectedPackage }: { selectedPackage: any }) {
-    const [stage, setStage] = useState<'confirmed' | 'preparing'>('confirmed');
-    const [progress, setProgress] = useState(0);
-    const [checklistIndex, setChecklistIndex] = useState(-1);
-
-    const checklist = [
-        "Üyelik bilgileriniz panele işleniyor.",
-        "Firmanıza özel mobil uygulama hazırlanıyor.",
-        "Mobil uygulama hazırlandı.",
-        "Müşteri yönetim sistemi aktifleştiriliyor.",
-        "Fotoğraf albüm optimizasyon özelliği aktifleştiriliyor.",
-        "Paneliniz başlatılıyor."
-    ];
-
-    useEffect(() => {
-        // Stage 1: Confirmed (10s)
-        const stage1Timeout = setTimeout(() => {
-            setStage('preparing');
-        }, 10000);
-
-        // Stage 2: Preparing (30s after first 10s)
-        const stage2Timeout = setTimeout(() => {
-            window.location.href = '/admin/dashboard';
-        }, 40000);
-
-        // Checklist progression (every 5s during the 30s prep period)
-        const checklistInterval = setInterval(() => {
-            setChecklistIndex((prev: number) => {
-                if (prev < checklist.length - 1) return prev + 1;
-                return prev;
-            });
-        }, 5000);
-
-        // Global progress bar (40s total)
-        const progressInterval = setInterval(() => {
-            setProgress((prev: number) => Math.min(prev + (100 / 400), 100)); // Update every 100ms
-        }, 100);
-
-        return () => {
-            clearTimeout(stage1Timeout);
-            clearTimeout(stage2Timeout);
-            clearInterval(checklistInterval);
-            clearInterval(progressInterval);
-        };
-    }, []);
-
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFBFF] p-6 relative overflow-hidden">
-            {/* Background ambient glows */}
-            <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-[100px] animate-pulse" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-
-            <div className="max-w-md w-full bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] p-12 text-center border border-white relative z-10 transition-all duration-700">
-
-                <AnimatePresence mode="wait">
-                    {stage === 'confirmed' ? (
-                        <motion.div
-                            key="confirmed"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 1.1 }}
-                        >
-                            <div className="relative mx-auto w-28 h-28 mb-8">
-                                <div className="absolute inset-0 border-4 border-transparent border-t-[#7B3FF2] border-r-indigo-500 rounded-full animate-spin"></div>
-                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-50 rounded-full shadow-inner m-4">
-                                    <CheckCircle className="w-10 h-10 text-[#7B3FF2] animate-bounce" />
-                                </div>
-                            </div>
-
-                            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-700 mb-4 tracking-tight">
-                                Harika! Ödeme Onaylandı
-                            </h2>
-                            <p className="text-slate-500 font-medium text-[15px] mb-8">
-                                <strong className="text-[#7B3FF2]">{selectedPackage.name}</strong> aboneliğiniz aktif ediliyor.
-                            </p>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="preparing"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-left"
-                        >
-                            <h2 className="text-2xl font-black text-slate-900 mb-6 text-center">Paneliniz Hazırlanıyor</h2>
-
-                            <div className="space-y-4 mb-8">
-                                {checklist.map((item, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{
-                                            opacity: idx <= checklistIndex ? 1 : 0.3,
-                                            x: 0,
-                                            color: idx < checklistIndex ? '#10B981' : (idx === checklistIndex ? '#7B3FF2' : '#94A3B8')
-                                        }}
-                                        className="flex items-center gap-3 text-[14px] font-bold"
-                                    >
-                                        {idx < checklistIndex ? (
-                                            <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
-                                        ) : idx === checklistIndex ? (
-                                            <div className="w-5 h-5 border-2 border-[#7B3FF2] border-t-transparent rounded-full animate-spin shrink-0" />
-                                        ) : (
-                                            <div className="w-5 h-5 rounded-full border-2 border-slate-200 shrink-0" />
-                                        )}
-                                        {item}
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Progress Bar */}
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mt-4">
-                    <div className="h-full bg-gradient-to-r from-[#7B3FF2] via-pink-500 to-indigo-500 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
-                </div>
-
-                <p className="text-[12px] text-slate-400 mt-4 font-medium italic">
-                    Lütfen bu sayfayı kapatmayın, işlemleriniz tamamlanıyor...
-                </p>
-            </div>
-        </div>
+        <UpgradeSuccessFlow
+            packageName={selectedPackage.name}
+            onComplete={() => {
+                window.location.href = '/admin/dashboard';
+            }}
+        />
     );
 }
 

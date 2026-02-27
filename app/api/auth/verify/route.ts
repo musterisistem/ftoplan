@@ -51,9 +51,9 @@ export async function GET(req: Request) {
         }
 
         // For true trials
-        // Reset trial start date to NOW (so they get full 7 days from verification)
+        // Reset trial start date to NOW (so they get full 3 days from verification)
         const freshExpiry = new Date();
-        freshExpiry.setDate(freshExpiry.getDate() + 7);
+        freshExpiry.setDate(freshExpiry.getDate() + 3);
         user.subscriptionExpiry = freshExpiry;
         user.isActive = true;
         await user.save();

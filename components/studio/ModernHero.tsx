@@ -9,9 +9,10 @@ interface ModernHeroProps {
     bannerImage: string;
     logo?: string;
     primaryColor: string;
+    heroSubtitle?: string;
 }
 
-export default function ModernHero({ studioName, bannerImage, logo, primaryColor }: ModernHeroProps) {
+export default function ModernHero({ studioName, bannerImage, logo, primaryColor, heroSubtitle }: ModernHeroProps) {
     const ref = useRef(null);
     const { scrollYProgress } = useScroll({
         target: ref,
@@ -22,7 +23,7 @@ export default function ModernHero({ studioName, bannerImage, logo, primaryColor
     const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
     // Fallback image if no banner provided
-    const bgImage = bannerImage || "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop";
+    const bgImage = bannerImage || "https://fotoplan.b-cdn.net/demo/demof_1.png";
 
     return (
         <div ref={ref} className="relative h-screen w-full overflow-hidden flex items-center justify-center">
@@ -72,7 +73,7 @@ export default function ModernHero({ studioName, bannerImage, logo, primaryColor
                     transition={{ duration: 1, delay: 0.8 }}
                     className="text-gray-100 text-lg md:text-xl font-light tracking-widest uppercase mb-8"
                 >
-                    Photography & Cinema
+                    {heroSubtitle || "Photography & Cinema"}
                 </motion.p>
 
                 <motion.div

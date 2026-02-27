@@ -18,8 +18,13 @@ interface MasonryPortfolioProps {
 export default function MasonryPortfolio({ photos, primaryColor }: MasonryPortfolioProps) {
     const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
-    // If no photos, show dummies
-    const displayPhotos = photos.length > 0 ? photos : Array(6).fill({ url: 'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?q=80&w=600&auto=format&fit=crop', title: 'Sample' });
+    // If no photos, show dummies using the 15 custom demo images
+    const defaultDemoImages = Array.from({ length: 15 }, (_, i) => ({
+        url: `https://fotoplan.b-cdn.net/demo/demof_${i + 1}.png`,
+        title: `Örnek ${i + 1}`
+    }));
+
+    const displayPhotos = photos.length > 0 ? photos : defaultDemoImages;
 
     return (
         <section className="py-20 px-4 md:px-8 bg-white">
