@@ -49,7 +49,17 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-quill": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-email/render": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-email/components": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   }
 }
