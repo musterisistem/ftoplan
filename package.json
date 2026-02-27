@@ -1,6 +1,6 @@
 {
   "name": "weey-net",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^16.1.6",
     "@react-email/components": "^1.0.6",
     "@react-email/render": "^2.0.4",
     "bcryptjs": "^3.0.3",
