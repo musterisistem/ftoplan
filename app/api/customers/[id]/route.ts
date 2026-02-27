@@ -159,6 +159,11 @@ export async function PUT(
             body.selectionCompleted === true &&
             customer.selectionCompleted === false;
 
+        // If selection was just completed by the customer, lock the timestamp
+        if (wasSelectionJustCompleted) {
+            updateData.selectionApprovedAt = new Date();
+        }
+
         // Sync with User Model if credentials or status changed
         if (customer.userId) {
             const userUpdate: any = {};

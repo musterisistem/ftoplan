@@ -848,6 +848,75 @@ function SummaryTab({ customer, appointmentStatus, albumStatus }: { customer: Cu
                         <div className="text-lg font-bold text-pink-900">{albumStatus.label}</div>
                     </div>
                 </div>
+
+                {/* Activity Logs Section */}
+                <div className="mt-8 border-t border-gray-100 pt-6">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-indigo-500" />
+                        Aktivite Kayıtları
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Son Giriş Bilgisi */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-4 hover:shadow-sm transition-shadow">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Globe className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900 mb-1">Son Sistem Girişi</p>
+                                {customer.lastLoginAt ? (
+                                    <>
+                                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                                            <Clock className="w-4 h-4" />
+                                            <span>
+                                                {new Date(customer.lastLoginAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                {' '} - {' '}
+                                                {new Date(customer.lastLoginAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <MapPin className="w-4 h-4" />
+                                            <span className="font-mono text-xs bg-gray-200 px-2 py-0.5 rounded text-gray-700">
+                                                IP: {customer.lastLoginIp || 'Bilinmiyor'}
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic flex items-center gap-1 mt-2">
+                                        <Info className="w-4 h-4" />
+                                        Müşteri henüz sisteme giriş yapmamış.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Son Şifre/Onay Bilgisi */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-start gap-4 hover:shadow-sm transition-shadow">
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900 mb-1">Seçim Onay Durumu</p>
+                                {(customer as any).selectionApprovedAt ? (
+                                    <div className="flex items-center gap-2 text-sm text-purple-700 font-medium">
+                                        Onaylandi:{' '}
+                                        {new Date((customer as any).selectionApprovedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        {' '}
+                                        {new Date((customer as any).selectionApprovedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                ) : customer.selectionCompleted ? (
+                                    <div className="text-sm text-green-600 font-medium">
+                                        Seçim tamamlandı.
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic mt-2">
+                                        Bekleniyor...
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

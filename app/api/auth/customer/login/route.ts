@@ -52,7 +52,23 @@ export async function POST(req: NextRequest) {
 
         console.log('✅ Login successful for customer:', customer._id);
 
-        console.log('✅ Login successful for customer:', customer._id);
+        // Capture the client IP using standard headers
+        const forwardedFor = req.headers.get('x-forwarded-for');
+        const realIp = req.headers.get('x-real-ip');
+        const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || 'Unknown IP');
+
+        // Remove IPv6 wrapper if present
+        const clientIp = rawIp.replace(/^.*:/, '');
+
+        // Update successful login details on the customer object
+        await Customer.findByIdAndUpdate(customer._id, {
+            $set: {
+                lastLoginAt: new Date(),
+                lastLoginIp: clientIp
+            }
+        });
+
+        console.log(`✅ Login successful for customer: ${customer._id} from IP: ${clientIp}`);
 
         // Populate photographerId for response
         await customer.populate('photographerId');
