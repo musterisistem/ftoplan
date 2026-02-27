@@ -13,7 +13,7 @@ const EmailTemplateSchema = new mongoose.Schema({
     photographerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+        required: false, // Make optional for system-wide templates
         index: true,
     },
     templateType: {
@@ -39,12 +39,7 @@ const EmailTemplateSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-// Compound unique index: one template per photographer per type
+// Compound unique index: one template per photographer per type (photographerId can be null)
 EmailTemplateSchema.index({ photographerId: 1, templateType: 1 }, { unique: true });
 
-// Delete cached model to force fresh schema in development
-if (mongoose.models.EmailTemplate) {
-    delete mongoose.models.EmailTemplate;
-}
-
-export default mongoose.model('EmailTemplate', EmailTemplateSchema);
+export default mongoose.models.EmailTemplate || mongoose.model('EmailTemplate', EmailTemplateSchema);

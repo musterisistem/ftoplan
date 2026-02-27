@@ -17,6 +17,8 @@ import {
     Package
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'react-hot-toast';
+import { EmailTemplateType } from '@/models/EmailTemplate';
 
 interface Photographer {
     _id: string;
@@ -40,6 +42,8 @@ export default function PhotographersPage() {
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         fetchPhotographers();
@@ -49,6 +53,7 @@ export default function PhotographersPage() {
         try {
             setLoading(true);
             setError('');
+            setSelectedIds([]); // Clear selection on refresh
             const res = await fetch('/api/superadmin/photographers', {
                 cache: 'no-store',
                 headers: {
@@ -66,6 +71,66 @@ export default function PhotographersPage() {
             setError('Sunucuya bağlanırken hata oluştu. Lütfen sayfayı yenileyin.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Bu üyeyi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+
+        try {
+            setDeleting(true);
+            const res = await fetch(`/api/superadmin/photographers/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                toast.success('Üye başarıyla silindi');
+                fetchPhotographers();
+            } else {
+                toast.error('Silme işlemi başarısız oldu');
+            }
+        } catch (error) {
+            toast.error('Bağlantı hatası');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`${selectedIds.length} üyeyi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+
+        try {
+            setDeleting(true);
+            const res = await fetch('/api/superadmin/photographers', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+
+            if (res.ok) {
+                toast.success(`${selectedIds.length} üye başarıyla silindi`);
+                fetchPhotographers();
+            } else {
+                toast.error('Toplu silme işlemi başarısız oldu');
+            }
+        } catch (error) {
+            toast.error('Bağlantı hatası');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filteredPhotographers.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredPhotographers.map(p => p._id));
         }
     };
 
@@ -108,6 +173,16 @@ export default function PhotographersPage() {
                     <Plus className="w-5 h-5" />
                     Yeni Fotoğrafçı
                 </button>
+                {selectedIds.length > 0 && (
+                    <button
+                        onClick={handleBulkDelete}
+                        disabled={deleting}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                    >
+                        <Trash2 className="w-5 h-5" />
+                        Seçilenleri Sil ({selectedIds.length})
+                    </button>
+                )}
             </div>
 
             {/* Search */}
@@ -157,6 +232,14 @@ export default function PhotographersPage() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-white/10">
+                                    <th className="px-6 py-4 text-left">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.length === filteredPhotographers.length && filteredPhotographers.length > 0}
+                                            onChange={toggleSelectAll}
+                                            className="w-4 h-4 rounded border-white/10 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-offset-gray-800"
+                                        />
+                                    </th>
                                     <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Fotoğrafçı</th>
                                     <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Paket</th>
                                     <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Depolama</th>
@@ -168,6 +251,14 @@ export default function PhotographersPage() {
                             <tbody>
                                 {filteredPhotographers.map((photographer) => (
                                     <tr key={photographer._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(photographer._id)}
+                                                onChange={() => toggleSelect(photographer._id)}
+                                                className="w-4 h-4 rounded border-white/10 bg-gray-700 text-purple-600 focus:ring-purple-500 focus:ring-offset-gray-800"
+                                            />
+                                        </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
@@ -222,13 +313,23 @@ export default function PhotographersPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Link
-                                                href={`/superadmin/photographers/${photographer._id}`}
-                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                                Düzenle
-                                            </Link>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Link
+                                                    href={`/superadmin/photographers/${photographer._id}`}
+                                                    className="p-2 text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors"
+                                                    title="Düzenle"
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDelete(photographer._id)}
+                                                    disabled={deleting}
+                                                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50"
+                                                    title="Sil"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -239,16 +340,18 @@ export default function PhotographersPage() {
             </div>
 
             {/* Add Photographer Modal */}
-            {showAddModal && (
-                <AddPhotographerModal
-                    onClose={() => setShowAddModal(false)}
-                    onSuccess={() => {
-                        setShowAddModal(false);
-                        fetchPhotographers();
-                    }}
-                />
-            )}
-        </div>
+            {
+                showAddModal && (
+                    <AddPhotographerModal
+                        onClose={() => setShowAddModal(false)}
+                        onSuccess={() => {
+                            setShowAddModal(false);
+                            fetchPhotographers();
+                        }}
+                    />
+                )
+            }
+        </div >
     );
 }
 

@@ -3,6 +3,7 @@
 // Template customizable fields for each template type
 export interface TemplateCustomization {
     logoUrl?: string;
+    logoWidth?: number;
     primaryColor?: string;
     subject?: string;
     headerText?: string;
@@ -107,8 +108,9 @@ export function buildEmailFromCustomization(
 }
 
 function buildVerifyEmailHtml(custom: TemplateCustomization, vars: Record<string, any>): string {
+    const logoWidth = custom.logoWidth || 140;
     const logoHtml = custom.logoUrl
-        ? `<div style="text-align: center; margin-bottom: 32px;"><img src="${custom.logoUrl}" width="140" height="40" alt="${custom.companyName}" style="margin: 0 auto;"></div>`
+        ? `<div style="text-align: center; margin-bottom: 32px;"><img src="${custom.logoUrl}" width="${logoWidth}" alt="${custom.companyName}" style="margin: 0 auto; max-width: 100%; height: auto;"></div>`
         : '';
 
     return `<!DOCTYPE html>
@@ -139,8 +141,9 @@ function buildVerifyEmailHtml(custom: TemplateCustomization, vars: Record<string
 }
 
 function buildWelcomePhotographerHtml(custom: TemplateCustomization, vars: Record<string, any>): string {
+    const logoWidth = custom.logoWidth || 140;
     const logoHtml = custom.logoUrl
-        ? `<img src="${custom.logoUrl}" width="140" height="40" alt="${custom.companyName}" style="margin: 0 auto 24px;">`
+        ? `<div style="text-align: center;"><img src="${custom.logoUrl}" width="${logoWidth}" alt="${custom.companyName}" style="margin: 0 auto 24px; max-width: 100%; height: auto;"></div>`
         : '';
 
     return `<!DOCTYPE html>
@@ -202,8 +205,9 @@ function buildCustomerStatusUpdateHtml(custom: TemplateCustomization, vars: Reco
 }
 
 function buildPlanUpdatedHtml(custom: TemplateCustomization, vars: Record<string, any>): string {
+    const logoWidth = custom.logoWidth || 140;
     const logoHtml = custom.logoUrl
-        ? `<div style="text-align: center; margin-bottom: 32px;"><img src="${custom.logoUrl}" width="140" height="40" alt="${custom.companyName}"></div>`
+        ? `<div style="text-align: center; margin-bottom: 32px;"><img src="${custom.logoUrl}" width="${logoWidth}" alt="${custom.companyName}" style="margin: 0 auto; max-width: 100%; height: auto;"></div>`
         : '';
 
     return `<!DOCTYPE html>
@@ -213,37 +217,37 @@ function buildPlanUpdatedHtml(custom: TemplateCustomization, vars: Record<string
     <div style="max-width: 600px; margin: 0 auto; padding: 48px 16px;">
         ${logoHtml}
         <div style="background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 25px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;">
-            <div style="background: linear-gradient(to right, #4f46e5, #9333ea, #ec4899); padding: 32px; text-align: center;">
-                <div style="display: inline-block; width: 64px; height: 64px; background-color: rgba(255,255,255,0.2); border-radius: 16px; margin-bottom: 16px; line-height: 64px; font-size: 32px;">
+            <div style="background: linear-gradient(135deg, ${custom.primaryColor} 0%, #111827 100%); padding: 40px; text-align: center;">
+                <div style="display: inline-block; width: 64px; height: 64px; background-color: rgba(255,255,255,0.2); border-radius: 20px; margin-bottom: 20px; line-height: 64px; font-size: 32px;">
                     ✨
                 </div>
-                <h1 style="font-size: 30px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">${custom.headerText || 'Üyelik Bilgileri'}</h1>
-                <p style="color: #c7d2fe; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">${custom.subject || 'Paket Güncellendi'}</p>
+                <h1 style="font-size: 28px; font-weight: bold; color: #ffffff; margin: 0 0 8px 0;">${custom.headerText || 'Üyelik Güncellemesi'}</h1>
+                <p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; margin: 0;">${custom.subject || 'Paketiniz Güncellendi'}</p>
             </div>
             <div style="padding: 40px;">
                 <p style="color: #374151; font-size: 16px; line-height: 1.75; margin-bottom: 32px;">
-                    Sayın <strong>{{photographerName}}</strong>,<br><br>${custom.bodyText}
+                    Merhaba <strong>{{photographerName}}</strong>,<br><br>${custom.bodyText || 'Üyeliğiniz başarıyla güncellenmiştir. Yeni paket bilgileriniz aşağıdadır:'}
                 </p>
-                <div style="background: linear-gradient(to bottom right, #f9fafb, #e5e7eb); border-radius: 16px; padding: 24px; border: 1px solid #d1d5db; margin-bottom: 32px;">
+                <div style="background-color: #f9fafb; border-radius: 20px; padding: 24px; border: 1px solid #e5e7eb; margin-bottom: 32px;">
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr style="border-bottom: 1px solid #d1d5db;">
+                        <tr style="border-bottom: 1px solid #f3f4f6;">
                             <td style="padding: 16px 0;">
                                 <div style="display: flex; align-items: center;">
-                                    <div style="width: 40px; height: 40px; background-color: #e0e7ff; border-radius: 12px; text-align: center; line-height: 40px; font-size: 20px; margin-right: 12px;">📦</div>
+                                    <div style="width: 40px; height: 40px; background-color: #f3f4f6; border-radius: 12px; text-align: center; line-height: 40px; font-size: 20px; margin-right: 12px;">📦</div>
                                     <div>
-                                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; margin: 0 0 4px 0;">Yeni Paket</p>
-                                        <p style="color: #111827; font-weight: bold; font-size: 18px; margin: 0;">{{newPlanName}}</p>
+                                        <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; font-weight: bold; margin: 0 0 2px 0;">Yeni Paket</p>
+                                        <p style="color: #111827; font-weight: bold; font-size: 16px; margin: 0;">{{newPlanName}}</p>
                                     </div>
                                 </div>
                             </td>
                         </tr>
-                        <tr style="border-bottom: 1px solid #d1d5db;">
+                        <tr style="border-bottom: 1px solid #f3f4f6;">
                             <td style="padding: 16px 0;">
                                 <div style="display: flex; align-items: center;">
-                                    <div style="width: 40px; height: 40px; background-color: #d1fae5; border-radius: 12px; text-align: center; line-height: 40px; font-size: 20px; margin-right: 12px;">📅</div>
+                                    <div style="width: 40px; height: 40px; background-color: #f3f4f6; border-radius: 12px; text-align: center; line-height: 40px; font-size: 20px; margin-right: 12px;">📅</div>
                                     <div>
-                                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; margin: 0 0 4px 0;">Geçerlilik Tarihi</p>
-                                        <p style="color: #111827; font-weight: bold; font-size: 18px; margin: 0;">{{expiryDate}}</p>
+                                        <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; font-weight: bold; margin: 0 0 2px 0;">Geçerlilik Tarihi</p>
+                                        <p style="color: #111827; font-weight: bold; font-size: 16px; margin: 0;">{{expiryDate}}</p>
                                     </div>
                                 </div>
                             </td>
@@ -251,10 +255,10 @@ function buildPlanUpdatedHtml(custom: TemplateCustomization, vars: Record<string
                         <tr>
                             <td style="padding: 16px 0;">
                                 <div style="display: flex; align-items: center;">
-                                    <div style="width: 40px; height: 40px; background-color: #dbeafe; border-radius: 12px; text-align: center; line-height: 40px; font-size: 20px; margin-right: 12px;">💾</div>
+                                    <div style="width: 40px; height: 40px; background-color: #f3f4f6; border-radius: 12px; text-align: center; line-height: 40px; font-size: 20px; margin-right: 12px;">💾</div>
                                     <div>
-                                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; margin: 0 0 4px 0;">Depolama Alanı</p>
-                                        <p style="color: #111827; font-weight: bold; font-size: 18px; margin: 0;">{{storageLimit}}</p>
+                                        <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; font-weight: bold; margin: 0 0 2px 0;">Depolama Alanı</p>
+                                        <p style="color: #111827; font-weight: bold; font-size: 16px; margin: 0;">{{storageLimit}}</p>
                                     </div>
                                 </div>
                             </td>
@@ -262,20 +266,17 @@ function buildPlanUpdatedHtml(custom: TemplateCustomization, vars: Record<string
                     </table>
                 </div>
                 <div style="text-align: center; margin-bottom: 24px;">
-                    <a href="/login" style="display: inline-block; background: linear-gradient(to right, #4f46e5, #9333ea); color: #ffffff; padding: 16px 32px; border-radius: 12px; font-weight: bold; font-size: 14px; text-decoration: none;">
-                        ${custom.buttonText}
+                    <a href="{{loginUrl}}" style="display: inline-block; background-color: ${custom.primaryColor}; color: #ffffff; padding: 18px 40px; border-radius: 16px; font-weight: bold; font-size: 15px; text-decoration: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                        ${custom.buttonText || 'Panelime Giriş Yap'}
                     </a>
                 </div>
-                <p style="color: #6b7280; font-size: 14px; text-align: center; line-height: 1.5; font-style: italic; margin: 0;">
-                    Yeni özelliklerinizi keşfetmek için hemen panelinize göz atın! 🚀
-                </p>
             </div>
             <div style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
-                <p style="color: #9ca3af; font-size: 12px; text-align: center; line-height: 1.5; margin: 0;">${custom.footerText}</p>
+                <p style="color: #9ca3af; font-size: 12px; text-align: center; line-height: 1.5; margin: 0;">${custom.footerText || ''}</p>
             </div>
         </div>
         <div style="text-align: center; margin-top: 32px;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} ${custom.companyName}. Tüm hakları saklıdır.</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} ${custom.companyName || ''}. Tüm hakları saklıdır.</p>
         </div>
     </div>
 </body>

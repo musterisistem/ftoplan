@@ -69,12 +69,15 @@ export const sendEmailWithTemplate = async ({
 
         await dbConnect();
 
-        // Find custom template
+        // Find custom template (prioritize photographer specific, then system-wide/global)
         const customTemplate = await EmailTemplate.findOne({
-            photographerId,
+            $or: [
+                { photographerId: photographerId },
+                { photographerId: null }
+            ],
             templateType,
             isActive: true
-        });
+        }).sort({ photographerId: -1 }); // Sort so that non-null (specific) comes first
 
         let customization;
 

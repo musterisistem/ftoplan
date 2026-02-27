@@ -1,22 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, Globe, MessageCircle, Instagram, Facebook, Twitter } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const CONTACT_INFO = [
-    { icon: MapPin, color: 'bg-[#5d2b72]', label: 'Adres', value: 'Levent Mah. Büyükdere Cad. No:123 Kat:8, 34394 Şişli / İstanbul' },
-    { icon: Phone, color: 'bg-emerald-500', label: 'Telefon', value: '+90 (212) 555 00 00' },
-    { icon: Mail, color: 'bg-blue-500', label: 'E-posta', value: 'destek@weey.net' },
-    { icon: Clock, color: 'bg-amber-500', label: 'Çalışma Saatleri', value: 'Pzt – Cuma: 09:00 – 18:00' },
+const ICON_MAP: { [key: string]: any } = {
+    MapPin, Phone, Mail, Clock, Globe, MessageCircle, Instagram, Facebook, Twitter
+};
+
+const DEFAULT_CONTACT_INFO = [
+    { icon: 'MapPin', color: 'bg-[#5d2b72]', label: 'Adres', value: 'Levent Mah. Büyükdere Cad. No:123 Kat:8, 34394 Şişli / İstanbul' },
+    { icon: 'Phone', color: 'bg-emerald-500', label: 'Telefon', value: '+90 (212) 555 00 00' },
+    { icon: 'Mail', color: 'bg-blue-500', label: 'E-posta', value: 'destek@weey.net' },
+    { icon: 'Clock', color: 'bg-amber-500', label: 'Çalışma Saatleri', value: 'Pzt – Cuma: 09:00 – 18:00' },
 ];
 
 export default function IletisimPage() {
     const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
     const [sent, setSent] = useState(false);
     const [sending, setSending] = useState(false);
+    const [contactInfo, setContactInfo] = useState<any[]>(DEFAULT_CONTACT_INFO);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.contactInfo && data.contactInfo.length > 0) {
+                    setContactInfo(data.contactInfo);
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,8 +81,8 @@ export default function IletisimPage() {
 
                     {/* Contact Info Cards */}
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
-                        {CONTACT_INFO.map((c, i) => {
-                            const Icon = c.icon;
+                        {contactInfo.map((c, i) => {
+                            const Icon = ICON_MAP[c.icon] || Mail;
                             return (
                                 <motion.div
                                     key={i}
@@ -181,8 +201,12 @@ export default function IletisimPage() {
                                     <div className="w-16 h-16 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <MapPin className="w-8 h-8 text-[#5d2b72]" />
                                     </div>
-                                    <p className="font-black text-slate-800 mb-1">Şişli, İstanbul</p>
-                                    <p className="text-sm text-slate-400">Levent Mah. Büyükdere Cad. No:123</p>
+                                    <p className="font-black text-slate-800 mb-1">
+                                        {contactInfo.find(c => c.label.toLowerCase().includes('adres'))?.value?.split(',')[0] || 'Şişli, İstanbul'}
+                                    </p>
+                                    <p className="text-sm text-slate-400">
+                                        {contactInfo.find(c => c.label.toLowerCase().includes('adres'))?.value || 'Levent Mah. Büyükdere Cad. No:123'}
+                                    </p>
                                 </div>
                             </div>
 
@@ -190,26 +214,36 @@ export default function IletisimPage() {
                             <div className="bg-gradient-to-br from-[#5d2b72] via-purple-700 to-purple-800 rounded-[32px] p-8 text-white shadow-2xl shadow-purple-200">
                                 <h3 className="text-lg font-black mb-2">Hızlı Destek</h3>
                                 <p className="text-purple-200 text-sm mb-6">Mesai saatleri içinde 30 dakika içinde geri dönüyoruz.</p>
-                                <a
-                                    href="mailto:destek@weey.net"
-                                    className="flex items-center gap-3 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10 mb-3"
-                                >
-                                    <Mail className="w-5 h-5 text-purple-200" />
-                                    <div>
-                                        <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">E-posta</p>
-                                        <p className="font-bold text-white text-sm">destek@weey.net</p>
-                                    </div>
-                                </a>
-                                <a
-                                    href="tel:+902125550000"
-                                    className="flex items-center gap-3 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10"
-                                >
-                                    <Phone className="w-5 h-5 text-purple-200" />
-                                    <div>
-                                        <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">Telefon</p>
-                                        <p className="font-bold text-white text-sm">+90 (212) 555 00 00</p>
-                                    </div>
-                                </a>
+
+                                {contactInfo.find(c => c.label.toLowerCase().includes('e-posta')) && (
+                                    <a
+                                        href={`mailto:${contactInfo.find(c => c.label.toLowerCase().includes('e-posta'))?.value}`}
+                                        className="flex items-center gap-3 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10 mb-3"
+                                    >
+                                        <Mail className="w-5 h-5 text-purple-200" />
+                                        <div>
+                                            <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">E-posta</p>
+                                            <p className="font-bold text-white text-sm">
+                                                {contactInfo.find(c => c.label.toLowerCase().includes('e-posta'))?.value}
+                                            </p>
+                                        </div>
+                                    </a>
+                                )}
+
+                                {contactInfo.find(c => c.label.toLowerCase().includes('telefon')) && (
+                                    <a
+                                        href={`tel:${contactInfo.find(c => c.label.toLowerCase().includes('telefon'))?.value}`}
+                                        className="flex items-center gap-3 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10"
+                                    >
+                                        <Phone className="w-5 h-5 text-purple-200" />
+                                        <div>
+                                            <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">Telefon</p>
+                                            <p className="font-bold text-white text-sm">
+                                                {contactInfo.find(c => c.label.toLowerCase().includes('telefon'))?.value}
+                                            </p>
+                                        </div>
+                                    </a>
+                                )}
                             </div>
                         </motion.div>
                     </div>

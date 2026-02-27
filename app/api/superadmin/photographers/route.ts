@@ -117,3 +117,30 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+// DELETE - Bulk delete photographers
+export async function DELETE(req: Request) {
+    try {
+        await dbConnect();
+        const body = await req.json();
+        const { ids } = body;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json({ error: 'Silinecek kullanıcılar belirtilmedi' }, { status: 400 });
+        }
+
+        const result = await User.deleteMany({
+            _id: { $in: ids },
+            role: 'admin' // Only delete admins (photographers)
+        });
+
+        return NextResponse.json({
+            message: `${result.deletedCount} fotoğrafçı silindi`,
+            deletedCount: result.deletedCount
+        });
+
+    } catch (error: any) {
+        console.error('Bulk delete photographers error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

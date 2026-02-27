@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
         let photographerId = null;
 
-        // Try to determine photographer from slug if provided
+        // 1. Determine photographer from slug if provided (studio visits)
         if (targetUserSlug) {
             const photographer = await User.findOne({ slug: targetUserSlug }).select('_id');
             if (photographer) {
@@ -20,16 +20,19 @@ export async function POST(req: Request) {
             }
         }
 
+        // 2. OR determine from logged-in session (admin panel visits)
+        // Note: The 'role' and 'photographerId' might be passed from the hook if logged in
+        // but we can also trust the role 'admin' sent by the client for filtering.
+
         // Create analytics entry
         await Analytics.create({
             path,
             title,
             role,
             visitorId,
-            targetUserId: photographerId, // Link to photographer if applicable
+            targetUserId: photographerId,
             photographerId: photographerId,
             userAgent: req.headers.get('user-agent'),
-            // We usually don't store raw IP for privacy, or hash it. Skipping IP for now.
         });
 
         return NextResponse.json({ success: true });

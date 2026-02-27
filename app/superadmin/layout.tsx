@@ -17,7 +17,8 @@ import {
     TrendingUp,
     Mail,
     MessageSquare,
-    Presentation
+    Presentation,
+    Globe
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -28,7 +29,8 @@ const menuItems = [
     { name: 'Toplu Email', href: '/superadmin/communications/email', icon: Mail },
     { name: 'Toplu SMS', href: '/superadmin/communications/sms', icon: MessageSquare },
     { name: 'Paketler', href: '/superadmin/packages', icon: Package },
-    { name: 'Sistem Mailleri', href: '/superadmin/settings/mail-templates', icon: Mail },
+    { name: 'İletişim Yönetimi', href: '/superadmin/settings/contact', icon: Globe },
+    { name: 'Mail Editörü', href: '/superadmin/mail-editor', icon: Mail },
     { name: 'Ayarlar', href: '/superadmin/settings', icon: Settings },
 ];
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Mail, Save, RotateCcw, Send, Sparkles, Eye, Edit3, ShieldCheck, Layout, MessageSquare, Settings, Info, CheckCircle2 } from 'lucide-react';
+import { Mail, Save, RotateCcw, Send, Sparkles, Eye, Edit3, ShieldCheck, Layout, MessageSquare, Settings, Info, CheckCircle2, ArrowUpRight } from 'lucide-react';
 
 interface TemplateCustomization {
     logoUrl?: string;
@@ -30,6 +30,11 @@ const TEMPLATE_INFO: Record<string, { name: string; icon: any; description: stri
         name: 'Hoş Geldin Mesajı',
         icon: Layout,
         description: 'Kayıt süreci tamamlandığında gönderilen karşılama e-postası.'
+    },
+    PLAN_UPDATED: {
+        name: 'Paket Güncelleme',
+        icon: ArrowUpRight,
+        description: 'Üyelik paketi yükseltildiğinde veya güncellendiğinde gönderilir.'
     }
 };
 
@@ -46,7 +51,8 @@ const FIELD_LABELS: Record<string, string> = {
 
 const TEMPLATE_VARIABLES: Record<string, string[]> = {
     VERIFY_EMAIL: ['{{photographerName}}', '{{verifyUrl}}'],
-    WELCOME_PHOTOGRAPHER: ['{{photographerName}}', '{{studioName}}', '{{loginUrl}}']
+    WELCOME_PHOTOGRAPHER: ['{{photographerName}}', '{{studioName}}', '{{loginUrl}}'],
+    PLAN_UPDATED: ['{{photographerName}}', '{{newPlanName}}', '{{expiryDate}}', '{{storageLimit}}', '{{loginUrl}}']
 };
 
 export default function SuperAdminEmailTemplatesPage() {
@@ -88,10 +94,13 @@ export default function SuperAdminEmailTemplatesPage() {
     const fetchTemplates = async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/admin/email-templates/customizations');
-            if (res.ok) {
-                const data = await res.json();
+            const res = await fetch('/api/superadmin/email-templates');
+            const data = await res.json().catch(() => null);
+
+            if (res.ok && data) {
                 setTemplates(data);
+            } else {
+                showError(data?.error || `Hata: ${res.status}`);
             }
         } catch (error) {
             console.error('Error fetching templates:', error);
@@ -103,14 +112,14 @@ export default function SuperAdminEmailTemplatesPage() {
 
     const fetchPreview = async (type: string, custom: TemplateCustomization) => {
         try {
-            const res = await fetch('/api/admin/email-templates/customizations/preview', {
+            const res = await fetch('/api/superadmin/email-templates/preview', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type, customization: custom })
             });
-            if (res.ok) {
-                const { html } = await res.json();
-                setPreviewHtml(html);
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.html) {
+                setPreviewHtml(data.html);
             }
         } catch (error) {
             console.error('Error fetching preview:', error);
@@ -146,16 +155,17 @@ export default function SuperAdminEmailTemplatesPage() {
         if (!selectedType) return;
         try {
             setSaving(true);
-            const res = await fetch(`/api/admin/email-templates/customizations/${selectedType}`, {
+            const res = await fetch(`/api/superadmin/email-templates/${selectedType}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ customization }),
             });
+            const data = await res.json().catch(() => null);
             if (res.ok) {
                 showSuccess('Şablon başarıyla kaydedildi');
                 fetchTemplates();
             } else {
-                showError('Şablon kaydedilemedi');
+                showError(data?.error || 'Şablon kaydedilemedi');
             }
         } catch (error) {
             console.error('Error saving template:', error);
@@ -169,7 +179,7 @@ export default function SuperAdminEmailTemplatesPage() {
         if (!selectedType) return;
         if (!confirm('Şablonu varsayılana sıfırlamak istediğinizden emin misiniz?')) return;
         try {
-            const res = await fetch(`/api/admin/email-templates/customizations/${selectedType}/reset`, {
+            const res = await fetch(`/api/superadmin/email-templates/${selectedType}/reset`, {
                 method: 'POST',
             });
             if (res.ok) {
@@ -187,7 +197,7 @@ export default function SuperAdminEmailTemplatesPage() {
     const handleSendTest = async () => {
         if (!selectedType) return;
         try {
-            const res = await fetch(`/api/admin/email-templates/customizations/${selectedType}/test`, {
+            const res = await fetch(`/api/superadmin/email-templates/${selectedType}/test`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ customization }),
@@ -263,39 +273,51 @@ export default function SuperAdminEmailTemplatesPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {templates.map(template => {
-                                const info = TEMPLATE_INFO[template.type];
-                                if (!info) return null;
-                                const Icon = info.icon;
-                                return (
-                                    <tr key={template.type} className="hover:bg-indigo-50/30 transition-colors group">
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-gray-100 group-hover:bg-indigo-600 transition-colors flex items-center justify-center">
-                                                    <Icon className="h-6 w-6 text-gray-500 group-hover:text-white transition-colors" />
+                            {templates.length > 0 ? (
+                                templates.map(template => {
+                                    const info = TEMPLATE_INFO[template.type];
+                                    if (!info) return null;
+                                    const Icon = info.icon;
+                                    return (
+                                        <tr key={template.type} className="hover:bg-indigo-50/30 transition-colors group">
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-2xl bg-gray-100 group-hover:bg-indigo-600 transition-colors flex items-center justify-center">
+                                                        <Icon className="h-6 w-6 text-gray-500 group-hover:text-white transition-colors" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900 text-base">{info.name}</h3>
+                                                        <span className="text-xs font-medium text-gray-400 font-mono">{template.type}</span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900 text-base">{info.name}</h3>
-                                                    <span className="text-xs font-medium text-gray-400 font-mono">{template.type}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6 text-sm text-gray-500 font-medium">{info.description}</td>
-                                        <td className="px-8 py-6">
-                                            {template.isCustom ? (
-                                                <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600">Özelleştirilmiş</span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Varsayılan</span>
-                                            )}
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <button onClick={() => setSelectedType(template.type)} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-indigo-600 transition-all shadow-sm">
-                                                <Edit3 className="h-4 w-4" /> Düzenle
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                            </td>
+                                            <td className="px-8 py-6 text-sm text-gray-500 font-medium">{info.description}</td>
+                                            <td className="px-8 py-6">
+                                                {template.isCustom ? (
+                                                    <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600">Özelleştirilmiş</span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold bg-gray-100 text-gray-500">Varsayılan</span>
+                                                )}
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <button onClick={() => setSelectedType(template.type)} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-indigo-600 transition-all shadow-sm">
+                                                    <Edit3 className="h-4 w-4" /> Düzenle
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="px-8 py-20 text-center">
+                                        <div className="flex flex-col items-center gap-3 text-gray-400">
+                                            <Mail className="h-10 w-10 opacity-20" />
+                                            <p className="font-bold">Düzenlenebilir şablon bulunamadı.</p>
+                                            <p className="text-sm">Erişim yetkiniz kısıtlı olabilir veya sistem şablonları yüklenemedi.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
