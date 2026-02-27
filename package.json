@@ -47,5 +47,9 @@
     "eslint-config-next": "15.1.0",
     "tailwindcss": "^4",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   }
 }
