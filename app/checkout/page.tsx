@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import Script from 'next/script';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CreditCard, Lock, Building, CheckCircle } from 'lucide-react';
 import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
@@ -130,15 +131,22 @@ function CheckoutContent() {
                     <div className="flex-1 w-full">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden w-full">
                             {paytrToken ? (
-                                <div className="w-full relative min-h-[600px]">
+                                <div className="w-full relative min-h-[800px]">
                                     <iframe
                                         src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
                                         id="paytriframe"
                                         frameBorder="0"
                                         scrolling="no"
-                                        style={{ width: '100%', minHeight: '600px' }}
+                                        style={{ width: '100%', minHeight: '800px' }}
                                     ></iframe>
-                                    <script dangerouslySetInnerHTML={{ __html: `iFrameResize({},'#paytriframe');` }}></script>
+                                    <Script
+                                        src="https://www.paytr.com/js/iframeResizer.min.js"
+                                        strategy="lazyOnload"
+                                        onLoad={() => {
+                                            // @ts-ignore
+                                            if (window.iFrameResize) window.iFrameResize({}, '#paytriframe');
+                                        }}
+                                    />
                                 </div>
                             ) : (
                                 <div className="p-8 sm:p-10 text-center">
