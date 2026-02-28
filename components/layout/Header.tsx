@@ -1,19 +1,21 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Search, Globe, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, Image as ImageIcon, LayoutTemplate, MonitorSmartphone, Contact2, FileText, Users, Camera, Loader2, X, Clock, Lock } from 'lucide-react';
+import { Bell, Search, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, Image as ImageIcon, LayoutTemplate, MonitorSmartphone, Contact2, FileText, Users, Camera, Loader2, X, Clock, Lock, AlertCircle } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import UpgradeModal from '@/components/admin/UpgradeModal';
+import VerifyEmailModal from '@/components/admin/VerifyEmailModal';
 
 export default function Header() {
     const { data: session } = useSession();
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [verifyModalOpen, setVerifyModalOpen] = useState(false);
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const router = useRouter();
 
@@ -167,9 +169,21 @@ export default function Header() {
                     </div>
 
                     {/* Greeting & Date */}
-                    <div className="hidden xl:block whitespace-nowrap">
-                        <span className="text-[17px] font-extrabold tracking-tight text-slate-800 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900">{greeting}!</span>
-                        <span className="text-sm font-medium text-slate-500 ml-2">Bugün, {dateStr}</span>
+                    <div className="hidden xl:flex items-center gap-4 whitespace-nowrap">
+                        <div>
+                            <span className="text-[17px] font-extrabold tracking-tight text-slate-800 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900">{greeting}!</span>
+                            <span className="text-sm font-medium text-slate-500 ml-2">Bugün, {dateStr}</span>
+                        </div>
+
+                        {session?.user && session.user.isEmailVerified === false && (
+                            <button
+                                onClick={() => setVerifyModalOpen(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-xs font-bold shadow-sm hover:bg-rose-100 transition-colors animate-pulse"
+                            >
+                                <AlertCircle className="w-3.5 h-3.5" />
+                                <span>Doğrulanmadı</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -320,6 +334,11 @@ export default function Header() {
                 </div>
             </header>
             <UpgradeModal isOpen={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
+            <VerifyEmailModal
+                isOpen={verifyModalOpen}
+                onClose={() => setVerifyModalOpen(false)}
+                userEmail={session?.user?.email || ''}
+            />
         </>
     );
 }

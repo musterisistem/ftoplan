@@ -92,6 +92,10 @@ export async function POST(req: Request) {
         const Subscriber = (await import('@/models/Subscriber')).default;
         const subscriptionExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
 
+        const crypto = await import('crypto');
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
         const limits = {
             storageLimit: (purchasedPackage.storage || 10) * 1024 * 1024 * 1024,
             maxCustomers: purchasedPackage.maxCustomers ?? -1,
@@ -119,9 +123,9 @@ export async function POST(req: Request) {
             subscriptionExpiry,
             billingInfo: draftUser.billingInfo,
             isActive: true,
-            isEmailVerified: true, // Paid users get auto-verified
-            verificationToken: null,
-            verificationTokenExpiry: null,
+            isEmailVerified: false,
+            verificationToken: verificationToken,
+            verificationTokenExpiry: verificationTokenExpiry,
         });
 
         // Save subscriber record
@@ -137,10 +141,12 @@ export async function POST(req: Request) {
         order.userId = newUser._id;
         await order.save();
 
-        // Send welcome email
+        // Send welcome & verification emails
         try {
             const { sendEmailWithTemplate } = await import('@/lib/resend');
             const { EmailTemplateType } = await import('@/models/EmailTemplate');
+
+            // 1. Welcome Email
             await sendEmailWithTemplate({
                 to: draftUser.email,
                 templateType: EmailTemplateType.WELCOME_PHOTOGRAPHER,
@@ -151,8 +157,20 @@ export async function POST(req: Request) {
                     loginUrl: `${baseUrl}/login`,
                 },
             });
+
+            // 2. Email Verification Email
+            const verifyUrl = `${baseUrl}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(draftUser.email)}`;
+            await sendEmailWithTemplate({
+                to: draftUser.email,
+                templateType: EmailTemplateType.VERIFY_EMAIL,
+                photographerId: newUser._id.toString(),
+                data: {
+                    photographerName: draftUser.name,
+                    verifyUrl,
+                },
+            });
         } catch (emailErr) {
-            console.error('[PayTR Callback] Failed to send welcome email:', emailErr);
+            console.error('[PayTR Callback] Failed to send welcome/verification email:', emailErr);
         }
 
         console.log(`[PayTR Callback] ✅ User created successfully: ${draftUser.email}`);
