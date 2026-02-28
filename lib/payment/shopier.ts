@@ -99,10 +99,9 @@ export class ShopierCheckout {
         };
 
         try {
-            console.log('[Shopier REST] Initiating checkout at /common/checkouts...');
+            console.log('[Shopier REST] Initiating checkout at /v1/checkouts...');
 
-            // Try /common/checkouts first as some docs suggest
-            const response = await fetch(`${this.restBaseUrl}/common/checkouts`, {
+            const response = await fetch(`${this.restBaseUrl}/checkouts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
