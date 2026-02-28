@@ -171,7 +171,8 @@ export async function POST(req: Request) {
 
         } else {
             // Paid Package Flow -> Do NOT create User. Create a pending Order instead.
-            const orderId = `FP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            // PayTR requires merchant_oid to be alphanumeric
+            const orderId = `FP${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
             await Order.create({
                 orderNo: orderId,
