@@ -42,34 +42,34 @@ export default function UpgradeSuccessFlow({
         // Timeline:
         // 0-4s: Success Confirmed Phase
         // 4-x: Preparing Phase
-        
+
         const stage1Timeout = setTimeout(() => {
             setStage('preparing');
-        }, 4000); 
+        }, 4000);
 
-        // 8 items in checklist. We want each item to show for ~3.2 seconds.
-        // Total preparing time = 8 * 3200 = 25600ms.
-        // After 25.6s, the panel should start immediately.
-        
+        // 8 items in checklist. We want each item to show for ~4.5 seconds.
+        // Total preparing time = 8 * 4500 = 36000ms.
+        // After 36s, the panel should start immediately.
+
         const stage2Timeout = setTimeout(() => {
             if (onComplete) {
                 onComplete();
             } else {
                 window.location.href = '/admin/dashboard';
             }
-        }, 29600); // 4000 (stage1) + 25600 (stage2) = 29600ms total
+        }, 40000); // 4000 (stage1) + 36000 (stage2) = 40000ms total
 
         const checklistInterval = setInterval(() => {
             setChecklistIndex((prev: number) => {
                 if (prev < checklist.length - 1) return prev + 1;
                 return prev;
             });
-        }, 3200);
+        }, 4500);
 
-        // Global progress bar (29.6s total = 29600ms. Update every 50ms)
+        // Global progress bar (40s total = 40000ms. Update every 50ms)
         const progressInterval = setInterval(() => {
             setProgress((prev: number) => {
-                const step = 100 / (29600 / 50);
+                const step = 100 / (40000 / 50);
                 return Math.min(prev + step, 100);
             });
         }, 50);
@@ -184,7 +184,7 @@ export default function UpgradeSuccessFlow({
                                             {isPast ? (
                                                 <div className="w-4 h-4 rounded-full border-[1.5px] border-[#374151]" />
                                             ) : isCurrent ? (
-                                                <motion.div 
+                                                <motion.div
                                                     animate={{ rotate: 360 }}
                                                     transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                                                     className="w-4 h-4 rounded-full border-[1.5px] border-t-[#a855f7] border-white/20"

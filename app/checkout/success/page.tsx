@@ -3,23 +3,66 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, Sparkles } from 'lucide-react';
+import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
+import confetti from 'canvas-confetti';
+import { motion } from 'framer-motion';
+
+function WelcomeScreen({ onMount, onClose }: { onMount: () => void, onClose: () => void }) {
+    useEffect(() => {
+        onMount();
+    }, []);
+
+    return (
+        <div className="min-h-screen bg-[#0a0510] flex items-center justify-center relative overflow-hidden px-4">
+            <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[150px] animate-pulse" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, type: 'spring' }}
+                className="bg-[#11081f] border border-white/10 p-8 sm:p-12 rounded-3xl shadow-[0_0_50px_rgba(123,63,242,0.15)] max-w-lg w-full text-center relative z-10"
+            >
+                <div className="mx-auto w-24 h-24 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30 mb-8 transform hover:rotate-12 transition-transform">
+                    <Sparkles className="w-12 h-12 text-white" />
+                </div>
+
+                <h1 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight drop-shadow-md">
+                    Aramıza Hoş Geldiniz!
+                </h1>
+                <p className="text-slate-300 text-lg mb-10 leading-relaxed font-medium">
+                    Yönetim paneliniz başarıyla kuruldu ve tüm modülleriniz aktif edildi. Sisteminizi kullanmaya hemen başlayabilirsiniz.
+                </p>
+
+                <button
+                    onClick={onClose}
+                    className="w-full py-4 bg-white text-black font-black text-lg rounded-xl hover:scale-[1.02] hover:bg-gray-100 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                >
+                    Panele Geçiş Yap
+                </button>
+            </motion.div>
+        </div>
+    );
+}
 
 function SuccessContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
-    const [status, setStatus] = useState<'verifying' | 'success' | 'redirecting' | 'error'>('verifying');
-    const [errorMsg, setErrorMsg] = useState('');
+
+    type ViewState = 'verifying' | 'successFlow' | 'welcome' | 'error';
+    const [view, setView] = useState<ViewState>('verifying');
+    const [packageName] = useState('Premium Paket');
 
     useEffect(() => {
         if (!token) {
-            setStatus('success');
+            setView('error');
             return;
         }
 
         let pollCount = 0;
-        const maxPolls = 15; // Toplamda ~30 saniye bekler (15 * 2000)
+        const maxPolls = 15;
 
         const checkStatus = async () => {
             try {
@@ -27,76 +70,91 @@ function SuccessContent() {
                 const data = await res.json();
 
                 if (data.success && data.status === 'completed') {
-                    // Ödeme başarılı, üyeliği açılmış, login olalım
-                    setStatus('redirecting');
-
-                    const loginRes = await signIn('credentials', {
+                    // Try to auto login in the background!
+                    await signIn('credentials', {
                         autoLoginToken: token,
                         redirect: false,
                     });
 
-                    if (loginRes?.ok && !loginRes.error) {
-                        router.push('/admin/dashboard');
-                    } else {
-                        // Eğer otomatik login olamazsa normal başarılı sayfasını göstersin
-                        setStatus('success');
-                    }
+                    // Start the 40-second long animation flow!
+                    setView('successFlow');
                 } else if (!data.success && data.error === 'Sipariş bulunamadı veya bağlantı süresi dolmuş') {
-                    // Hatalı token veya süre dolmuş
-                    setStatus('success');
+                    setView('error');
                 } else {
-                    // Hala pending...
                     pollCount++;
                     if (pollCount < maxPolls) {
                         setTimeout(checkStatus, 2000);
                     } else {
-                        setStatus('success'); // Beklemekten sıkıldık, manuel giriş yapsın
+                        setView('error');
                     }
                 }
             } catch (err) {
                 console.error('Status check error:', err);
-                setStatus('success'); // Hata durumunda da standart başarılı ekranında kalsın
+                setView('error');
             }
         };
 
         checkStatus();
-    }, [token, router]);
+    }, [token]);
+
+    const handleFlowComplete = () => {
+        // Upgrade flow bitince karşılama ekranına geç
+        setView('welcome');
+    };
+
+    const handleWelcomeScreenLoad = () => {
+        // Havai fişekleri patlatıyoruz!
+        const duration = 15 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+
+        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+        const interval: any = setInterval(function () {
+            const timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+    };
+
+    if (view === 'successFlow') {
+        return <UpgradeSuccessFlow packageName={packageName} onComplete={handleFlowComplete} isModal={false} />;
+    }
+
+    if (view === 'welcome') {
+        return <WelcomeScreen onMount={handleWelcomeScreenLoad} onClose={() => router.push('/admin/dashboard')} />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
 
-                {status === 'verifying' && (
+                {view === 'verifying' && (
                     <div className="flex flex-col items-center">
                         <Loader2 className="w-16 h-16 text-[#5d2b72] animate-spin mb-6" />
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Ödeme Doğrulanıyor...</h2>
-                        <p className="text-gray-500">Lütfen sayfadan ayrılmayın, üyeliğiniz aktifleştiriliyor.</p>
+                        <p className="text-gray-500">Lütfen bekleyin, sunucu ile iletişim halindeyiz.</p>
                     </div>
                 )}
 
-                {status === 'redirecting' && (
+                {view === 'error' && (
                     <div className="flex flex-col items-center">
                         <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
                             <CheckCircle className="w-10 h-10" />
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Kurulum Tamamlandı!</h2>
-                        <p className="text-gray-500 mb-6">Yönetim paneline yönlendiriliyorsunuz...</p>
-                        <Loader2 className="w-8 h-8 text-[#5d2b72] animate-spin" />
-                    </div>
-                )}
-
-                {(status === 'success' || status === 'error') && (
-                    <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle className="w-10 h-10" />
-                        </div>
-                        <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ödeme Başarılı!</h2>
+                        <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ödeme Onaylandı!</h2>
                         <p className="text-gray-600 mb-8 leading-relaxed">
-                            {errorMsg || 'Ödemeniz başarıyla alındı. Hesabınız arka planda aktifleştiriliyor. Müşteri panelinizi hemen kullanmaya başlayabilirsiniz.'}
+                            Ödemeniz başarıyla alındı ve hesabınız aktifleştirildi. Yönetim paneline giriş yapabilirsiniz.
                         </p>
                         <button
                             onClick={() => router.push('/login')}
-                            className="inline-block w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all text-lg"
+                            className="inline-block w-full py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all text-lg"
                         >
                             Panele Giriş Yap
                         </button>
@@ -109,7 +167,7 @@ function SuccessContent() {
 
 export default function CheckoutSuccessPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin w-12 h-12 text-purple-600" /></div>}>
+        <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="animate-spin w-12 h-12 text-[#5d2b72]" /></div>}>
             <SuccessContent />
         </Suspense>
     );
