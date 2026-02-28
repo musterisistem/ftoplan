@@ -8,7 +8,7 @@ export interface IOrder extends Document {
     amount: number; // The exact amount paid
     currency: string;
     status: 'pending' | 'completed' | 'failed' | 'refunded';
-    shopierPaymentId?: string; // ID returned by Shopier upon success
+    paytrPaymentId?: string; // ID returned by PayTR upon success
     createdAt: Date;
     completedAt?: Date;
 }
@@ -26,7 +26,7 @@ const orderSchema = new Schema<IOrder>(
             enum: ['pending', 'completed', 'failed', 'refunded'],
             default: 'pending',
         },
-        shopierPaymentId: { type: String },
+        paytrPaymentId: { type: String },
         completedAt: { type: Date },
     },
     { timestamps: true }

@@ -3,7 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import { Order } from '@/models/Order';
 import User from '@/models/User';
 import Package from '@/models/Package';
-import { ShopierCheckout } from '@/lib/payment/shopier';
+import { PayTRCheckout } from '@/lib/payment/paytr';
 
 export async function POST(req: Request) {
     try {
@@ -12,10 +12,12 @@ export async function POST(req: Request) {
 
         // Try to get keys from DB first, then Env
         const settings = await SystemSetting.findOne({});
-        const shopierApiKey = settings?.shopierApiKey || process.env.SHOPIER_API_KEY || '';
-        const shopierApiSecret = settings?.shopierApiSecret || process.env.SHOPIER_API_SECRET || '';
+        const merchantId = settings?.paytrMerchantId || process.env.PAYTR_MERCHANT_ID || '';
+        const merchantKey = settings?.paytrMerchantKey || process.env.PAYTR_MERCHANT_KEY || '';
+        const merchantSalt = settings?.paytrMerchantSalt || process.env.PAYTR_MERCHANT_SALT || '';
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001';
-        // Shopier sends POST with application/x-www-form-urlencoded containing 'res' and 'hash'
+
+        // PayTR sends POST with application/x-www-form-urlencoded
         const formData = await req.formData();
         const postData: Record<string, string> = {};
         formData.forEach((value, key) => {
@@ -23,41 +25,54 @@ export async function POST(req: Request) {
         });
 
         // --------------- Validation ---------------
-        if (!shopierApiKey || !shopierApiSecret) {
-            console.error('[Shopier OSB] API credentials not configured');
-            // Return plain text "success" so Shopier doesn't keep retrying
-            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        if (!merchantId || !merchantKey || !merchantSalt) {
+            console.error('[PayTR Callback] API credentials not configured');
+            // PayTR'a "OK" dönerek tekrar tekrar atmasını engelliyoruz. Zaten hata bizden kaynaklı.
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
-        const shopier = new ShopierCheckout({ apiKey: shopierApiKey, apiSecret: shopierApiSecret });
+        const paytr = new PayTRCheckout({ merchantId, merchantKey, merchantSalt });
 
-        // Use OSB format validation (res + hash)
-        const callbackData = shopier.validateOSBCallback(postData);
+        // Use Hash validation
+        const isValid = paytr.validateCallback(postData);
 
-        if (!callbackData) {
-            console.error('[Shopier OSB] Invalid signature or missing res/hash fields. PostData keys:', Object.keys(postData));
-            // Return success to prevent Shopier spam retries; log the issue
-            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        if (!isValid) {
+            console.error('[PayTR Callback] Invalid signature. PostData:', postData);
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
-        const { orderid, istest, email, buyername } = callbackData;
-        console.log(`[Shopier OSB] Callback received. OrderId: ${orderid}, isTest: ${istest}, buyer: ${email}`);
+        const { merchant_oid, status, total_amount, failed_reason_code = '', failed_reason_msg = '' } = postData;
 
-        await dbConnect();
+        console.log(`[PayTR Callback] Received Valid Callback. OrderId: ${merchant_oid}, Status: ${status}`);
+
+        // Status "success" ya da "failed" olabilir. 
+        // Eğer "failed" ise kullanıcı reddedilmiş / limit yetersiz vb demektir.
+        if (status !== 'success') {
+            console.error(`[PayTR Callback] Payment failed for order ${merchant_oid}. Reason: ${failed_reason_msg} (${failed_reason_code})`);
+
+            // Veritabanında sipariş durumunu "failed" yapabiliriz.
+            const order = await Order.findOne({ orderNo: merchant_oid });
+            if (order && order.status === 'pending') {
+                order.status = 'failed';
+                await order.save();
+            }
+
+            // PayTR expects 'OK' even if payment failed, to acknowledge receipt
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        }
 
         // --------------- Find Pending Order ---------------
-        const order = await Order.findOne({ orderNo: orderid });
+        const order = await Order.findOne({ orderNo: merchant_oid });
 
         if (!order) {
-            // This is normal for OSB test calls or unknown orders — return success
-            console.warn(`[Shopier OSB] No order found for orderid: ${orderid} (could be OSB test)`);
-            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+            console.warn(`[PayTR Callback] No order found for orderid: ${merchant_oid}`);
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
         // Already completed — prevent double processing
         if (order.status === 'completed') {
-            console.log(`[Shopier OSB] Order ${orderid} already completed, skipping.`);
-            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+            console.log(`[PayTR Callback] Order ${merchant_oid} already completed, skipping.`);
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
         // --------------- Process Payment Success ---------------
@@ -69,8 +84,8 @@ export async function POST(req: Request) {
         const purchasedPackage = await Package.findById(order.packageId);
 
         if (!draftUser || !purchasedPackage) {
-            console.error('[Shopier OSB] Missing draftUserData or package for order:', orderid);
-            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+            console.error('[PayTR Callback] Missing draftUserData or package for order:', merchant_oid);
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
         // --------------- Create User ---------------
@@ -137,17 +152,17 @@ export async function POST(req: Request) {
                 },
             });
         } catch (emailErr) {
-            console.error('[Shopier OSB] Failed to send welcome email:', emailErr);
+            console.error('[PayTR Callback] Failed to send welcome email:', emailErr);
         }
 
-        console.log(`[Shopier OSB] ✅ User created successfully: ${draftUser.email}`);
+        console.log(`[PayTR Callback] ✅ User created successfully: ${draftUser.email}`);
 
-        // Shopier expects plain text "success" response
-        return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        // PayTR expects plain text "OK" response
+        return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
 
     } catch (error: any) {
-        console.error('[Shopier OSB] Callback Error:', error.message);
-        // Always return 200 so Shopier doesn't spam retries
-        return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        console.error('[PayTR Callback] Runtime Error:', error.message);
+        // Always return OK so PayTR stops retrying
+        return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
     }
 }

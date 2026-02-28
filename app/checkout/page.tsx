@@ -20,6 +20,7 @@ function CheckoutContent() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [paytrToken, setPaytrToken] = useState<string | null>(null);
 
     useEffect(() => {
         if (!orderNo) {
@@ -56,7 +57,7 @@ function CheckoutContent() {
         setError('');
 
         try {
-            const res = await fetch('/api/payment/shopier/checkout', {
+            const res = await fetch('/api/payment/paytr/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ orderNo: selectedPackage.orderNo }),
@@ -64,31 +65,9 @@ function CheckoutContent() {
 
             const data = await res.json();
 
-            if (res.ok && data.success) {
-                if (data.url) {
-                    // Method 1: Direct link (REST API)
-                    window.location.href = data.url;
-                    return;
-                }
-
-                if (data.html) {
-                    // Method 2: Hidden form (Classic/Fallback)
-                    const container = document.createElement('div');
-                    container.style.display = 'none';
-                    container.innerHTML = data.html;
-                    document.body.appendChild(container);
-
-                    const form = container.querySelector('form');
-                    if (form) {
-                        form.submit();
-                    } else {
-                        setError('Ödeme formu oluşturulamadı. Lütfen tekrar deneyin.');
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                throw new Error('Geçersiz ödeme yanıtı.');
+            if (res.ok && data.success && data.token) {
+                // Set token to render iframe
+                setPaytrToken(data.token);
             } else {
                 setError(data.error || 'Ödeme altyapısına bağlanılamadı. Lütfen tekrar deneyin.');
                 setLoading(false);
@@ -140,60 +119,74 @@ function CheckoutContent() {
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
-                <div className="mb-8 text-center sm:text-left">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-8 text-center sm:text-left max-w-4xl mx-auto">
                     <h1 className="text-3xl font-bold text-gray-900">Güvenli Ödeme</h1>
                     <p className="text-gray-500 mt-2">Aboneliğinizi başlatmak için ödeme adımını tamamlayın.</p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Left: Payment Form */}
-                    <div className="flex-1">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="p-8 sm:p-10 text-center">
-                                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <CreditCard className="w-8 h-8" />
+                <div className="flex flex-col lg:flex-row gap-8 max-w-4xl mx-auto">
+                    {/* Left: Payment Form / iFrame */}
+                    <div className="flex-1 w-full">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden w-full">
+                            {paytrToken ? (
+                                <div className="w-full relative min-h-[600px]">
+                                    <iframe
+                                        src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
+                                        id="paytriframe"
+                                        frameBorder="0"
+                                        scrolling="no"
+                                        style={{ width: '100%', minHeight: '600px' }}
+                                    ></iframe>
+                                    <script dangerouslySetInnerHTML={{ __html: `iFrameResize({},'#paytriframe');` }}></script>
                                 </div>
-                                <h2 className="text-2xl font-bold text-gray-900 mb-3">Güvenli Kredi Kartı Ödemesi</h2>
-                                <p className="text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
-                                    Ödemenizi 256-bit SSL korumalı Shopier altyapısı üzerinden güvenle gerçekleştirebilirsiniz. İşleminiz tamamlandığında paneliniz otomatik olarak aktif edilecektir.
-                                </p>
-
-                                {error && (
-                                    <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium text-left">
-                                        {error}
+                            ) : (
+                                <div className="p-8 sm:p-10 text-center">
+                                    <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <CreditCard className="w-8 h-8" />
                                     </div>
-                                )}
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-3">Güvenli Kredi Kartı Ödemesi</h2>
+                                    <p className="text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
+                                        Ödemenizi 256-bit SSL korumalı PayTR altyapısı üzerinden güvenle gerçekleştirebilirsiniz. İşleminiz tamamlandığında paneliniz otomatik olarak aktif edilecektir.
+                                    </p>
 
-                                <button
-                                    onClick={handlePayment}
-                                    disabled={loading || !selectedPackage}
-                                    className="w-full max-w-md mx-auto py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-[0_8px_25px_rgba(93,43,114,0.3)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-60"
-                                >
-                                    {loading ? (
-                                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                        <><Lock className="w-5 h-5" /> Shopier ile Güvenli Öde: {selectedPackage?.price}</>
+                                    {error && (
+                                        <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium text-left">
+                                            {error}
+                                        </div>
                                     )}
-                                </button>
 
-                                <div className="mt-8 flex items-center justify-center gap-6 opacity-60">
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                                        <Lock className="w-3.5 h-3.5" /> 256-bit SSL
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                                        <CheckCircle className="w-3.5 h-3.5" /> 3D Secure
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                                        <Building className="w-3.5 h-3.5" /> Shopier Güvencesi
+                                    <button
+                                        onClick={handlePayment}
+                                        disabled={loading || !selectedPackage}
+                                        className="w-full max-w-md mx-auto py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-[0_8px_25px_rgba(93,43,114,0.3)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-60"
+                                    >
+                                        {loading ? (
+                                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <><Lock className="w-5 h-5" /> PayTR ile Güvenli Öde: {selectedPackage?.price}</>
+                                        )}
+                                    </button>
+
+                                    <div className="mt-8 flex items-center justify-center gap-6 opacity-60">
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                            <Lock className="w-3.5 h-3.5" /> 256-bit SSL
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                            <CheckCircle className="w-3.5 h-3.5" /> 3D Secure
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                            <Building className="w-3.5 h-3.5" /> PayTR Güvencesi
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Right: Order Summary */}
-                    <div className="w-full lg:w-96">
+                    <div className="w-full lg:w-80">
+
                         <div className="bg-gray-900 rounded-2xl p-6 sm:p-8 text-white sticky top-8">
                             <h3 className="text-xl font-bold mb-6">Sipariş Özeti</h3>
 
