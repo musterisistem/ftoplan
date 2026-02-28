@@ -11,7 +11,8 @@ export const authOptions: NextAuthOptions = {
             name: 'Credentials',
             credentials: {
                 email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" }
+                password: { label: "Password", type: "password" },
+                autoLoginToken: { label: "Auto Login Token", type: "text" }
             },
             async authorize(credentials) {
                 // SUPER ADMIN: System owner with full access
@@ -46,8 +47,47 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Veritabanı bağlantısı sağlanamadı.');
                 }
 
-                if (!credentials?.email || !credentials?.password) {
+                if (!credentials?.email && !credentials?.password && !credentials?.autoLoginToken) {
                     throw new Error('Email/Kullanıcı adı ve şifre gereklidir');
+                }
+
+                if (credentials?.autoLoginToken) {
+                    try {
+                        const { Order } = await import('@/models/Order');
+                        const order = await Order.findOne({ autoLoginToken: credentials.autoLoginToken, status: 'completed' });
+                        if (!order || !order.userId) {
+                            throw new Error('Geçersiz veya süresi dolmuş otomatik giriş bağlantısı. Lütfen manuel giriş yapın.');
+                        }
+                        const user = await User.findById(order.userId);
+                        if (!user) throw new Error('Kullanıcı bulunamadı');
+
+                        // Clear the token so it can only be used once
+                        order.autoLoginToken = undefined;
+                        await order.save();
+
+                        const finalRole = user.email === 'musterisistem@gmail.com' ? 'superadmin' : user.role;
+
+                        return {
+                            id: user._id.toString(),
+                            email: user.email,
+                            name: user.name || '',
+                            role: finalRole,
+                            customerId: user.customerId?.toString(),
+                            storageUsage: user.storageUsage || 0,
+                            storageLimit: user.storageLimit || 21474836480,
+                            studioName: user.studioName,
+                            subscriptionExpiry: user.subscriptionExpiry ? new Date(user.subscriptionExpiry).toISOString() : undefined,
+                            packageType: user.packageType || 'trial',
+                            image: user.panelLogo || user.logo || '',
+                            panelSettings: user.panelSettings || undefined,
+                            hasCompletedOnboarding: user.hasCompletedOnboarding || false,
+                            isActive: user.isActive !== false,
+                            isEmailVerified: user.isEmailVerified === true,
+                        };
+                    } catch (error) {
+                        console.error('Auto login error:', error);
+                        throw new Error('Otomatik giriş başarısız oldu.');
+                    }
                 }
 
                 // First try to find by email

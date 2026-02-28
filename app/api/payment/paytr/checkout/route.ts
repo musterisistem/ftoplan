@@ -61,6 +61,12 @@ export async function POST(req: Request) {
 
         const draftUser = order.draftUserData || {};
         const baseUrl = process.env.NEXTAUTH_URL || 'https://www.weey.net';
+        const crypto = await import('crypto');
+        const autoLoginToken = crypto.randomUUID();
+
+        // Save autoLoginToken to order
+        order.autoLoginToken = autoLoginToken;
+        await order.save();
 
         // Get client IP
         const forwardedFor = req.headers.get('x-forwarded-for');
@@ -79,7 +85,7 @@ export async function POST(req: Request) {
             basket: [
                 [`FotoPlan Yazılım Paketi - ${selectedPackage.title}`, order.amount.toString(), 1]
             ] as Array<[string, string, number]>,
-            okUrl: `${baseUrl}/checkout/success`, // The page user sees after successful payment in frame (If auto-redirected)
+            okUrl: `${baseUrl}/checkout/success?token=${autoLoginToken}`, // Pass token for auto-login
             failUrl: `${baseUrl}/checkout/fail`   // The page user sees if payment fails
         };
 
