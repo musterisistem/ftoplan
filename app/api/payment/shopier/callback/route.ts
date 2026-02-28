@@ -5,10 +5,8 @@ import User from '@/models/User';
 import Package from '@/models/Package';
 import { ShopierCheckout } from '@/lib/payment/shopier';
 
-const shopierOptions = {
-    apiKey: process.env.SHOPIER_API_KEY || '',
-    apiSecret: process.env.SHOPIER_API_SECRET || '',
-};
+const shopierApiKey = process.env.SHOPIER_API_KEY || '';
+const shopierApiSecret = process.env.SHOPIER_API_SECRET || '';
 
 export async function POST(req: Request) {
     try {
@@ -19,12 +17,18 @@ export async function POST(req: Request) {
             postData[key] = value.toString();
         });
 
-        const shopier = new ShopierCheckout(shopierOptions);
+        if (!shopierApiKey || !shopierApiSecret) {
+            console.error('Shopier API key/secret not configured in environment variables.');
+            return new Response('Configuration Error', { status: 200 }); // Return 200 so Shopier does not spam retries
+        }
+
+        const shopier = new ShopierCheckout({ apiKey: shopierApiKey, apiSecret: shopierApiSecret });
         const isValid = shopier.validateCallback(postData);
 
         if (!isValid) {
             console.error('Shopier Invalid Signature Callback:', postData);
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/packages?payment=invalid-signature`);
+            // Still return 200 to stop Shopier from retrying - just log the rejection
+            return new Response('Invalid Signature', { status: 200 });
         }
 
         const { status, random_nr } = postData; // random_nr is our OrderNo
@@ -35,8 +39,9 @@ export async function POST(req: Request) {
         const order = await Order.findOne({ orderNo: random_nr });
 
         if (!order) {
-            console.error('Shopier Unknown Order Callback:', random_nr);
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/packages?payment=order-not-found`);
+            console.warn('Shopier OSB Test or Unknown Order Callback:', random_nr);
+            // Return 200 OK so Shopier OSB test passes. This is normal for test callbacks.
+            return new Response('OK', { status: 200 });
         }
 
         if (status.toLowerCase() === 'success') {
