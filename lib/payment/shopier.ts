@@ -1,21 +1,21 @@
 import crypto from 'crypto';
 
 export interface ShopierOptions {
-    apiKey: string;
-    apiSecret: string;
+    apiKey: string;    // Shopier username / API_key
+    apiSecret: string; // Shopier key
 }
 
 export interface ShopierOrderData {
-    id: string; // Your unique order ID (e.g., from MongoDB)
-    amount: number; // e.g., 9499.00
+    id: string;        // Our platform_order_id (orderNo)
+    amount: number;    // e.g., 5
     currency?: 'TRY' | 'USD' | 'EUR';
     buyer: {
-        id: string; // User ID
+        id: string;
         name: string;
         surname: string;
         email: string;
         phone: string;
-        account_age?: number; // Days since registration
+        account_age?: number;
     };
     billing_address: {
         address: string;
@@ -23,6 +23,22 @@ export interface ShopierOrderData {
         country: string;
         postcode: string;
     };
+}
+
+/** Decoded data from Shopier OSB callback */
+export interface ShopierCallbackData {
+    email: string;
+    orderid: string;     // = our platform_order_id
+    currency: string;    // '0'=TRY, '1'=USD, '2'=EUR
+    price: string;
+    buyername: string;
+    buyersurname: string;
+    productcount: string;
+    productid: string;
+    productlist: string;
+    chartdetails: string;
+    customernote: string;
+    istest: string;      // '0'=live, '1'=test
 }
 
 export class ShopierCheckout {
@@ -39,7 +55,9 @@ export class ShopierCheckout {
     }
 
     /**
-     * Generates the signature needed for Shopier POST request
+     * Generates the checkout form signature for the payment initiation request.
+     * (Used in the SEND direction: our site → Shopier)
+     * hash = HMAC-SHA256(orderNo + amount + currencyCode, apiSecret) → base64
      */
     private generateSignature(orderNo: string, amount: string, currency: string): string {
         const data = orderNo + amount + currency;
@@ -49,14 +67,47 @@ export class ShopierCheckout {
     }
 
     /**
-     * Returns an HTML string that automatically submits a form to Shopier.
-     * Your Next.js API route should stream/send this HTML to the browser.
+     * Validates the OSB (Otomatik Sipariş Bildirimi) callback from Shopier.
+     * (Used in the RECEIVE direction: Shopier → our site)
+     *
+     * Shopier sends:
+     *   POST res  = base64(JSON string)
+     *   POST hash = hex( HMAC-SHA256(res + apiKey, apiSecret) )
+     *
+     * Returns the decoded callback data if valid, or null if invalid.
+     */
+    public validateOSBCallback(postData: Record<string, string>): ShopierCallbackData | null {
+        const { res, hash } = postData;
+
+        if (!res || !hash) {
+            return null;
+        }
+
+        // Shopier hash: HMAC-SHA256(res + apiKey, apiSecret) → hex
+        const expectedHash = crypto
+            .createHmac('sha256', this.apiSecret)
+            .update(res + this.apiKey)
+            .digest('hex');
+
+        if (expectedHash !== hash) {
+            return null;
+        }
+
+        try {
+            const jsonStr = Buffer.from(res, 'base64').toString('utf-8');
+            return JSON.parse(jsonStr) as ShopierCallbackData;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Returns an HTML page that auto-submits a form to Shopier payment gateway.
      */
     public generatePaymentForm(data: ShopierOrderData, callbackUrl: string): string {
         const amountStr = data.amount.toString();
-        const currencyStr = data.currency === 'USD' ? '1' : data.currency === 'EUR' ? '2' : '0'; // 0 = TRY
+        const currencyStr = data.currency === 'USD' ? '1' : data.currency === 'EUR' ? '2' : '0'; // 0=TRY
 
-        // For digital products/subscriptions we send dummy shipping info or same as billing
         const signature = this.generateSignature(data.id, amountStr, currencyStr);
 
         return `
@@ -82,7 +133,7 @@ export class ShopierCheckout {
               <input type="hidden" name="website_index" value="1">
               <input type="hidden" name="platform_order_id" value="${data.id}">
               <input type="hidden" name="product_name" value="FotoPlan Yazılım Paketi - ${data.id}">
-              <input type="hidden" name="product_type" value="1"> <!-- 1 = Digital / Non-shippable -->
+              <input type="hidden" name="product_type" value="1">
               <input type="hidden" name="buyer_name" value="${data.buyer.name}">
               <input type="hidden" name="buyer_surname" value="${data.buyer.surname}">
               <input type="hidden" name="buyer_email" value="${data.buyer.email}">
@@ -102,7 +153,7 @@ export class ShopierCheckout {
               <input type="hidden" name="currency" value="${currencyStr}">
               <input type="hidden" name="platform" value="0">
               <input type="hidden" name="is_in_frame" value="0">
-              <input type="hidden" name="current_language" value="2"> <!-- 2 = TR -->
+              <input type="hidden" name="current_language" value="2">
               <input type="hidden" name="modul_version" value="1.0.4">
               <input type="hidden" name="random_nr" value="${data.id}">
               <input type="hidden" name="signature" value="${signature}">
@@ -113,24 +164,5 @@ export class ShopierCheckout {
       </body>
       </html>
     `;
-    }
-
-    /**
-     * Validates the callback received from Shopier after payment.
-     * Usually called in a POST route: /api/payment/shopier/callback
-     */
-    public validateCallback(postData: Record<string, string>): boolean {
-        const { random_nr, signature, status } = postData;
-
-        if (!signature || !random_nr) {
-            return false;
-        }
-
-        const expectedData = random_nr + status;
-        const hmac = crypto.createHmac('sha256', this.apiSecret);
-        hmac.update(expectedData);
-        const expectedSignature = hmac.digest('base64');
-
-        return signature === expectedSignature;
     }
 }

@@ -7,118 +7,121 @@ import { ShopierCheckout } from '@/lib/payment/shopier';
 
 const shopierApiKey = process.env.SHOPIER_API_KEY || '';
 const shopierApiSecret = process.env.SHOPIER_API_SECRET || '';
+const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001';
 
 export async function POST(req: Request) {
     try {
-        // Shopier sends POST request with application/x-www-form-urlencoded
+        // Shopier sends POST with application/x-www-form-urlencoded containing 'res' and 'hash'
         const formData = await req.formData();
         const postData: Record<string, string> = {};
         formData.forEach((value, key) => {
             postData[key] = value.toString();
         });
 
+        // --------------- Validation ---------------
         if (!shopierApiKey || !shopierApiSecret) {
-            console.error('Shopier API key/secret not configured in environment variables.');
-            return new Response('Configuration Error', { status: 200 }); // Return 200 so Shopier does not spam retries
+            console.error('[Shopier OSB] API credentials not configured');
+            // Return plain text "success" so Shopier doesn't keep retrying
+            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
         const shopier = new ShopierCheckout({ apiKey: shopierApiKey, apiSecret: shopierApiSecret });
-        const isValid = shopier.validateCallback(postData);
 
-        if (!isValid) {
-            console.error('Shopier Invalid Signature Callback:', postData);
-            // Still return 200 to stop Shopier from retrying - just log the rejection
-            return new Response('Invalid Signature', { status: 200 });
+        // Use OSB format validation (res + hash)
+        const callbackData = shopier.validateOSBCallback(postData);
+
+        if (!callbackData) {
+            console.error('[Shopier OSB] Invalid signature or missing res/hash fields. PostData keys:', Object.keys(postData));
+            // Return success to prevent Shopier spam retries; log the issue
+            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
-        const { status, random_nr } = postData; // random_nr is our OrderNo
+        const { orderid, istest, email, buyername } = callbackData;
+        console.log(`[Shopier OSB] Callback received. OrderId: ${orderid}, isTest: ${istest}, buyer: ${email}`);
 
         await dbConnect();
 
-        // Find the pending order
-        const order = await Order.findOne({ orderNo: random_nr });
+        // --------------- Find Pending Order ---------------
+        const order = await Order.findOne({ orderNo: orderid });
 
         if (!order) {
-            console.warn('Shopier OSB Test or Unknown Order Callback:', random_nr);
-            // Return 200 OK so Shopier OSB test passes. This is normal for test callbacks.
-            return new Response('OK', { status: 200 });
+            // This is normal for OSB test calls or unknown orders — return success
+            console.warn(`[Shopier OSB] No order found for orderid: ${orderid} (could be OSB test)`);
+            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
 
-        if (status.toLowerCase() === 'success') {
-            // Check if already completed to prevent double processing
-            if (order.status === 'completed') {
-                return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/admin/dashboard?payment=success`);
-            }
+        // Already completed — prevent double processing
+        if (order.status === 'completed') {
+            console.log(`[Shopier OSB] Order ${orderid} already completed, skipping.`);
+            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        }
 
-            // 1. Update Order
-            order.status = 'completed';
-            order.completedAt = new Date();
-            await order.save();
+        // --------------- Process Payment Success ---------------
+        order.status = 'completed';
+        order.completedAt = new Date();
+        await order.save();
 
-            // 2. We don't have a user yet. We must create one from draftUserData.
-            const draftUser = order.draftUserData;
-            const purchasedPackage = await Package.findById(order.packageId);
+        const draftUser = order.draftUserData;
+        const purchasedPackage = await Package.findById(order.packageId);
 
-            if (!draftUser || !purchasedPackage) {
-                console.error('Missing Draft Data or Package details:', draftUser, purchasedPackage);
-                return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/packages?payment=draft-missing`);
-            }
+        if (!draftUser || !purchasedPackage) {
+            console.error('[Shopier OSB] Missing draftUserData or package for order:', orderid);
+            return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        }
 
-            // 3. Setup package limits
-            const Subscriber = (await import('@/models/Subscriber')).default;
-            const subscriptionExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+        // --------------- Create User ---------------
+        const Subscriber = (await import('@/models/Subscriber')).default;
+        const subscriptionExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
 
-            // Base limit definition mapped directly from the package
-            const limits = {
-                storageLimit: purchasedPackage.storage * 1024 * 1024 * 1024,
-                maxCustomers: purchasedPackage.maxCustomers,
-                maxPhotos: purchasedPackage.maxPhotos,
-                maxAppointments: purchasedPackage.maxAppointments,
-                hasWatermark: purchasedPackage.hasWatermark,
-                hasWebsite: purchasedPackage.hasWebsite,
-                supportType: purchasedPackage.supportType
-            };
+        const limits = {
+            storageLimit: (purchasedPackage.storage || 10) * 1024 * 1024 * 1024,
+            maxCustomers: purchasedPackage.maxCustomers ?? -1,
+            maxPhotos: purchasedPackage.maxPhotos ?? -1,
+            maxAppointments: purchasedPackage.maxAppointments ?? -1,
+            hasWatermark: purchasedPackage.hasWatermark ?? false,
+            hasWebsite: purchasedPackage.hasWebsite ?? false,
+            supportType: purchasedPackage.supportType ?? 'E-posta',
+        };
 
-            // 4. Create User
-            const newUser = await User.create({
-                name: draftUser.name,
-                studioName: draftUser.studioName,
-                slug: draftUser.slug,
-                email: draftUser.email,
-                password: draftUser.hashedPassword, // Used the pre-hashed password from checkout step
-                phone: draftUser.phone,
-                address: draftUser.address,
-                role: 'admin',
-                packageType: purchasedPackage.id,
-                intendedAction: draftUser.intendedAction || 'purchase',
-                heroTitle: draftUser.studioName,
-                heroSubtitle: draftUser.phone,
-                ...limits,
-                subscriptionExpiry,
-                billingInfo: draftUser.billingInfo,
-                isActive: true, // Officially activated immediately because payment succeeded
-                isEmailVerified: true, // Auto-verify email for paid users to reduce friction
-                verificationToken: null,
-                verificationTokenExpiry: null
-            });
+        const newUser = await User.create({
+            name: draftUser.name,
+            studioName: draftUser.studioName,
+            slug: draftUser.slug,
+            email: draftUser.email,
+            password: draftUser.hashedPassword,
+            phone: draftUser.phone,
+            address: draftUser.address,
+            role: 'admin',
+            packageType: purchasedPackage.id,
+            intendedAction: draftUser.intendedAction || 'purchase',
+            heroTitle: draftUser.studioName,
+            heroSubtitle: draftUser.phone,
+            ...limits,
+            subscriptionExpiry,
+            billingInfo: draftUser.billingInfo,
+            isActive: true,
+            isEmailVerified: true, // Paid users get auto-verified
+            verificationToken: null,
+            verificationTokenExpiry: null,
+        });
 
-            // Add to Subscriber table for bulk mailing
-            await Subscriber.create({
-                email: draftUser.email.toLowerCase(),
-                name: draftUser.name,
-                studioName: draftUser.studioName,
-                packageType: purchasedPackage.id,
-                isActive: true
-            });
+        // Save subscriber record
+        await Subscriber.create({
+            email: draftUser.email.toLowerCase(),
+            name: draftUser.name,
+            studioName: draftUser.studioName,
+            packageType: purchasedPackage.id,
+            isActive: true,
+        }).catch(() => { }); // Don't fail if already exists
 
-            // 5. Update Order to record actual userId
-            order.userId = newUser._id;
-            await order.save();
+        // Link order to newly created user
+        order.userId = newUser._id;
+        await order.save();
 
-            // Send Welcome Email
+        // Send welcome email
+        try {
             const { sendEmailWithTemplate } = await import('@/lib/resend');
             const { EmailTemplateType } = await import('@/models/EmailTemplate');
-
             await sendEmailWithTemplate({
                 to: draftUser.email,
                 templateType: EmailTemplateType.WELCOME_PHOTOGRAPHER,
@@ -126,24 +129,21 @@ export async function POST(req: Request) {
                 data: {
                     photographerName: draftUser.name,
                     studioName: draftUser.studioName,
-                    loginUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/login`
+                    loginUrl: `${baseUrl}/login`,
                 },
             });
-
-            // 6. Redirect the user back to the login page with a success flag
-            // (Shopier callback executes within the user's browser, so redirect works!)
-            // Pass the email so we can pre-fill it or automatically trigger credential login on frontend if desired
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?payment=success&email=${encodeURIComponent(draftUser.email)}`);
-
-        } else {
-            // Payment Failed (Declined by Bank, insufficient funds, etc.)
-            order.status = 'failed';
-            await order.save();
-            return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/packages?payment=failed`);
+        } catch (emailErr) {
+            console.error('[Shopier OSB] Failed to send welcome email:', emailErr);
         }
 
+        console.log(`[Shopier OSB] ✅ User created successfully: ${draftUser.email}`);
+
+        // Shopier expects plain text "success" response
+        return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+
     } catch (error: any) {
-        console.error('Shopier Callback Error:', error);
-        return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/packages?payment=error`);
+        console.error('[Shopier OSB] Callback Error:', error.message);
+        // Always return 200 so Shopier doesn't spam retries
+        return new Response('success', { status: 200, headers: { 'Content-Type': 'text/plain' } });
     }
 }
