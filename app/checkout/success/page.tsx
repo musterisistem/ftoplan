@@ -136,7 +136,7 @@ function SuccessContent() {
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             <PublicHeader />
-            <main className="flex-1 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 flex flex-col justify-center items-center pt-32 pb-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
 
                     {view === 'verifying' && (
