@@ -5,12 +5,16 @@ import User from '@/models/User';
 import Package from '@/models/Package';
 import { ShopierCheckout } from '@/lib/payment/shopier';
 
-const shopierApiKey = process.env.SHOPIER_API_KEY || '';
-const shopierApiSecret = process.env.SHOPIER_API_SECRET || '';
-const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001';
-
 export async function POST(req: Request) {
     try {
+        await dbConnect();
+        const SystemSetting = (await import('@/models/SystemSetting')).default;
+
+        // Try to get keys from DB first, then Env
+        const settings = await SystemSetting.findOne({});
+        const shopierApiKey = settings?.shopierApiKey || process.env.SHOPIER_API_KEY || '';
+        const shopierApiSecret = settings?.shopierApiSecret || process.env.SHOPIER_API_SECRET || '';
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001';
         // Shopier sends POST with application/x-www-form-urlencoded containing 'res' and 'hash'
         const formData = await req.formData();
         const postData: Record<string, string> = {};

@@ -11,23 +11,25 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'Sipariş numarası eksik.' }, { status: 400 });
         }
 
-        // Check env vars first and log for debugging
-        const apiKey = process.env.SHOPIER_API_KEY;
-        const apiSecret = process.env.SHOPIER_API_SECRET;
+        await dbConnect();
+        const { Order } = await import('@/models/Order');
+        const SystemSetting = (await import('@/models/SystemSetting')).default;
 
-        console.log('[Checkout] SHOPIER_API_KEY present:', !!apiKey);
-        console.log('[Checkout] SHOPIER_API_SECRET present:', !!apiSecret);
+        // Try to get keys from DB first, then Env
+        const settings = await SystemSetting.findOne({});
+        const apiKey = settings?.shopierApiKey || process.env.SHOPIER_API_KEY;
+        const apiSecret = settings?.shopierApiSecret || process.env.SHOPIER_API_SECRET;
+
+        console.log('[Checkout] API Key source:', settings?.shopierApiKey ? 'Database' : (process.env.SHOPIER_API_KEY ? 'Environment' : 'MISSING'));
         console.log('[Checkout] Order requested:', orderNo);
 
         if (!apiKey || !apiSecret) {
-            console.error('[Checkout] SHOPIER env vars missing on this deployment!');
+            console.error('[Checkout] Shopier API keys are missing in both DB and Env');
             return NextResponse.json({
                 success: false,
                 error: 'Ödeme altyapısı henüz yapılandırılmamış. Lütfen tekrar deneyin.',
             }, { status: 503 });
         }
-
-        await dbConnect();
 
         // Get Pending Order with package info
         const order = await Order.findOne({ orderNo }).populate('packageId');

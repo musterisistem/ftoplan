@@ -16,6 +16,8 @@ const SystemSettingSchema = new mongoose.Schema({
     trialDays: { type: Number, default: 3 },
     enableRegistration: { type: Boolean, default: true },
     maintenanceMode: { type: Boolean, default: false },
+    shopierApiKey: { type: String, default: '' },
+    shopierApiSecret: { type: String, default: '' },
     contactInfo: [ContactInfoSchema]
 }, { timestamps: true });
 
