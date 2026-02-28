@@ -7,6 +7,8 @@ import { CheckCircle, Loader2, Sparkles } from 'lucide-react';
 import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
 import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
+import PublicHeader from '@/components/layout/PublicHeader';
+import PublicFooter from '@/components/layout/PublicFooter';
 
 function WelcomeScreen({ onMount, onClose }: { onMount: () => void, onClose: () => void }) {
     useEffect(() => {
@@ -132,35 +134,39 @@ function SuccessContent() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <PublicHeader />
+            <main className="flex-1 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
 
-                {view === 'verifying' && (
-                    <div className="flex flex-col items-center">
-                        <Loader2 className="w-16 h-16 text-[#5d2b72] animate-spin mb-6" />
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Ödeme Doğrulanıyor...</h2>
-                        <p className="text-gray-500">Lütfen bekleyin, sunucu ile iletişim halindeyiz.</p>
-                    </div>
-                )}
-
-                {view === 'error' && (
-                    <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle className="w-10 h-10" />
+                    {view === 'verifying' && (
+                        <div className="flex flex-col items-center">
+                            <Loader2 className="w-16 h-16 text-[#5d2b72] animate-spin mb-6" />
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Ödeme Doğrulanıyor...</h2>
+                            <p className="text-gray-500">Lütfen bekleyin, sunucu ile iletişim halindeyiz.</p>
                         </div>
-                        <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ödeme Onaylandı!</h2>
-                        <p className="text-gray-600 mb-8 leading-relaxed">
-                            Ödemeniz başarıyla alındı ve hesabınız aktifleştirildi. Yönetim paneline giriş yapabilirsiniz.
-                        </p>
-                        <button
-                            onClick={() => router.push('/login')}
-                            className="inline-block w-full py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all text-lg"
-                        >
-                            Panele Giriş Yap
-                        </button>
-                    </div>
-                )}
-            </div>
+                    )}
+
+                    {view === 'error' && (
+                        <div className="flex flex-col items-center">
+                            <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle className="w-10 h-10" />
+                            </div>
+                            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ödeme Onaylandı!</h2>
+                            <p className="text-gray-600 mb-8 leading-relaxed">
+                                Ödemeniz başarıyla alındı ve hesabınız aktifleştirildi. Yönetim paneline giriş yapabilirsiniz.
+                            </p>
+                            <button
+                                onClick={() => router.push('/login')}
+                                className="inline-block w-full py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all text-lg"
+                            >
+                                Panele Giriş Yap
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </main>
+            <PublicFooter />
         </div>
     );
 }
