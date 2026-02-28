@@ -258,6 +258,10 @@ function PackagesContent() {
                 const res = await fetch('/api/packages');
                 const data = await res.json();
 
+                if (!Array.isArray(data)) {
+                    throw new Error('Geçersiz paket verisi');
+                }
+
                 // Format db package to match UI expectations
                 const formatted = data.map((pkg: any) => ({
                     id: pkg.id,

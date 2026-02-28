@@ -65,17 +65,26 @@ function CheckoutContent() {
             const data = await res.json();
 
             if (res.ok && data.success && data.html) {
-                // Replace entire page with Shopier's redirect form
-                document.open();
-                document.write(data.html);
-                document.close();
+                // Inject the form into the document and submit it automatically
+                const container = document.createElement('div');
+                container.style.display = 'none';
+                container.innerHTML = data.html;
+                document.body.appendChild(container);
+
+                const form = container.querySelector('form');
+                if (form) {
+                    form.submit();
+                } else {
+                    setError('Ödeme formu oluşturulamadı. Lütfen tekrar deneyin.');
+                    setLoading(false);
+                }
             } else {
                 setError(data.error || 'Ödeme altyapısına bağlanılamadı. Lütfen tekrar deneyin.');
                 setLoading(false);
             }
         } catch (err) {
             console.error('Payment error:', err);
-            setError('Shopier servisine bağlanılırken hata oluştu. Lütfen tekrar deneyin.');
+            setError('Ödeme sistemiyle bağlantı kurulamadı.');
             setLoading(false);
         }
     };
