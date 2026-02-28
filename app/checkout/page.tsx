@@ -16,6 +16,7 @@ function CheckoutContent() {
     const [selectedPackage, setSelectedPackage] = useState<{
         name: string;
         price: string;
+        amount: number;
         code: string;
         orderNo: string;
     } | null>(null);
@@ -40,6 +41,7 @@ function CheckoutContent() {
                     setSelectedPackage({
                         name: data.order.packageName || 'Paket',
                         price: `₺${(data.order.amount ?? 0).toLocaleString('tr-TR')}`,
+                        amount: data.order.amount ?? 0,
                         code: data.order.packageId || '',
                         orderNo: data.order.orderNo,
                     });
@@ -224,6 +226,32 @@ function CheckoutContent() {
                                     Ödemenizi tamamladığınız an sisteminiz otomatik olarak kurulur ve fotoğraflarınızı yüklemeye başlayabilirsiniz.
                                 </div>
                             </div>
+
+                            {/* Taksit Seçenekleri Tablosu */}
+                            {selectedPackage && (
+                                <div className="mt-6 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">Taksit Seçenekleri</h3>
+                                    <style dangerouslySetInnerHTML={{
+                                        __html: `
+                                        #paytr_taksit_tablosu{clear: both;font-size: 12px;max-width: 1200px;text-align: center;font-family: inherit;}
+                                        #paytr_taksit_tablosu::before {display: table;content: " ";}
+                                        #paytr_taksit_tablosu::after {content: "";clear: both;display: table;}
+                                        .taksit-tablosu-wrapper{margin: 5px;width: 100%; max-width: 280px; padding: 12px;cursor: default;text-align: center;display: inline-block;border: 1px solid #e1e1e1; border-radius: 12px;}
+                                        .taksit-logo img{max-height: 28px;padding-bottom: 10px; margin: 0 auto;}
+                                        .taksit-tutari-text{float: left;width: 50%;color: #a2a2a2;margin-bottom: 5px;}
+                                        .taksit-tutar-wrapper{display: inline-block;background-color: #f7f7f7; width: 100%; border-radius: 8px; margin-bottom: 4px; overflow: hidden;}
+                                        .taksit-tutar-wrapper:hover{background-color: #e8e8e8;}
+                                        .taksit-tutari{float: left;width: 50%;padding: 6px 0;color: #474747;}
+                                        .taksit-tutari:last-child {border-left: 2px solid #ffffff;}
+                                        .taksit-tutari-bold{font-weight: bold;}
+                                    `}} />
+                                    <div id="paytr_taksit_tablosu"></div>
+                                    <Script
+                                        src={`https://www.paytr.com/odeme/taksit-tablosu/v2?token=4dda7b2cd16fea5352bf5b9c30c3fb9de51faef89644ab7c8924e93e5ce4c20c&merchant_id=675630&amount=${selectedPackage.amount}&taksit=0&tumu=0`}
+                                        strategy="lazyOnload"
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
