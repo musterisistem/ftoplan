@@ -244,7 +244,7 @@ export default function SuperAdminDashboard() {
                     </h2>
 
                     <div className="space-y-4">
-                        {liveData.topPages.length > 0 ? (
+                        {(liveData?.topPages?.length || 0) > 0 ? (
                             liveData.topPages.map((page, idx) => (
                                 <div key={idx} className="flex items-center justify-between group">
                                     <div className="flex-1 min-w-0 mr-4">
@@ -259,7 +259,7 @@ export default function SuperAdminDashboard() {
                                         <div className="h-1.5 w-16 bg-gray-700 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-amber-500 rounded-full"
-                                                style={{ width: `${Math.min(100, (page.count / (liveData.topPages[0]?.count || 1)) * 100)}%` }}
+                                                style={{ width: `${Math.min(100, (page.count / (liveData?.topPages?.[0]?.count || 1)) * 100)}%` }}
                                             ></div>
                                         </div>
                                         <span className="text-xs font-bold text-white w-8 text-right">{page.count}</span>

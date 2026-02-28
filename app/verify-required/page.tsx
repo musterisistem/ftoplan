@@ -3,7 +3,8 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Mail, CheckCircle, RefreshCw, Loader2, ShieldCheck, Sparkles, AlertTriangle, ArrowRight, ExternalLink, Inbox, Info, LogOut } from 'lucide-react';
+import { Mail, CheckCircle, RefreshCw, Loader2, ShieldCheck, Sparkles, AlertTriangle, ArrowRight, ExternalLink, Inbox, Info, LogOut, Home } from 'lucide-react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function VerifyRequiredPage() {
@@ -243,6 +244,13 @@ export default function VerifyRequiredPage() {
                             >
                                 <LogOut className="w-4 h-4" /> Farklı Hesaba Geç
                             </button>
+
+                            <Link
+                                href="/"
+                                className="w-full h-12 rounded-[20px] text-slate-400 font-bold text-xs hover:text-[#5d2b72] transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Home className="w-4 h-4" /> Ana Sayfaya Dön
+                            </Link>
                         </div>
                     </div>
                 </div>

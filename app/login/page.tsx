@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -38,7 +38,9 @@ function LoginContent() {
                 const sessionRes = await fetch('/api/auth/session');
                 const session = await sessionRes.json();
                 if (session?.user?.role === 'superadmin') {
-                    router.push('/superadmin/dashboard');
+                    await signOut({ redirect: false });
+                    setError('Süper Admin girişi bu sayfadan yapılamaz. Lütfen süper admin girişini kullanın.');
+                    setLoading(false);
                 } else if (session?.user?.role === 'couple') {
                     router.push('/musteri');
                 } else {

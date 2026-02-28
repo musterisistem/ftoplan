@@ -55,13 +55,18 @@ export async function POST(req: Request) {
         // Hash Password
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Package Type & Duration (Trial: 3 days, Others: 365 days)
+        // Create Package Draft Data
         const pkgType = selectedPackage || 'trial';
         const subscriptionExpiry = new Date();
-        if (pkgType === 'trial') {
-            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 3);
-        } else {
-            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 365);
+        const Order = (await import('@/models/Order')).Order;
+        const PackageModel = (await import('@/models/Package')).default;
+
+        let dbPackage = null;
+        if (pkgType !== 'trial') {
+            dbPackage = await PackageModel.findOne({ id: pkgType });
+            if (!dbPackage) {
+                return NextResponse.json({ error: 'Geçersiz paket seçimi.' }, { status: 400 });
+            }
         }
 
         // Generate Verification Token
@@ -103,64 +108,106 @@ export async function POST(req: Request) {
 
         const limits = packageLimits[pkgType] || packageLimits['trial'];
 
-        // Create User
-        const newUser = await User.create({
-            name,
-            studioName,
-            slug,
-            email,
-            password: hashedPassword,
-            phone,
-            address: address || billingInfo?.address || '',
-            role: 'admin',
-            packageType: pkgType,
-            intendedAction: intendedAction || 'trial',
-            heroTitle: studioName,
-            heroSubtitle: phone,
-            ...limits,
-            subscriptionExpiry,
-            billingInfo: {
-                companyType: billingInfo?.companyType || 'individual',
-                address: billingInfo?.address || address || '',
-                taxOffice: billingInfo?.taxOffice || '',
-                taxNumber: billingInfo?.taxNumber || '',
-                identityNumber: billingInfo?.identityNumber || '',
-            },
-            isActive: false,
-            verificationToken,
-            verificationTokenExpiry
-        });
+        // If trial, proceed with creating User directly
+        if (pkgType === 'trial') {
+            subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 3);
+            const newUser = await User.create({
+                name,
+                studioName,
+                slug,
+                email,
+                password: hashedPassword, // Trial uses direct hash
+                phone,
+                address: address || billingInfo?.address || '',
+                role: 'admin',
+                packageType: pkgType,
+                intendedAction: intendedAction || 'trial',
+                heroTitle: studioName,
+                heroSubtitle: phone,
+                ...limits,
+                subscriptionExpiry,
+                billingInfo: {
+                    companyType: billingInfo?.companyType || 'individual',
+                    address: billingInfo?.address || address || '',
+                    taxOffice: billingInfo?.taxOffice || '',
+                    taxNumber: billingInfo?.taxNumber || '',
+                    identityNumber: billingInfo?.identityNumber || '',
+                },
+                isActive: false,
+                verificationToken,
+                verificationTokenExpiry
+            });
 
-        // Add to Subscriber table for bulk mailing
-        await Subscriber.create({
-            email: email.toLowerCase(),
-            name,
-            studioName,
-            packageType: selectedPackage || 'trial',
-            isActive: false // inactive until verified
-        });
+            await Subscriber.create({
+                email: email.toLowerCase(),
+                name,
+                studioName,
+                packageType: pkgType,
+                isActive: false // inactive until verified
+            });
 
-        // Send verification email
-        const { sendEmailWithTemplate } = await import('@/lib/resend');
-        const { EmailTemplateType } = await import('@/models/EmailTemplate');
+            // Send verification email
+            const { sendEmailWithTemplate } = await import('@/lib/resend');
+            const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
-        const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+            const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
-        await sendEmailWithTemplate({
-            to: email,
-            templateType: EmailTemplateType.VERIFY_EMAIL,
-            photographerId: newUser._id.toString(),
-            data: {
-                photographerName: name,
-                verifyUrl,
-            },
-        });
+            await sendEmailWithTemplate({
+                to: email,
+                templateType: EmailTemplateType.VERIFY_EMAIL,
+                photographerId: newUser._id.toString(),
+                data: {
+                    photographerName: name,
+                    verifyUrl,
+                },
+            });
 
-        return NextResponse.json({
-            success: true,
-            message: 'Kayıt başarılı. Lütfen e-posta adresinizi doğrulayın.',
-            slug
-        }, { status: 201 });
+            return NextResponse.json({
+                success: true,
+                isPaid: false,
+                message: 'Kayıt başarılı. Lütfen e-posta adresinizi doğrulayın.',
+                slug
+            }, { status: 201 });
+
+        } else {
+            // Paid Package Flow -> Do NOT create User. Create a pending Order instead.
+            const orderId = `FP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+            await Order.create({
+                orderNo: orderId,
+                packageId: dbPackage._id,
+                amount: dbPackage.price,
+                currency: 'TRY',
+                status: 'pending',
+                draftUserData: {
+                    name,
+                    studioName,
+                    slug,
+                    email,
+                    password: password, // Store plain here to login via callback, or we can deal with hashes in callback
+                    hashedPassword,
+                    phone,
+                    address: address || billingInfo?.address || '',
+                    intendedAction: intendedAction || 'purchase',
+                    billingInfo: {
+                        companyType: billingInfo?.companyType || 'individual',
+                        address: billingInfo?.address || address || '',
+                        taxOffice: billingInfo?.taxOffice || '',
+                        taxNumber: billingInfo?.taxNumber || '',
+                        identityNumber: billingInfo?.identityNumber || '',
+                    },
+                    verificationToken,
+                    verificationTokenExpiry
+                }
+            });
+
+            return NextResponse.json({
+                success: true,
+                isPaid: true,
+                orderNo: orderId,
+                message: 'Devam etmek için ödeme sayfasına yönlendiriliyorsunuz.',
+            }, { status: 200 });
+        }
 
     } catch (error: any) {
         console.error('Registration error:', error);

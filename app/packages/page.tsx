@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,65 +29,19 @@ const formatPhone = (v: string) => {
 };
 
 /* ─── Package data ─────────────────────────────────── */
-const PACKAGES = [
+const FALLBACK_PACKAGES = [
     {
         id: 'trial', name: 'Ücretsiz Deneme', price: 0,
         icon: Sparkles, iconBg: 'bg-amber-400', badge: null, highlight: false,
         tagline: '3 gün · Kredi kartı gerekmez',
-        desc: 'Sistemimizi keşfetmeniz için tasarlanmış risksiz başlangıç planı.',
+        description: 'Sistemimizi keşfetmeniz için tasarlanmış risksiz başlangıç planı.',
         features: [
             '500 MB Hızlı Bulut Depolama',
             '1 Aktif Müşteri Takibi',
-            '30 Fotoğraflık Deneme Galerisi',
-            'Randevu Sistemi Önizlemesi',
-            'Mobil Uygulama Erişimi (iOS/Android)',
-            'Online Cari Hesap Girişi',
-            'Otomatik Fotoğraf Optimizasyonu'
+            '30 Fotoğraflık Deneme Galerisi'
         ],
         missing: ['Filigransız Fotoğraf', 'Özel Web Sitesi', '7/24 Destek'],
-    },
-    {
-        id: 'standart', name: 'Standart Paket', price: 9499,
-        icon: Award, iconBg: 'bg-[#5d2b72]', badge: 'En Popüler', highlight: true,
-        tagline: '₺791/ay · Yıllık faturalandırma',
-        desc: 'Büyüyen stüdyolar için tüm iş süreçlerini dijitalleştiren profesyonel çözüm.',
-        features: [
-            '10 GB Güvenli Bulut Arşivi',
-            'Sınırsız Müşteri Kaydı & Yönetimi',
-            'Sınırsız Fotoğraf Yükleme & Paylaşım',
-            'Filigransız ve Şifreli Müşteri Galerileri',
-            'Görsel Fotoğraf Seçim Arayüzü',
-            'HIGHLIGHT: Otomatik Boyut Küçültme & Optimizasyon',
-            'Otomatik Randevu SMS & Mail Hatırlatıcılar',
-            'Gelişmiş Finansal Gelir-Gider Takibi',
-            'Dijital Sözleşme İmzalama Altyapısı',
-            'Tam Teşekküllü Mobil Uygulama Paneli'
-        ],
-        missing: ['Özel Web Sitesi'],
-    },
-    {
-        id: 'kurumsal', name: 'Kurumsal Paket', price: 19999,
-        icon: Globe, iconBg: 'bg-indigo-600', badge: 'Elite', highlight: false,
-        tagline: '₺1.667/ay · Yıllık faturalandırma',
-        desc: 'Markasını büyütmek ve premium bir deneyim sunmak isteyen stüdyolar için en üst seviye çözüm.',
-        features: [
-            '30 GB Genişletilebilir Depolama Alanı',
-            'Stüdyonuza Özel Profesyonel Web Sitesi',
-            'Özel Alan Adı Desteği (domain.com)',
-            'Kurumsal İş E-posta Adresi (info@...)',
-            'Markanıza Özel Arayüz Özelleştirmeleri',
-            'HIGHLIGHT: Otomatik Boyut Küçültme & Optimizasyon',
-            '--- EKSTRA ÖZELLİKLER ---',
-            '7/24 VIP Müşteri ve Teknik Destek Hattı',
-            'Çoklu Ekip & Asistan Yetkilendirme Sistemi',
-            'Detaylı İş Analizi ve Performans Raporları',
-            'Yapay Zeka Destekli Fotoğraf Tasnifleme',
-            'Gelişmiş Müşteri Sadakat Programı Modülü',
-            'Öncelikli Yeni Özellik Erişimi',
-            'Tüm Standart Paket Özellikleri Dahildir'
-        ],
-        missing: [],
-    },
+    }
 ];
 
 /* ─── Registration Form ─────────────────────────────── */
@@ -138,15 +92,18 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
             });
             const data = await res.json();
             if (res.ok) {
-                const result = await signIn('credentials', { email: form.email, password: form.password, redirect: false });
-                if (result?.ok) {
-                    if (pkgId === 'trial') {
+                if (data.isPaid && data.orderNo) {
+                    // Zero-account checkout flow: redirect straight to checkout with orderNo
+                    router.push(`/checkout?order=${data.orderNo}`);
+                } else {
+                    // Trial package flow: Log the user in
+                    const result = await signIn('credentials', { email: form.email, password: form.password, redirect: false });
+
+                    if (result?.ok) {
                         router.push('/admin/dashboard');
                     } else {
-                        router.push(`/checkout?package=${pkgId}`);
+                        router.push('/login?registered=1');
                     }
-                } else {
-                    router.push('/login?registered=1');
                 }
             } else {
                 setError(data.error || 'Kayıt tamamlanamadı.');
@@ -292,8 +249,40 @@ function PackagesContent() {
     const searchParams = useSearchParams();
     const initialPkg = searchParams.get('package') || null;
     const [selectedPkg, setSelectedPkg] = useState<string | null>(initialPkg);
+    const [packages, setPackages] = useState<any[]>([]);
+    const [loadingPkgs, setLoadingPkgs] = useState(true);
 
-    const activePkg = PACKAGES.find(p => p.id === selectedPkg);
+    useEffect(() => {
+        const fetchPackages = async () => {
+            try {
+                const res = await fetch('/api/packages');
+                const data = await res.json();
+
+                // Format db package to match UI expectations
+                const formatted = data.map((pkg: any) => ({
+                    id: pkg.id,
+                    name: pkg.name,
+                    price: pkg.price,
+                    icon: pkg.id === 'trial' ? Sparkles : (pkg.id === 'kurumsal' ? Globe : Award),
+                    iconBg: pkg.id === 'trial' ? 'bg-amber-400' : (pkg.id === 'kurumsal' ? 'bg-indigo-600' : 'bg-[#5d2b72]'),
+                    badge: pkg.popular ? 'En Popüler' : null,
+                    highlight: pkg.popular,
+                    tagline: pkg.price > 0 ? `₺${Math.floor(pkg.price / 12)}/ay · Yıllık faturalandırma` : 'Kredi kartı gerekmez',
+                    desc: pkg.description,
+                    features: pkg.features || [],
+                    missing: []
+                }));
+                setPackages(formatted.length > 0 ? formatted : FALLBACK_PACKAGES);
+            } catch (e) {
+                setPackages(FALLBACK_PACKAGES);
+            } finally {
+                setLoadingPkgs(false);
+            }
+        };
+        fetchPackages();
+    }, []);
+
+    const activePkg = packages.find(p => p.id === selectedPkg);
     const formOpen = !!activePkg;
 
     return (
@@ -330,7 +319,9 @@ function PackagesContent() {
                     {/* LEFT: Package Cards */}
                     <div className={`transition-all duration-500 ${formOpen ? 'w-full lg:w-[420px] shrink-0' : 'w-full max-w-5xl mx-auto'}`}>
                         <div className={`flex gap-5 ${formOpen ? 'flex-col' : 'grid md:grid-cols-3'}`}>
-                            {PACKAGES.map((pkg, i) => {
+                            {loadingPkgs ? (
+                                <div className="col-span-3 py-20 flex justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#5d2b72]" /></div>
+                            ) : packages.map((pkg, i) => {
                                 const Icon = pkg.icon;
                                 const isSelected = selectedPkg === pkg.id;
                                 return (
@@ -374,7 +365,7 @@ function PackagesContent() {
                                                 <div className="space-y-4 mb-10">
                                                     <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Neler Dahil?</p>
                                                     <ul className="space-y-3">
-                                                        {pkg.features.map((f, fi) => {
+                                                        {pkg.features.map((f: string, fi: number) => {
                                                             const isHighlight = f.startsWith('HIGHLIGHT:');
                                                             const isDivider = f.startsWith('---');
                                                             const cleanF = f.replace('HIGHLIGHT:', '').replace('---', '').trim();
@@ -406,7 +397,7 @@ function PackagesContent() {
                                                                 </motion.li>
                                                             );
                                                         })}
-                                                        {pkg.missing.map((f, fi) => (
+                                                        {pkg.missing?.map((f: string, fi: number) => (
                                                             <li key={fi} className="flex items-start gap-3 text-[14px] font-medium text-slate-300 leading-snug px-2">
                                                                 <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                                                 {f}

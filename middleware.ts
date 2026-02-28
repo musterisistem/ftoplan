@@ -26,14 +26,6 @@ export default withAuth(
                     // Don't redirect verify-success or signout related flows if any
                     return NextResponse.redirect(new URL('/verify-required', req.url));
                 }
-
-                // 2. Enforce Payment for paid packages
-                if (token.isActive === false) {
-                    if (token.packageType === 'standart' || token.packageType === 'kurumsal') {
-                        if (pathname === '/checkout') return NextResponse.next();
-                        return NextResponse.redirect(new URL(`/checkout?package=${token.packageType}`, req.url));
-                    }
-                }
             }
         }
 

@@ -22,17 +22,6 @@
     --color-card-bg: #ffffff;
     --color-text-main: #1F2937;
     --radius-main: 1rem;
-@layer utilities {
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-  }
-}
-
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
     /* Rounded-2xl usually */
   }
 

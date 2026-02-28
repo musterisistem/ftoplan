@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 const navLinks = [
     { href: '/ozellikler', label: 'Özellikler' },
@@ -18,6 +19,8 @@ interface PublicHeaderProps {
 
 export default function PublicHeader({ variant = 'transparent' }: PublicHeaderProps) {
     const pathname = usePathname();
+    const router = useRouter();
+    const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
@@ -27,8 +30,17 @@ export default function PublicHeader({ variant = 'transparent' }: PublicHeaderPr
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    // Determine header styles based on path and scroll state
     const isSolid = scrolled || variant === 'light';
+
+    // Determine the dashboard URL based on role
+    const getDashboardUrl = () => {
+        if (!session?.user) return '/login';
+        if (session.user.role === 'superadmin') return '/superadmin/dashboard';
+        if (session.user.role === 'couple') return '/musteri';
+        return '/admin/dashboard';
+    };
+
+    const isLoggedIn = !!session?.user;
 
     return (
         <>
@@ -37,7 +49,7 @@ export default function PublicHeader({ variant = 'transparent' }: PublicHeaderPr
                 : 'bg-transparent border-transparent pt-6'
                 }`}>
                 <div className="max-w-7xl mx-auto px-6 xl:px-8 flex items-center justify-between" style={{ height: isSolid ? '80px' : '100px' }}>
-                    {/* Logo — 80px height */}
+                    {/* Logo */}
                     <Link href="/" className="flex items-center group shrink-0">
                         <img
                             src="/logoweey.png"
@@ -67,18 +79,29 @@ export default function PublicHeader({ variant = 'transparent' }: PublicHeaderPr
 
                     {/* Auth Buttons */}
                     <div className="hidden md:flex items-center gap-2 shrink-0">
-                        <Link
-                            href="/login"
-                            className={`px-4 py-2 rounded-xl text-[14px] font-semibold transition-all ${isSolid
-                                ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                : 'text-gray-700 hover:text-gray-900 hover:bg-white/30'
-                                }`}
-                        >
-                            Giriş Yap
-                        </Link>
-                        <Link href="/packages" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white shadow-lg shadow-[#7a3a94]/25 hover:from-[#4a2260] hover:to-[#4a2260] transition-all">
-                            Ücretsiz Başla <ArrowRight className="w-4 h-4" />
-                        </Link>
+                        {isLoggedIn ? (
+                            <Link
+                                href={getDashboardUrl()}
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white shadow-lg shadow-[#7a3a94]/25 hover:from-[#4a2260] hover:to-[#4a2260] transition-all"
+                            >
+                                <LayoutDashboard className="w-4 h-4" /> Panele Git
+                            </Link>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/login"
+                                    className={`px-4 py-2 rounded-xl text-[14px] font-semibold transition-all ${isSolid
+                                        ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/30'
+                                        }`}
+                                >
+                                    Giriş Yap
+                                </Link>
+                                <Link href="/packages" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white shadow-lg shadow-[#7a3a94]/25 hover:from-[#4a2260] hover:to-[#4a2260] transition-all">
+                                    Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Hamburger */}
@@ -106,12 +129,24 @@ export default function PublicHeader({ variant = 'transparent' }: PublicHeaderPr
                             </Link>
                         ))}
                         <div className="pt-3 grid grid-cols-2 gap-3">
-                            <Link href="/login" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 text-center transition-all">
-                                Giriş Yap
-                            </Link>
-                            <Link href="/packages" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white text-center">
-                                Kayıt Ol
-                            </Link>
+                            {isLoggedIn ? (
+                                <Link
+                                    href={getDashboardUrl()}
+                                    onClick={() => setMobileOpen(false)}
+                                    className="py-3 col-span-2 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white text-center flex items-center justify-center gap-2"
+                                >
+                                    <LayoutDashboard className="w-4 h-4" /> Panele Git
+                                </Link>
+                            ) : (
+                                <>
+                                    <Link href="/login" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold border border-gray-200 text-gray-700 hover:bg-gray-50 text-center transition-all">
+                                        Giriş Yap
+                                    </Link>
+                                    <Link href="/packages" onClick={() => setMobileOpen(false)} className="py-3 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#5d2b72] to-[#5d2b72] text-white text-center">
+                                        Kayıt Ol
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}

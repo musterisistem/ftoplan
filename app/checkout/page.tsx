@@ -8,91 +8,83 @@ import { motion, AnimatePresence } from 'framer-motion';
 import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
 
 function CheckoutContent() {
-    const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const packageCode = searchParams.get('package');
+    const orderNo = searchParams.get('order');
 
-    const [packagesData, setPackagesData] = useState<any[]>([]);
     const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
 
-    const [paymentMethod, setPaymentMethod] = useState<'cc' | 'transfer'>('cc');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    // Form states for Fake CC
-    const [ccName, setCcName] = useState('');
-    const [ccNumber, setCcNumber] = useState('');
-    const [ccExpiry, setCcExpiry] = useState('');
-    const [ccCvv, setCcCvv] = useState('');
-
+    // Fetch the specific order details directly
     useEffect(() => {
-        const fetchPackages = async () => {
+        if (!orderNo) {
+            router.push('/packages');
+            return;
+        }
+
+        const fetchOrder = async () => {
             try {
-                const res = await fetch('/api/packages');
-                if (res.ok) {
-                    const data = await res.json();
-                    setPackagesData(data);
+                const res = await fetch(`/api/orders/${orderNo}`);
+                const data = await res.json();
+
+                if (data.success && data.order) {
+                    setSelectedPackage({
+                        name: data.order.packageName,
+                        price: `₺${data.order.amount.toLocaleString('tr-TR')}`,
+                        code: data.order.packageId,
+                        orderNo: data.order.orderNo,
+                    });
+                } else {
+                    setError('Sipariş bulunamadı veya süresi doldu.');
                 }
             } catch (err) {
-                console.error('Failed to load packages', err);
+                console.error('Failed to load order', err);
+                setError('Sipariş yüklenirken bir sorun oluştu.');
             }
         };
-        fetchPackages();
-    }, []);
+        fetchOrder();
+    }, [orderNo, router]);
 
-    useEffect(() => {
-        if (packagesData.length > 0 && packageCode) {
-            const foundPackage = packagesData.find((p: any) => p.id === packageCode);
-            if (foundPackage) {
-                // Formatting it like before to keep UI consistent
-                setSelectedPackage({
-                    name: foundPackage.name,
-                    price: `₺${foundPackage.price.toLocaleString('tr-TR')}`,
-                    code: foundPackage.id
-                });
-            }
-        }
-    }, [packagesData, packageCode]);
-
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login?redirect=/checkout?package=' + packageCode);
-        }
-        // if (status === 'authenticated' && !selectedPackage) is omitted here because selectedPackage is null until packagesData loads
-    }, [status, router, packageCode]);
-
-    if (!selectedPackage || status === 'loading') {
+    if (!orderNo || (!selectedPackage && !error)) {
         return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div></div>;
     }
 
-    const handlePayment = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handlePayment = async () => {
         setLoading(true);
         setError('');
 
         try {
-            // Mock API request to activate package
-            const res = await fetch('/api/payment/process', {
+            // Real Shopier Checkout for Credit Card
+            const res = await fetch('/api/payment/shopier/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    packageCode: selectedPackage.code,
-                    paymentMethod,
-                }),
+                body: JSON.stringify({ orderNo: selectedPackage.orderNo }),
             });
 
             const data = await res.json();
 
-            if (res.ok) {
-                setSuccess(true);
+            if (res.ok && data.success && data.html) {
+                // Inject the form into the document and submit it automatically
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.html;
+                document.body.appendChild(tempDiv);
+
+                const formElement = document.getElementById('shopier_form') as HTMLFormElement;
+                if (formElement) {
+                    formElement.submit();
+                } else {
+                    setError('Ödeme sayfasına yönlendirilemedi.');
+                    setLoading(false);
+                }
             } else {
-                setError(data.error || 'Ödeme işlemi başarısız oldu.');
+                setError(data.error || 'Ödeme altyapısına bağlanılamadı.');
+                setLoading(false);
             }
         } catch (err) {
-            setError('Bir sunucu hatası oluştu. Lütfen tekrar deneyin.');
-        } finally {
+            setError('Shopier servisine bağlanılırken hata oluştu. Lütfen tekrar deneyin.');
             setLoading(false);
         }
     };
@@ -113,92 +105,44 @@ function CheckoutContent() {
                     {/* Left: Payment Form */}
                     <div className="flex-1">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                            {/* Tabs */}
-                            <div className="flex border-b border-gray-200">
-                                <button
-                                    onClick={() => setPaymentMethod('cc')}
-                                    className={`flex-1 py-4 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 ${paymentMethod === 'cc' ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-600' : 'text-gray-500 hover:bg-gray-50'}`}
-                                >
-                                    <CreditCard className="w-5 h-5" /> Kredi / Banka Kartı
-                                </button>
-                                <button
-                                    onClick={() => setPaymentMethod('transfer')}
-                                    className={`flex-1 py-4 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 ${paymentMethod === 'transfer' ? 'bg-purple-50 text-purple-700 border-b-2 border-purple-600' : 'text-gray-500 hover:bg-gray-50'}`}
-                                >
-                                    <Building className="w-5 h-5" /> Havale / EFT
-                                </button>
-                            </div>
+                            <div className="p-8 sm:p-10 text-center">
+                                <div className="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <CreditCard className="w-8 h-8" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-3">Güvenli Kredi Kartı Ödemesi</h2>
+                                <p className="text-gray-500 mb-8 max-w-sm mx-auto leading-relaxed">
+                                    Ödemenizi 256-bit SSL korumalı Shopier altyapısı üzerinden güvenle gerçekleştirebilirsiniz. İşleminiz tamamlandığında paneliniz otomatik olarak aktif edilecektir.
+                                </p>
 
-                            <div className="p-6 sm:p-8">
                                 {error && (
-                                    <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100 font-medium">
+                                    <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium flex items-start text-left">
                                         {error}
                                     </div>
                                 )}
 
-                                {paymentMethod === 'cc' ? (
-                                    <form onSubmit={handlePayment} className="space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Kart Üzerindeki İsim</label>
-                                            <input type="text" required value={ccName} onChange={(e) => setCcName(e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all" placeholder="AD SOYAD" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Kart Numarası</label>
-                                            <div className="relative">
-                                                <input type="text" required maxLength={19} value={ccNumber} onChange={(e) => setCcNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())} className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all font-mono" placeholder="0000 0000 0000 0000" />
-                                                <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">Son Kullanma (AA/YY)</label>
-                                                <input type="text" required maxLength={5} value={ccExpiry} onChange={(e) => {
-                                                    let val = e.target.value.replace(/\D/g, '');
-                                                    if (val.length >= 2) val = val.substring(0, 2) + '/' + val.substring(2, 4);
-                                                    setCcExpiry(val);
-                                                }} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all font-mono" placeholder="MM/YY" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
-                                                <input type="text" required maxLength={3} value={ccCvv} onChange={(e) => setCcCvv(e.target.value.replace(/\D/g, ''))} className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all font-mono" placeholder="123" />
-                                            </div>
-                                        </div>
+                                <button
+                                    onClick={handlePayment}
+                                    disabled={loading}
+                                    className="w-full max-w-md mx-auto py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-[0_8px_25px_rgba(93,43,114,0.3)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg"
+                                >
+                                    {loading ? (
+                                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <><Lock className="w-5 h-5" /> Shopier ile Güvenli Öde: {selectedPackage.price}</>
+                                    )}
+                                </button>
 
-                                        <div className="pt-4">
-                                            <button type="submit" disabled={loading} className="w-full py-4 bg-gray-900 text-white font-bold rounded-xl shadow-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                                                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Lock className="w-4 h-4" /> {selectedPackage.price} Öde ve Başla</>}
-                                            </button>
-                                        </div>
-                                        <p className="text-center text-xs text-gray-500 mt-4 flex items-center justify-center gap-1">
-                                            <Lock className="w-3 h-3" /> 256-bit SSL sertifikası ile ödemeniz güvence altındadır. (Demo Mode)
-                                        </p>
-                                    </form>
-                                ) : (
-                                    <div className="space-y-6">
-                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800 leading-relaxed">
-                                            Lütfen aşağıda yer alan banka hesabımıza sipariş tutarını havale edin. Açıklama kısmına kayıt olduğunuz <strong>e-posta adresini</strong> veya <strong>firma adınızı</strong> yazmayı unutmayın. Yönetim ekibi ödemeyi doğruladığında hesabınız aktif edilecektir (Demo).
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div className="p-4 border border-gray-200 rounded-xl">
-                                                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Banka Adı</p>
-                                                <p className="font-medium text-gray-900">Garanti BBVA</p>
-                                            </div>
-                                            <div className="p-4 border border-gray-200 rounded-xl">
-                                                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Alıcı Adı</p>
-                                                <p className="font-medium text-gray-900">Weey Yazılım A.Ş.</p>
-                                            </div>
-                                            <div className="p-4 border border-gray-200 rounded-xl">
-                                                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">IBAN</p>
-                                                <p className="font-mono text-gray-900">TR12 0006 2000 0001 2345 6789 01</p>
-                                            </div>
-                                        </div>
-                                        <div className="pt-4">
-                                            <button onClick={handlePayment} disabled={loading} className="w-full py-4 bg-gray-900 text-white font-bold rounded-xl shadow-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                                                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Havale Bildirimi Yap ve Bekle</>}
-                                            </button>
-                                        </div>
+                                <div className="mt-8 flex items-center justify-center gap-6 opacity-60">
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <Lock className="w-3.5 h-3.5" /> 256-bit SSL
                                     </div>
-                                )}
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <CheckCircle className="w-3.5 h-3.5" /> 3D Secure
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                        <Building className="w-3.5 h-3.5" /> Shopier Güvencesi
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
