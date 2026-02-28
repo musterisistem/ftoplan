@@ -1,57 +1,49 @@
 import { NextResponse } from 'next/server';
-import { Order } from '@/models/Order';
 import dbConnect from '@/lib/mongodb';
 import { ShopierCheckout } from '@/lib/payment/shopier';
 
 export async function POST(req: Request) {
     try {
-        const { orderNo } = await req.json();
+        const body = await req.json();
+        const { orderNo } = body;
 
         if (!orderNo) {
             return NextResponse.json({ success: false, error: 'Sipariş numarası eksik.' }, { status: 400 });
         }
 
         await dbConnect();
+
+        // Use dynamic imports to ensure models are registered in the current connection
         const { Order } = await import('@/models/Order');
-        const SystemSetting = (await import('@/models/SystemSetting')).default;
+        const { default: SystemSetting } = await import('@/models/SystemSetting');
+        const { default: Package } = await import('@/models/Package'); // Ensure Package model is loaded for populate
 
         // Try to get keys from DB first, then Env
         const settings = await SystemSetting.findOne({});
-        const apiKey = settings?.shopierApiKey || process.env.SHOPIER_API_KEY;
-        const apiSecret = settings?.shopierApiSecret || process.env.SHOPIER_API_SECRET;
+        const shopierAccessToken = settings?.shopierAccessToken || process.env.SHOPIER_ACCESS_TOKEN;
 
-        console.log('[Checkout] API Key source:', settings?.shopierApiKey ? 'Database' : (process.env.SHOPIER_API_KEY ? 'Environment' : 'MISSING'));
-        console.log('[Checkout] Order requested:', orderNo);
-
-        if (!apiKey || !apiSecret) {
-            console.error('[Checkout] Shopier API keys are missing in both DB and Env');
-            return NextResponse.json({
-                success: false,
-                error: 'Ödeme altyapısı henüz yapılandırılmamış. Lütfen tekrar deneyin.',
-            }, { status: 503 });
-        }
+        console.log('[Checkout] PAT Detection:', shopierAccessToken ? 'Found' : 'MISSING');
 
         // Get Pending Order with package info
         const order = await Order.findOne({ orderNo }).populate('packageId');
 
         if (!order) {
             console.error('[Checkout] Order not found:', orderNo);
-            return NextResponse.json({ success: false, error: 'Sipariş bulunamadı. Kayıt formunu tekrar doldurun.' }, { status: 404 });
+            return NextResponse.json({ success: false, error: 'Sipariş bulunamadı. Lütfen paket seçimini tekrar yapın.' }, { status: 404 });
         }
 
         if (order.status !== 'pending') {
-            return NextResponse.json({ success: false, error: 'Bu sipariş zaten işlenmiş veya iptal edilmiştir.' }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'Bu sipariş zaten işlenmiş veya geçersiz.' }, { status: 400 });
         }
 
         const selectedPackage = order.packageId;
-
-        if (!selectedPackage || selectedPackage.price <= 0) {
-            return NextResponse.json({ success: false, error: 'Bu paket ücretsizdir, ödeme yapılamaz.' }, { status: 400 });
+        if (!selectedPackage) {
+            return NextResponse.json({ success: false, error: 'Paket bilgisi siparişte bulunamadı.' }, { status: 400 });
         }
 
-        // Build Shopier payment request using REST API
+        // Build Shopier payment request
         const shopier = new ShopierCheckout({
-            accessToken: settings?.shopierAccessToken || process.env.SHOPIER_ACCESS_TOKEN
+            accessToken: shopierAccessToken
         });
 
         const draftUser = order.draftUserData || {};
@@ -63,13 +55,13 @@ export async function POST(req: Request) {
             buyer: {
                 id: order._id.toString(),
                 name: draftUser.name || 'Musteri',
-                surname: draftUser.studioName || 'Fotograf',
-                email: draftUser.email || 'musteri@weey.net',
+                surname: draftUser.surname || draftUser.studioName || 'Kullanici',
+                email: draftUser.email || 'destek@weey.net',
                 phone: (draftUser.phone || '05555555555').replace(/\s/g, ''),
             },
             billing_address: {
-                address: draftUser.billingInfo?.address || draftUser.address || 'Turkiye',
-                city: 'Istanbul',
+                address: draftUser.address || draftUser.billingInfo?.address || 'Turkiye',
+                city: draftUser.city || 'Istanbul',
                 country: 'Turkey',
                 postcode: '34000',
             },
@@ -82,11 +74,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, url: paymentUrl });
         } catch (apiErr: any) {
             console.error('[Checkout] Shopier API Error:', apiErr.message);
-            return NextResponse.json({ success: false, error: apiErr.message || 'Shopier ile bağlantı kurulamadı.' }, { status: 502 });
+            return NextResponse.json({
+                success: false,
+                error: apiErr.message || 'Ödeme sayfası oluşturulamadı.',
+                details: apiErr.stack // Add stack for debugging (temporary)
+            }, { status: 502 });
         }
 
     } catch (error: any) {
         console.error('[Checkout] Fatal Error:', error.message, error.stack);
-        return NextResponse.json({ success: false, error: 'Ödeme başlatılırken beklenmedik bir sorun oluştu. Lütfen tekrar deneyin.' }, { status: 500 });
+        return NextResponse.json({
+            success: false,
+            error: 'Ödeme sunucusu hatası (500). Görünüşe göre bir kod hatası var.',
+            debug: error.message,
+            stack: error.stack
+        }, { status: 500 });
     }
 }

@@ -99,6 +99,9 @@ export class ShopierCheckout {
         };
 
         try {
+            console.log('[Shopier REST] Initiating checkout at /common/checkouts...');
+
+            // Try /common/checkouts first as some docs suggest
             const response = await fetch(`${this.restBaseUrl}/common/checkouts`, {
                 method: 'POST',
                 headers: {
@@ -112,8 +115,9 @@ export class ShopierCheckout {
             const result = await response.json();
 
             if (!response.ok) {
-                console.error('[Shopier REST] API Error:', result);
-                throw new Error(result.message || 'Shopier ödeme oluşturma hatası.');
+                const errMsg = result.message || JSON.stringify(result);
+                console.error('[Shopier REST] Error Response:', errMsg);
+                throw new Error(`Shopier: ${errMsg}`);
             }
 
             return result.checkout_url || result.payment_url;
