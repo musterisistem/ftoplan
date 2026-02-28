@@ -60,7 +60,9 @@ export class ShopierCheckout {
      * hash = HMAC-SHA256(orderNo + amount + currencyCode, apiSecret) → base64
      */
     private generateSignature(orderNo: string, amount: string, currency: string): string {
-        const data = orderNo + amount + currency;
+        // Shopier checkout signature: platform_order_id + total_order_value + currency + random_nr
+        // Since we use orderNo as both platform_order_id and random_nr:
+        const data = orderNo + amount + currency + orderNo;
         const hmac = crypto.createHmac('sha256', this.apiSecret);
         hmac.update(data);
         return hmac.digest('base64');
