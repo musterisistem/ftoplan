@@ -112,7 +112,14 @@ export class ShopierCheckout {
                 body: JSON.stringify(body)
             });
 
-            const result = await response.json();
+            let result: any;
+            try {
+                result = await response.json();
+            } catch (jsonErr) {
+                const text = await response.text();
+                console.error('[Shopier REST] Non-JSON Response:', text);
+                throw new Error(`Shopier API (HTTP ${response.status}): ${text.substring(0, 100)}`);
+            }
 
             if (!response.ok) {
                 const errMsg = result.message || JSON.stringify(result);
