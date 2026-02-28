@@ -59,10 +59,9 @@ export class ShopierCheckout {
      * (Used in the SEND direction: our site → Shopier)
      * hash = HMAC-SHA256(orderNo + amount + currencyCode, apiSecret) → base64
      */
-    private generateSignature(orderNo: string, amount: string, currency: string, websiteIndex: string): string {
-        // Shopier checkout signature: platform_order_id + total_order_value + currency + website_index + random_nr
-        // Since we use orderNo as both platform_order_id and random_nr:
-        const data = orderNo + amount + currency + websiteIndex + orderNo;
+    private generateSignature(randomNr: string, orderNo: string, amount: string, currency: string): string {
+        // Correct Shopier checkout signature: random_nr + platform_order_id + total_order_value + currency
+        const data = randomNr + orderNo + amount + currency;
         const hmac = crypto.createHmac('sha256', this.apiSecret);
         hmac.update(data);
         return hmac.digest('base64');
@@ -107,11 +106,10 @@ export class ShopierCheckout {
      * Returns an HTML page that auto-submits a form to Shopier payment gateway.
      */
     public generatePaymentForm(data: ShopierOrderData, callbackUrl: string): string {
-        const amountStr = data.amount.toString();
+        const amountStr = Number(data.amount).toFixed(2);
         const currencyStr = data.currency === 'USD' ? '1' : data.currency === 'EUR' ? '2' : '0'; // 0=TRY
 
-        const websiteIndex = "1"; // Default website index
-        const signature = this.generateSignature(data.id, amountStr, currencyStr, websiteIndex);
+        const signature = this.generateSignature(data.id, data.id, amountStr, currencyStr);
 
         return `
       <!DOCTYPE html>
