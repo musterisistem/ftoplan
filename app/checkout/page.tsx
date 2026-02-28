@@ -2,9 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { CreditCard, Lock, Building, CheckCircle, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { CreditCard, Lock, Building, CheckCircle } from 'lucide-react';
 import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
 
 function CheckoutContent() {
@@ -12,13 +10,17 @@ function CheckoutContent() {
     const searchParams = useSearchParams();
     const orderNo = searchParams.get('order');
 
-    const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<{
+        name: string;
+        price: string;
+        code: string;
+        orderNo: string;
+    } | null>(null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    // Fetch the specific order details directly
     useEffect(() => {
         if (!orderNo) {
             router.push('/packages');
@@ -27,37 +29,33 @@ function CheckoutContent() {
 
         const fetchOrder = async () => {
             try {
-                const res = await fetch(`/api/orders/${orderNo}`);
+                const res = await fetch(`/api/orders/${encodeURIComponent(orderNo)}`);
                 const data = await res.json();
 
                 if (data.success && data.order) {
                     setSelectedPackage({
-                        name: data.order.packageName,
-                        price: `₺${data.order.amount.toLocaleString('tr-TR')}`,
-                        code: data.order.packageId,
+                        name: data.order.packageName || 'Paket',
+                        price: `₺${(data.order.amount ?? 0).toLocaleString('tr-TR')}`,
+                        code: data.order.packageId || '',
                         orderNo: data.order.orderNo,
                     });
                 } else {
-                    setError('Sipariş bulunamadı veya süresi doldu.');
+                    setError('Sipariş bulunamadı veya süresi dolmuş. Lütfen tekrar kayıt olun.');
                 }
             } catch (err) {
                 console.error('Failed to load order', err);
-                setError('Sipariş yüklenirken bir sorun oluştu.');
+                setError('Sipariş yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.');
             }
         };
         fetchOrder();
     }, [orderNo, router]);
 
-    if (!orderNo || (!selectedPackage && !error)) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div></div>;
-    }
-
     const handlePayment = async () => {
+        if (!selectedPackage) return;
         setLoading(true);
         setError('');
 
         try {
-            // Real Shopier Checkout for Credit Card
             const res = await fetch('/api/payment/shopier/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -67,30 +65,57 @@ function CheckoutContent() {
             const data = await res.json();
 
             if (res.ok && data.success && data.html) {
-                // Inject the form into the document and submit it automatically
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.html;
-                document.body.appendChild(tempDiv);
-
-                const formElement = document.getElementById('shopier_form') as HTMLFormElement;
-                if (formElement) {
-                    formElement.submit();
-                } else {
-                    setError('Ödeme sayfasına yönlendirilemedi.');
-                    setLoading(false);
-                }
+                // Replace entire page with Shopier's redirect form
+                document.open();
+                document.write(data.html);
+                document.close();
             } else {
-                setError(data.error || 'Ödeme altyapısına bağlanılamadı.');
+                setError(data.error || 'Ödeme altyapısına bağlanılamadı. Lütfen tekrar deneyin.');
                 setLoading(false);
             }
         } catch (err) {
+            console.error('Payment error:', err);
             setError('Shopier servisine bağlanılırken hata oluştu. Lütfen tekrar deneyin.');
             setLoading(false);
         }
     };
 
-    if (success) {
-        return <SuccessFlow selectedPackage={selectedPackage} />;
+    if (success && selectedPackage) {
+        return (
+            <UpgradeSuccessFlow
+                packageName={selectedPackage.name}
+                onComplete={() => { window.location.href = '/admin/dashboard'; }}
+            />
+        );
+    }
+
+    // Loading state
+    if (!orderNo || (!selectedPackage && !error)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500" />
+            </div>
+        );
+    }
+
+    // Error state
+    if (error && !selectedPackage) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+                <div className="bg-white rounded-2xl shadow-sm border border-red-100 p-8 max-w-md text-center">
+                    <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Sipariş Bulunamadı</h2>
+                    <p className="text-gray-500 text-sm mb-6">{error}</p>
+                    <a href="/packages" className="inline-block px-6 py-3 bg-[#5d2b72] text-white rounded-xl font-semibold text-sm hover:bg-[#4a2260] transition-colors">
+                        Paketlere Dön
+                    </a>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -115,20 +140,20 @@ function CheckoutContent() {
                                 </p>
 
                                 {error && (
-                                    <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium flex items-start text-left">
+                                    <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 font-medium text-left">
                                         {error}
                                     </div>
                                 )}
 
                                 <button
                                     onClick={handlePayment}
-                                    disabled={loading}
-                                    className="w-full max-w-md mx-auto py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-[0_8px_25px_rgba(93,43,114,0.3)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg"
+                                    disabled={loading || !selectedPackage}
+                                    className="w-full max-w-md mx-auto py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-[0_8px_25px_rgba(93,43,114,0.3)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.4)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-60"
                                 >
                                     {loading ? (
                                         <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                     ) : (
-                                        <><Lock className="w-5 h-5" /> Shopier ile Güvenli Öde: {selectedPackage.price}</>
+                                        <><Lock className="w-5 h-5" /> Shopier ile Güvenli Öde: {selectedPackage?.price}</>
                                     )}
                                 </button>
 
@@ -154,7 +179,7 @@ function CheckoutContent() {
 
                             <div className="flex justify-between items-center py-4 border-b border-gray-800">
                                 <span className="text-gray-400">Paket</span>
-                                <span className="font-medium text-white">{selectedPackage.name}</span>
+                                <span className="font-medium text-white">{selectedPackage?.name}</span>
                             </div>
 
                             <div className="flex justify-between items-center py-4 border-b border-gray-800">
@@ -165,7 +190,7 @@ function CheckoutContent() {
                             <div className="py-6">
                                 <div className="flex justify-between items-end">
                                     <span className="text-gray-400">Toplam Tutar</span>
-                                    <span className="text-3xl font-extrabold text-white">{selectedPackage.price}</span>
+                                    <span className="text-3xl font-extrabold text-white">{selectedPackage?.price}</span>
                                 </div>
                                 <p className="text-right text-xs text-gray-500 mt-1">KDV Dahildir</p>
                             </div>
@@ -181,21 +206,13 @@ function CheckoutContent() {
     );
 }
 
-/* ─── Success Flow Component ────────────────────────── */
-function SuccessFlow({ selectedPackage }: { selectedPackage: any }) {
-    return (
-        <UpgradeSuccessFlow
-            packageName={selectedPackage.name}
-            onComplete={() => {
-                window.location.href = '/admin/dashboard';
-            }}
-        />
-    );
-}
-
 export default function CheckoutPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" /></div>}>
+        <Suspense fallback={
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
+            </div>
+        }>
             <CheckoutContent />
         </Suspense>
     );
