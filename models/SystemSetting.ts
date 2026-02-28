@@ -18,6 +18,7 @@ const SystemSettingSchema = new mongoose.Schema({
     maintenanceMode: { type: Boolean, default: false },
     shopierApiKey: { type: String, default: '' },
     shopierApiSecret: { type: String, default: '' },
+    shopierAccessToken: { type: String, default: '' },
     contactInfo: [ContactInfoSchema]
 }, { timestamps: true });
 

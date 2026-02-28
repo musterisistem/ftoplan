@@ -49,8 +49,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'Bu paket ücretsizdir, ödeme yapılamaz.' }, { status: 400 });
         }
 
-        // Build Shopier payment form
-        const shopier = new ShopierCheckout({ apiKey, apiSecret });
+        // Build Shopier payment request using REST API
+        const shopier = new ShopierCheckout({
+            accessToken: settings?.shopierAccessToken || process.env.SHOPIER_ACCESS_TOKEN
+        });
+
         const draftUser = order.draftUserData || {};
 
         const userData = {
@@ -73,11 +76,14 @@ export async function POST(req: Request) {
         };
 
         const callbackUrl = `${process.env.NEXTAUTH_URL || 'https://www.weey.net'}/api/payment/shopier/callback`;
-        console.log('[Checkout] Callback URL:', callbackUrl);
 
-        const paymentFormHtml = shopier.generatePaymentForm(userData, callbackUrl);
-
-        return NextResponse.json({ success: true, html: paymentFormHtml });
+        try {
+            const paymentUrl = await shopier.createCheckout(userData, callbackUrl);
+            return NextResponse.json({ success: true, url: paymentUrl });
+        } catch (apiErr: any) {
+            console.error('[Checkout] Shopier API Error:', apiErr.message);
+            return NextResponse.json({ success: false, error: apiErr.message || 'Shopier ile bağlantı kurulamadı.' }, { status: 502 });
+        }
 
     } catch (error: any) {
         console.error('[Checkout] Fatal Error:', error.message, error.stack);

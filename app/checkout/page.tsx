@@ -64,20 +64,31 @@ function CheckoutContent() {
 
             const data = await res.json();
 
-            if (res.ok && data.success && data.html) {
-                // Inject the form into the document and submit it automatically
-                const container = document.createElement('div');
-                container.style.display = 'none';
-                container.innerHTML = data.html;
-                document.body.appendChild(container);
-
-                const form = container.querySelector('form');
-                if (form) {
-                    form.submit();
-                } else {
-                    setError('Ödeme formu oluşturulamadı. Lütfen tekrar deneyin.');
-                    setLoading(false);
+            if (res.ok && data.success) {
+                if (data.url) {
+                    // Method 1: Direct link (REST API)
+                    window.location.href = data.url;
+                    return;
                 }
+
+                if (data.html) {
+                    // Method 2: Hidden form (Classic/Fallback)
+                    const container = document.createElement('div');
+                    container.style.display = 'none';
+                    container.innerHTML = data.html;
+                    document.body.appendChild(container);
+
+                    const form = container.querySelector('form');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        setError('Ödeme formu oluşturulamadı. Lütfen tekrar deneyin.');
+                        setLoading(false);
+                    }
+                    return;
+                }
+
+                throw new Error('Geçersiz ödeme yanıtı.');
             } else {
                 setError(data.error || 'Ödeme altyapısına bağlanılamadı. Lütfen tekrar deneyin.');
                 setLoading(false);
