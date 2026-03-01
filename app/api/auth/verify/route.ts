@@ -59,7 +59,7 @@ export async function GET(req: Request) {
         await user.save();
 
         // Default redirect for trial
-        return NextResponse.redirect(new URL('/login?verified=true', req.url));
+        return NextResponse.redirect(new URL(`/checkout/success?verified=true&email=${encodeURIComponent(email)}&token=${token}`, req.url));
 
     } catch (error) {
         console.error('Verification error:', error);
