@@ -16,13 +16,13 @@ export default function EmailVerificationGate({ children }: { children: React.Re
 
     // Poll for verification every 5 seconds while gate is shown
     useEffect(() => {
-        if (!session?.user || session.user.isActive !== false || verified) return;
+        if (!session?.user || session.user.isEmailVerified === true || verified) return;
 
         const interval = setInterval(async () => {
             try {
                 const res = await fetch('/api/auth/session');
                 const data = await res.json();
-                if (data?.user?.isActive === true) {
+                if (data?.user?.isEmailVerified === true) {
                     clearInterval(interval);
                     await update();
                     setShowSuccess(true);
@@ -60,7 +60,7 @@ export default function EmailVerificationGate({ children }: { children: React.Re
             const res = await fetch('/api/auth/session');
             const data = await res.json();
 
-            if (data?.user?.isActive === true) {
+            if (data?.user?.isEmailVerified === true) {
                 await update();
                 setShowSuccess(true);
                 setTimeout(() => {
@@ -77,8 +77,8 @@ export default function EmailVerificationGate({ children }: { children: React.Re
         }
     };
 
-    // Show gate if user is authenticated but not active (not verified) and not yet verified locally
-    const showGate = status === 'authenticated' && session?.user?.isActive === false && !verified && !showSuccess;
+    // Show gate if user is authenticated but email is not verified and not yet verified locally
+    const showGate = status === 'authenticated' && session?.user?.isEmailVerified === false && !verified && !showSuccess;
 
     return (
         <>
