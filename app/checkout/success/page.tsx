@@ -72,7 +72,7 @@ function SuccessContent() {
 
         // Otherwise, we just finished payment and need to poll for verification
         let pollCount = 0;
-        const maxPolls = 60; // Poll for 2 minutes (every 2s)
+        const maxPolls = 120; // Poll for 2 minutes (every 1s)
 
         const checkStatus = async () => {
             try {
@@ -80,27 +80,15 @@ function SuccessContent() {
                 const data = await res.json();
 
                 if (data.success && data.status === 'completed') {
-                    // Payment is OK, check if user is already active (verified)
-                    const sessionRes = await fetch('/api/auth/session');
-                    const sessionData = await sessionRes.json();
-
-                    if (sessionData?.user?.isActive === true) {
-                        setView('setupAnimation');
-                        handleAutoLogin();
-                    } else {
-                        setView('awaitingVerification');
-                        // Continue polling until verified
-                        pollCount++;
-                        if (pollCount < maxPolls) {
-                            setTimeout(checkStatus, 2000);
-                        }
-                    }
+                    // Payment is OK, start setup immediately
+                    setView('setupAnimation');
+                    handleAutoLogin();
                 } else if (!data.success && data.error === 'Sipariş bulunamadı veya bağlantı süresi dolmuş') {
                     setView('error');
                 } else {
                     pollCount++;
                     if (pollCount < maxPolls) {
-                        setTimeout(checkStatus, 2000);
+                        setTimeout(checkStatus, 1000);
                     } else {
                         setView('error');
                     }
