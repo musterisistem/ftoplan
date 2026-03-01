@@ -6,12 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Zap, Award, Globe, Check, ArrowRight, XCircle,
     Sparkles, Clock, Lock, Eye, EyeOff, Loader2,
-    ShieldCheck, Star, CheckCircle, AlertCircle, ChevronRight
+    ShieldCheck, Star, CheckCircle, AlertCircle, ChevronRight,
+    ShieldAlert, Info
 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import CreativeLoader from '@/components/ui/CreativeLoader';
+import LegalModal from '@/components/ui/LegalModal';
+import { LEGAL_CONTENT } from '@/constants/legal';
 
 /* ─── Helpers ─────────────────────────────────────── */
 const generateSlug = (text: string) =>
@@ -57,7 +60,17 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
         address: '', taxOffice: '', taxNumber: '', identityNumber: '',
     });
 
+    const [legal, setLegal] = useState({
+        privacy: false, terms: false, mss: false, kvkk: false
+    });
+    const [seen, setSeen] = useState({
+        privacy: false, terms: false, mss: false, kvkk: false
+    });
+    const [modal, setModal] = useState<{ id: string; title: string; content: React.ReactNode } | null>(null);
+
     const slugPreview = form.slug || generateSlug(form.studioName);
+
+    const allAgreed = legal.privacy && legal.terms && legal.mss && legal.kvkk;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -70,8 +83,15 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
         });
     };
 
+    const openLegal = (id: 'privacy' | 'terms' | 'mss' | 'kvkk', title: string) => {
+        setModal({ id, title, content: LEGAL_CONTENT[id] });
+        setSeen(prev => ({ ...prev, [id]: true }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!allAgreed) return;
+
         setLoading(true);
         setError('');
         try {
@@ -88,6 +108,12 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                         taxOffice: form.taxOffice, taxNumber: form.taxNumber,
                         identityNumber: form.identityNumber,
                     },
+                    legalConsents: {
+                        privacyPolicyConfirmed: legal.privacy,
+                        termsOfUseConfirmed: legal.terms,
+                        distanceSalesAgreementConfirmed: legal.mss,
+                        kvkkConfirmed: legal.kvkk
+                    }
                 }),
             });
             const data = await res.json();
@@ -221,6 +247,48 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                     </div>
                 </div>
 
+                {/* Legal Consents */}
+                <div className="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                        <ShieldAlert className="w-3.5 h-3.5 text-[#5d2b72]" /> Yasal Onaylar
+                    </p>
+
+                    {[
+                        { id: 'privacy', label: 'Gizlilik Politikası', title: 'Gizlilik Politikası' },
+                        { id: 'terms', label: 'Kullanım Şartları', title: 'Kullanım Şartları' },
+                        { id: 'mss', label: 'Mesafeli Satış Sözleşmesi', title: 'Mesafeli Satış Sözleşmesi' },
+                        { id: 'kvkk', label: 'KVKK Aydınlatma Metni', title: 'KVKK' },
+                    ].map((item) => (
+                        <div key={item.id} className="flex items-start gap-3 group">
+                            <div className="relative flex items-center mt-0.5">
+                                <input
+                                    type="checkbox"
+                                    checked={legal[item.id as keyof typeof legal]}
+                                    disabled={!seen[item.id as keyof typeof seen]}
+                                    onChange={(e) => setLegal(prev => ({ ...prev, [item.id]: e.target.checked }))}
+                                    className="peer w-4 h-4 appearance-none rounded border border-slate-300 checked:bg-[#5d2b72] checked:border-[#5d2b72] disabled:bg-slate-100 disabled:cursor-not-allowed transition-all"
+                                />
+                                <Check className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 left-0.5 pointer-events-none transition-opacity" />
+                            </div>
+                            <div className="text-[12px] leading-tight">
+                                <button
+                                    type="button"
+                                    onClick={() => openLegal(item.id as any, item.title)}
+                                    className="text-slate-600 font-semibold hover:text-[#5d2b72] transition-colors underline decoration-slate-300 underline-offset-4"
+                                >
+                                    {item.label}
+                                </button>
+                                <span className="text-slate-400 font-medium ml-1">&apos;nı okudum ve onaylıyorum.</span>
+                                {!seen[item.id as keyof typeof seen] && (
+                                    <span className="flex items-center gap-1 text-[10px] text-amber-600 font-bold mt-1">
+                                        <Info className="w-3 h-3" /> Metni açıp okumanız gerekmektedir.
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
                 {/* Uyarı */}
                 <div className="flex gap-3 p-3.5 bg-amber-50 border border-amber-100 rounded-xl">
                     <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -230,8 +298,8 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                 </div>
 
                 {/* Submit */}
-                <button type="submit" disabled={loading}
-                    className="w-full py-3.5 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold text-[15px] rounded-xl shadow-md shadow-purple-200 hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                <button type="submit" disabled={loading || !allAgreed}
+                    className="w-full py-3.5 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold text-[15px] rounded-xl shadow-md shadow-purple-200 hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:shadow-none disabled:translate-y-0">
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Kayıt Ol ve Paneli Aç <ChevronRight className="w-5 h-5" /></>}
                 </button>
 
@@ -240,6 +308,18 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                     <a href="/login" className="text-[#5d2b72] font-semibold hover:underline">Giriş yapın</a>
                 </p>
             </form>
+
+            <LegalModal
+                isOpen={!!modal}
+                onClose={() => setModal(null)}
+                title={modal?.title || ''}
+                content={modal?.content}
+                onConfirm={() => {
+                    if (modal) {
+                        setLegal(prev => ({ ...prev, [modal.id]: true }));
+                    }
+                }}
+            />
         </div>
     );
 }

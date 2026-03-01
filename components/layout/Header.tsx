@@ -190,8 +190,8 @@ export default function Header() {
                 {/* Right Actions */}
                 <div className="flex items-center gap-4 ml-4">
 
-                    {/* Upgrade Button (Only for Trial Users) */}
-                    {session?.user?.packageType === 'trial' && (
+                    {/* Upgrade Button (Visible for Trial and Standart Users) */}
+                    {(session?.user?.packageType === 'trial' || session?.user?.packageType === 'standart') && (
                         <button
                             onClick={() => setUpgradeModalOpen(true)}
                             className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Globe, User, Mail, Phone, Package, Server } from 'lucide-react';
+import { ArrowLeft, Save, Globe, User, Mail, Phone, Package, Server, ShieldAlert, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 interface Photographer {
@@ -16,6 +16,14 @@ interface Photographer {
     storageLimit: number;
     isActive: boolean;
     subscriptionExpiry?: string;
+    legalConsents?: {
+        privacyPolicyConfirmed: boolean;
+        termsOfUseConfirmed: boolean;
+        distanceSalesAgreementConfirmed: boolean;
+        kvkkConfirmed: boolean;
+        confirmedAt?: string;
+        ipAddress?: string;
+    };
 }
 
 export default function EditPhotographerPage() {
@@ -332,6 +340,72 @@ export default function EditPhotographerPage() {
                         {photographer.isActive ? 'Aktif' : 'Pasif'}
                     </button>
                 </div>
+            </div>
+
+            {/* Legal Consents Section */}
+            <div className="bg-gray-800/50 rounded-2xl border border-white/10 p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-purple-400" />
+                    Yasal Onaylar
+                </h2>
+
+                {photographer.legalConsents ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                            { id: 'privacyPolicyConfirmed', label: 'Gizlilik Politikası' },
+                            { id: 'termsOfUseConfirmed', label: 'Kullanım Şartları' },
+                            { id: 'distanceSalesAgreementConfirmed', label: 'Mesafeli Satış Sözleşmesi' },
+                            { id: 'kvkkConfirmed', label: 'KVKK Aydınlatma Metni' },
+                        ].map((item) => {
+                            const isConfirmed = !!(photographer.legalConsents as any)?.[item.id];
+                            return (
+                                <div key={item.id} className="p-4 bg-gray-900/50 rounded-xl border border-white/5 flex items-start gap-3">
+                                    {isConfirmed ? (
+                                        <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                                            <CheckCircle className="w-4 h-4 text-green-400" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                                            <ShieldAlert className="w-4 h-4 text-red-400" />
+                                        </div>
+                                    )}
+                                    <div>
+                                        <p className="text-sm font-semibold text-white">{item.label}</p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {isConfirmed ? 'Onaylandı' : 'Onay Bekliyor'}
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        <div className="md:col-span-2 p-4 bg-purple-500/5 rounded-xl border border-purple-500/10">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-purple-400" />
+                                    <span className="text-xs text-gray-400">Onay Tarihi:</span>
+                                    <span className="text-xs font-medium text-white">
+                                        {photographer.legalConsents.confirmedAt
+                                            ? new Date(photographer.legalConsents.confirmedAt).toLocaleString('tr-TR')
+                                            : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Server className="w-4 h-4 text-purple-400" />
+                                    <span className="text-xs text-gray-400">IP Adresi:</span>
+                                    <span className="text-xs font-medium text-white">
+                                        {photographer.legalConsents.ipAddress || 'Bilinmiyor'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-8 text-center bg-gray-900/30 rounded-xl border border-dashed border-white/10">
+                        <ShieldAlert className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                        <p className="text-sm text-gray-400 font-medium">Bu kullanıcı henüz yasal onay sürecinden geçmemiş (Eski Kayıt).</p>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -6,6 +6,7 @@ import User from '@/models/User';
 export async function POST(req: Request) {
     try {
         const body = await req.json();
+        const ip = req.headers.get('x-forwarded-for') || '0.0.0.0';
         const {
             name,
             studioName,
@@ -135,15 +136,33 @@ export async function POST(req: Request) {
                 },
                 isActive: false,
                 verificationToken,
-                verificationTokenExpiry
+                verificationTokenExpiry,
+                legalConsents: {
+                    privacyPolicyConfirmed: body.legalConsents?.privacyPolicyConfirmed || false,
+                    termsOfUseConfirmed: body.legalConsents?.termsOfUseConfirmed || false,
+                    distanceSalesAgreementConfirmed: body.legalConsents?.distanceSalesAgreementConfirmed || false,
+                    kvkkConfirmed: body.legalConsents?.kvkkConfirmed || false,
+                    confirmedAt: new Date(),
+                    ipAddress: ip
+                }
             });
 
             await Subscriber.create({
+                // ... (Subscriber part already updated, I'll ensure it stays consistent)
+
                 email: email.toLowerCase(),
                 name,
                 studioName,
                 packageType: pkgType,
-                isActive: false // inactive until verified
+                isActive: false, // inactive until verified
+                legalConsents: {
+                    privacyPolicyConfirmed: body.legalConsents?.privacyPolicyConfirmed || false,
+                    termsOfUseConfirmed: body.legalConsents?.termsOfUseConfirmed || false,
+                    distanceSalesAgreementConfirmed: body.legalConsents?.distanceSalesAgreementConfirmed || false,
+                    kvkkConfirmed: body.legalConsents?.kvkkConfirmed || false,
+                    confirmedAt: new Date(),
+                    ipAddress: ip
+                }
             });
 
             // Send verification email
@@ -198,7 +217,15 @@ export async function POST(req: Request) {
                         identityNumber: billingInfo?.identityNumber || '',
                     },
                     verificationToken,
-                    verificationTokenExpiry
+                    verificationTokenExpiry,
+                    legalConsents: {
+                        privacyPolicyConfirmed: body.legalConsents?.privacyPolicyConfirmed || false,
+                        termsOfUseConfirmed: body.legalConsents?.termsOfUseConfirmed || false,
+                        distanceSalesAgreementConfirmed: body.legalConsents?.distanceSalesAgreementConfirmed || false,
+                        kvkkConfirmed: body.legalConsents?.kvkkConfirmed || false,
+                        confirmedAt: new Date(),
+                        ipAddress: ip
+                    }
                 }
             });
 

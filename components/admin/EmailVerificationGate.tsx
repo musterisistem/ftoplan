@@ -95,148 +95,71 @@ export default function EmailVerificationGate({ children }: { children: React.Re
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#080c18]/90 backdrop-blur-md"
+                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md"
                     >
-                        {/* Background Light Elements - Brand Colors */}
-                        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#5d2b72]/10 blur-[120px] rounded-full pointer-events-none" />
-                        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#7a3a94]/10 blur-[120px] rounded-full pointer-events-none" />
-
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 30 }}
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-                            className="relative bg-white/95 backdrop-blur-xl rounded-[40px] p-8 md:p-12 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] max-w-lg w-full text-center border border-white/20"
+                            className="bg-white rounded-[2rem] p-8 md:p-10 shadow-2xl max-w-md w-full text-center relative overflow-hidden"
                         >
-                            {/* Brand Accent Bar */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-gradient-to-r from-[#5d2b72] via-[#7a3a94] to-[#5d2b72] rounded-b-full shadow-[0_4px_12px_rgba(93,43,114,0.2)]" />
+                            {/* Simple Top Accent */}
+                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#5d2b72] to-[#7a3a94]" />
 
-                            {/* Header Icon Section */}
-                            <div className="relative mb-8">
-                                <motion.div
-                                    animate={{ y: [0, -8, 0] }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                    className="w-24 h-24 bg-gradient-to-tr from-[#f7eefa] to-white border border-[#f7eefa] rounded-3xl flex items-center justify-center mx-auto shadow-sm relative z-10"
-                                >
-                                    <Mail className="w-12 h-12 text-[#5d2b72]" />
-                                </motion.div>
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#5d2b72]/5 blur-2xl rounded-full" />
+                            <div className="mb-6">
+                                <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <Mail className="w-8 h-8 text-[#5d2b72]" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2">E-Posta Doğrulama</h2>
+                                <p className="text-slate-500 text-sm">
+                                    Panelinizi kullanmaya başlamak için lütfen e-postanızı doğrulayın.
+                                </p>
                             </div>
 
-                            <motion.h2
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="text-3xl font-bold text-[#1a0b2e] mb-3 tracking-tight"
-                            >
-                                E-Postanızı Doğrulayın
-                            </motion.h2>
-
-                            <motion.p
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.15 }}
-                                className="text-slate-500 text-lg mb-4 font-medium"
-                            >
-                                Panelinizin kilidini açmak için tek bir adım kaldı.
-                            </motion.p>
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#f7eefa]/30 border border-[#f7eefa] rounded-full text-[#5d2b72] font-bold text-sm mb-10 shadow-sm"
-                            >
-                                <span className="w-2 h-2 rounded-full bg-[#7a3a94] animate-pulse" />
+                            <div className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 font-medium text-xs mb-8 inline-block">
                                 {session?.user?.email}
-                            </motion.div>
-
-                            {/* Info Steps */}
-                            <div className="grid grid-cols-1 gap-4 text-left mb-10">
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="flex items-center gap-5 p-5 bg-[#f7eefa]/20 hover:bg-[#f7eefa]/40 transition-colors border border-[#f7eefa]/50 rounded-3xl group"
-                                >
-                                    <div className="w-12 h-12 shrink-0 bg-white border border-[#f7eefa] rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                        <ExternalLink className="w-5 h-5 text-[#5d2b72]" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[15px] font-bold text-[#1a0b2e] mb-0.5">Mailinizi Kontrol Edin</p>
-                                        <p className="text-slate-500 text-[13px] leading-relaxed">Gelen kutusunda veya spam klasöründe doğrulama linkini bulun.</p>
-                                    </div>
-                                </motion.div>
                             </div>
 
-                            {/* Notifications & Error messages */}
+                            {/* Status Messages */}
                             <AnimatePresence mode="wait">
                                 {sent && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-[24px] mb-6 text-emerald-700 text-[14px] font-bold shadow-sm"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-emerald-600 text-xs font-bold mb-4 flex items-center justify-center gap-1.5"
                                     >
-                                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm text-emerald-500">
-                                            <CheckCircle className="w-5 h-5" />
-                                        </div>
-                                        <span>Yeni doğrulama maili gönderildi!</span>
+                                        <CheckCircle className="w-4 h-4" /> Doğrulama maili tekrar gönderildi.
                                     </motion.div>
                                 )}
-
                                 {error && (
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                        className="flex items-start gap-4 p-5 bg-rose-50 border border-rose-100 rounded-[28px] mb-8 text-left group"
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-rose-500 text-xs font-bold mb-4 leading-relaxed px-4"
                                     >
-                                        <div className="w-10 h-10 shrink-0 bg-white rounded-2xl flex items-center justify-center shadow-sm text-rose-500 group-hover:rotate-12 transition-transform">
-                                            <AlertTriangle className="w-5 h-5" />
-                                        </div>
-                                        <p className="text-[13px] text-rose-800 font-bold leading-[1.6]">
-                                            {error}
-                                        </p>
+                                        {error}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            {/* Actions */}
-                            <div className="space-y-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.02, y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
+                            <div className="space-y-3">
+                                <button
                                     onClick={checkVerification}
                                     disabled={checking}
-                                    className="group w-full h-16 rounded-[24px] bg-[#5d2b72] hover:bg-[#4a2260] text-white font-bold text-lg shadow-[0_12px_24px_-8px_rgba(93,43,114,0.5)] hover:shadow-[0_20px_32px_-8px_rgba(93,43,114,0.6)] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:hover:translate-y-0"
+                                    className="w-full py-4 bg-[#5d2b72] hover:bg-[#4a2260] text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                                 >
-                                    {checking ? (
-                                        <Loader2 className="w-6 h-6 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <span>Doğruladım, Panele Gir</span>
-                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                        </>
-                                    )}
-                                </motion.button>
+                                    {checking ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Doğruladım, Devam Et'}
+                                </button>
 
                                 <button
                                     onClick={resendVerification}
                                     disabled={sending || sent}
-                                    className="w-full h-14 rounded-[20px] bg-white border border-slate-100 text-slate-500 font-bold text-[14px] hover:border-[#f7eefa] hover:text-[#5d2b72] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="w-full py-3 bg-white border border-slate-200 text-slate-500 font-bold text-xs rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                                 >
-                                    {sending ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <RefreshCw className="w-4 h-4" />
-                                            Yeniden Gönder
-                                        </>
-                                    )}
+                                    {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><RefreshCw className="w-3.5 h-3.5" /> Tekrar Gönder</>}
                                 </button>
-
-                                <p className="text-[11px] text-slate-300 font-medium tracking-wide pt-4">© 2026 FOTOPLAN OS · BÜM TEKNOLOJİ GÜVENCESİYLE</p>
                             </div>
+
+                            <p className="mt-8 text-[10px] text-slate-300 font-medium italic">FOTOPLAN Digital Solutions</p>
                         </motion.div>
                     </motion.div>
                 )}

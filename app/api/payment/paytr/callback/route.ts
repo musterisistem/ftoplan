@@ -76,25 +76,11 @@ export async function POST(req: Request) {
         }
 
         // --------------- Process Payment Success ---------------
-        order.status = 'completed';
-        order.completedAt = new Date();
-        await order.save();
-
-        const draftUser = order.draftUserData;
         const purchasedPackage = await Package.findById(order.packageId);
-
-        if (!draftUser || !purchasedPackage) {
-            console.error('[PayTR Callback] Missing draftUserData or package for order:', merchant_oid);
+        if (!purchasedPackage) {
+            console.error('[PayTR Callback] Missing package for order:', merchant_oid);
             return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
         }
-
-        // --------------- Create User ---------------
-        const Subscriber = (await import('@/models/Subscriber')).default;
-        const subscriptionExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
-
-        const crypto = await import('crypto');
-        const verificationToken = crypto.randomBytes(32).toString('hex');
-        const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         const limits = {
             storageLimit: (purchasedPackage.storage || 10) * 1024 * 1024 * 1024,
@@ -105,6 +91,40 @@ export async function POST(req: Request) {
             hasWebsite: purchasedPackage.hasWebsite ?? false,
             supportType: purchasedPackage.supportType ?? 'E-posta',
         };
+
+        const subscriptionExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
+
+        // CASE 1: Upgrade for Existing User
+        if (order.userId) {
+            console.log(`[PayTR Callback] Processing UPGRADE for user ${order.userId}`);
+            const user = await User.findById(order.userId);
+            if (user) {
+                user.packageType = purchasedPackage.id;
+                user.subscriptionExpiry = subscriptionExpiry;
+                user.isActive = true;
+                Object.assign(user, limits);
+                await user.save();
+                console.log(`[PayTR Callback] ✅ Upgrade completed for ${user.email}`);
+
+                // FINALLY mark order as completed AFTER user update
+                order.status = 'completed';
+                order.completedAt = new Date();
+                await order.save();
+            } else {
+                console.error(`[PayTR Callback] User ${order.userId} not found for upgrade.`);
+            }
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        }
+
+        // CASE 2: New Registration (Direct Purchase)
+        const draftUser = order.draftUserData;
+        if (!draftUser) {
+            console.error('[PayTR Callback] Missing draftUserData for new registration:', merchant_oid);
+            return new Response('OK', { status: 200, headers: { 'Content-Type': 'text/plain' } });
+        }
+
+        // --------------- Create User ---------------
+        const Subscriber = (await import('@/models/Subscriber')).default;
 
         const newUser = await User.create({
             name: draftUser.name,
@@ -139,6 +159,8 @@ export async function POST(req: Request) {
 
         // Link order to newly created user
         order.userId = newUser._id;
+        order.status = 'completed'; // Now mark as completed
+        order.completedAt = new Date();
         await order.save();
 
         // Send welcome & verification emails

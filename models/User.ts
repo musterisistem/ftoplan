@@ -196,6 +196,14 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    legalConsents: {
+        privacyPolicyConfirmed: { type: Boolean, default: false },
+        termsOfUseConfirmed: { type: Boolean, default: false },
+        distanceSalesAgreementConfirmed: { type: Boolean, default: false },
+        kvkkConfirmed: { type: Boolean, default: false },
+        confirmedAt: { type: Date },
+        ipAddress: { type: String }
+    }
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);

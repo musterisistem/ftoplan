@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, CheckCircle, Zap, HardDrive, Globe, CreditCard,
@@ -16,112 +17,106 @@ interface UpgradeModalProps {
     onClose: () => void;
 }
 
-const PACKAGES_DATA: Record<string, {
+interface PackageData {
+    id: string;
+    _id: string;
     name: string;
-    price: string;
-    code: string;
-    accent: string;
-    isPopular?: boolean;
+    price: number;
+    storage: number;
+    maxCustomers?: number;
+    maxPhotos?: number;
+    maxAppointments?: number;
+    hasWatermark?: boolean;
+    hasWebsite?: boolean;
+    supportType?: string;
     features: string[];
-}> = {
-    standart: {
-        name: 'Standart Paket',
-        price: '9.499 ₺',
-        code: 'standart',
-        accent: '#5d2b72',
-        isPopular: false,
-        features: [
-            '10 GB Güvenli Bulut Arşivi',
-            'Sınırsız Müşteri Kaydı & Yönetimi',
-            'Sınırsız Fotoğraf Yükleme & Paylaşım',
-            'Filigransız ve Şifreli Galeriler',
-            'Görsel Fotoğraf Seçim Arayüzü',
-            'Otomatik Boyut Optimizasyonu',
-            'Randevu SMS & Mail Hatırlatıcılar',
-            'Gelişmiş Gelir-Gider Takibi',
-            'Dijital Sözleşme Altyapısı',
-            'Mobil Uygulama Paneli'
-        ]
-    },
-    kurumsal: {
-        name: 'Kurumsal Paket',
-        price: '19.999 ₺',
-        code: 'kurumsal',
-        accent: '#7b3ff2',
-        isPopular: true,
-        features: [
-            '30 GB Genişletilebilir Depolama',
-            'Profesyonel Web Sitesi',
-            'Özel Alan Adı (domain.com)',
-            'Kurumsal İş E-posta Adresi',
-            'Markaya Özel Arayüz Tasarımı',
-            '7/24 VIP Teknik Destek Hattı',
-            'Ekip & Asistan Yetkilendirme',
-            'İş Analizi & Performans Raporları',
-            'Yapay Zeka Fotoğraf Tasnifleme',
-            'Tüm Standart Özellikler'
-        ]
-    }
-};
+}
 
 export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     const { data: session, update } = useSession();
     const router = useRouter();
 
+    const [packages, setPackages] = useState<PackageData[]>([]);
     const [step, setStep] = useState<1 | 2 | 3>(1);
-    const [selectedPackage, setSelectedPackage] = useState<'standart' | 'kurumsal' | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<PackageData | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<'cc' | 'transfer'>('cc');
 
     // Payment states
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [ccName, setCcName] = useState('');
-    const [ccNumber, setCcNumber] = useState('');
-    const [ccExpiry, setCcExpiry] = useState('');
-    const [ccCvv, setCcCvv] = useState('');
+    const [paytrToken, setPaytrToken] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchPackages();
+        }
+    }, [isOpen]);
+
+    const fetchPackages = async () => {
+        try {
+            const res = await fetch('/api/packages');
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                // Filter out trial package if it exists in DB, or just sort them
+                setPackages(data.filter(p => p.id !== 'trial'));
+            }
+        } catch (err) {
+            console.error('Failed to fetch packages:', err);
+        }
+    };
 
     if (!isOpen) return null;
 
-    const handleSelectPackage = (pkg: 'standart' | 'kurumsal') => {
+    const handleSelectPackage = (pkg: PackageData) => {
+        if (session?.user?.packageType === pkg.id) return;
         setSelectedPackage(pkg);
         setStep(2);
     };
 
     const handleBack = () => {
-        if (step === 2) setStep(1);
+        if (step === 2) {
+            setStep(1);
+            setPaytrToken(null);
+        }
     };
 
-    const handlePayment = async (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
+    const handlePayment = async () => {
         if (!selectedPackage) return;
 
         setLoading(true);
         setError('');
 
         try {
-            const res = await fetch('/api/payment/process', {
+            // 1. Create Upgrade Order
+            const orderRes = await fetch('/api/payment/upgrade/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    packageCode: selectedPackage,
-                    paymentMethod,
-                }),
+                body: JSON.stringify({ packageId: selectedPackage.id }),
             });
 
-            const data = await res.json();
+            const orderData = await orderRes.json();
 
-            if (res.ok) {
-                setStep(3);
-                await update({
-                    packageType: selectedPackage,
-                    storageLimit: data.storageLimit || (selectedPackage === 'kurumsal' ? 32212254720 : 10737418240),
-                    subscriptionExpiry: data.expiryDate
-                });
-            } else {
-                setError(data.error || 'Ödeme işlemi başarısız oldu.');
+            if (!orderRes.ok) {
+                throw new Error(orderData.error || 'Sipariş oluşturulamadı.');
             }
-        } catch (err) {
-            setError('Bir sunucu hatası oluştu. Lütfen tekrar deneyin.');
+
+            // 2. Get PayTR Checkout Token
+            const checkoutRes = await fetch('/api/payment/paytr/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderNo: orderData.orderNo }),
+            });
+
+            const checkoutData = await checkoutRes.json();
+
+            if (checkoutRes.ok && checkoutData.success && checkoutData.token) {
+                setPaytrToken(checkoutData.token);
+            } else {
+                throw new Error(checkoutData.error || 'Ödeme oturumu başlatılamadı.');
+            }
+
+        } catch (err: any) {
+            setError(err.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
         } finally {
             setLoading(false);
         }
@@ -170,53 +165,69 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                 </div>
 
                                 <div className="grid lg:grid-cols-2 gap-8 items-stretch">
-                                    {Object.values(PACKAGES_DATA).map((pkg) => (
-                                        <div
-                                            key={pkg.code}
-                                            onClick={() => handleSelectPackage(pkg.code as any)}
-                                            className={`group relative flex flex-col bg-white rounded-[2.5rem] p-8 border-2 transition-all duration-500 cursor-pointer overflow-hidden
-                                                ${pkg.isPopular
-                                                    ? 'border-[#7b3ff2] shadow-[0_20px_60px_-15px_rgba(123,63,242,0.15)] ring-1 ring-[#7b3ff2]/20'
-                                                    : 'border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1'}`}
-                                        >
-                                            {pkg.isPopular && (
-                                                <div className="absolute top-0 right-0 pt-4 pr-4">
-                                                    <span className="bg-[#7b3ff2] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-purple-500/20">
-                                                        Elite
-                                                    </span>
-                                                </div>
-                                            )}
+                                    {packages.map((pkg) => {
+                                        const isCurrent = session?.user?.packageType === pkg.id;
+                                        return (
+                                            <div
+                                                key={pkg.id}
+                                                onClick={() => !isCurrent && handleSelectPackage(pkg)}
+                                                className={`group relative flex flex-col bg-white rounded-[2.5rem] p-8 border-2 transition-all duration-500 cursor-pointer overflow-hidden
+                                                    ${pkg.id === 'kurumsal'
+                                                        ? 'border-[#7b3ff2] shadow-[0_20px_60px_-15px_rgba(123,63,242,0.15)] ring-1 ring-[#7b3ff2]/20'
+                                                        : 'border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1'}
+                                                    ${isCurrent ? 'opacity-70 grayscale-[0.5] cursor-default border-emerald-500' : ''}`}
+                                            >
+                                                {pkg.id === 'kurumsal' && (
+                                                    <div className="absolute top-0 right-0 pt-4 pr-4">
+                                                        <span className="bg-[#7b3ff2] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-purple-500/20">
+                                                            Elite
+                                                        </span>
+                                                    </div>
+                                                )}
 
-                                            <div className="mb-8">
-                                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:rotate-6 transition-transform duration-500 bg-gradient-to-br ${pkg.code === 'kurumsal' ? 'from-[#7b3ff2] to-indigo-600' : 'from-[#5d2b72] to-purple-600'} text-white`}>
-                                                    {pkg.code === 'kurumsal' ? <Award className="w-7 h-7" /> : <Zap className="w-7 h-7" />}
+                                                {isCurrent && (
+                                                    <div className="absolute top-0 left-0 pt-4 pl-4">
+                                                        <span className="bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-500/20 flex items-center gap-1">
+                                                            <CheckCircle className="w-3 h-3" /> Mevcut Paket
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <div className="mb-8">
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:rotate-6 transition-transform duration-500 bg-gradient-to-br ${pkg.id === 'kurumsal' ? 'from-[#7b3ff2] to-indigo-600' : 'from-[#5d2b72] to-purple-600'} text-white`}>
+                                                        {pkg.id === 'kurumsal' ? <Award className="w-7 h-7" /> : <Zap className="w-7 h-7" />}
+                                                    </div>
+                                                    <h3 className="text-2xl font-black text-slate-900 group-hover:text-[#5d2b72] transition-colors">{pkg.name}</h3>
+                                                    <div className="flex items-baseline gap-1 mt-2">
+                                                        <span className="text-4xl font-black text-slate-900 tracking-tight">{pkg.price.toLocaleString('tr-TR')} ₺</span>
+                                                        <span className="text-sm text-slate-400 font-bold uppercase tracking-wider">/ Yıl</span>
+                                                    </div>
                                                 </div>
-                                                <h3 className="text-2xl font-black text-slate-900 group-hover:text-[#5d2b72] transition-colors">{pkg.name}</h3>
-                                                <div className="flex items-baseline gap-1 mt-2">
-                                                    <span className="text-4xl font-black text-slate-900 tracking-tight">{pkg.price}</span>
-                                                    <span className="text-sm text-slate-400 font-bold uppercase tracking-wider">/ Yıl</span>
-                                                </div>
+
+                                                <ul className="space-y-3.5 mb-10 flex-1">
+                                                    {pkg.features?.map((feature: string, i: number) => (
+                                                        <li key={i} className="flex items-start gap-3">
+                                                            <div className={`mt-1 h-5 w-5 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:border-purple-200 transition-colors`}>
+                                                                <Check className={`w-3 h-3 ${pkg.id === 'kurumsal' ? 'text-[#7b3ff2]' : 'text-[#5d2b72]'} stroke-[4]`} />
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-slate-600 leading-tight">{feature}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+
+                                                <button
+                                                    disabled={isCurrent}
+                                                    className={`w-full py-4 rounded-2xl font-black text-[15px] flex items-center justify-center gap-2 transition-all group-active:scale-95
+                                                    ${isCurrent
+                                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default'
+                                                            : pkg.id === 'kurumsal'
+                                                                ? 'bg-[#7b3ff2] text-white shadow-[0_12px_24px_-8px_rgba(123,63,242,0.4)] hover:shadow-[0_16px_32px_-8px_rgba(123,63,242,0.5)]'
+                                                                : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 hover:bg-slate-800'}`}>
+                                                    {isCurrent ? 'Aktif Kullanılıyor' : <>Seç ve İlerle <ArrowRight className="w-4 h-4" /></>}
+                                                </button>
                                             </div>
-
-                                            <ul className="space-y-3.5 mb-10 flex-1">
-                                                {pkg.features.map((feature, i) => (
-                                                    <li key={i} className="flex items-start gap-3">
-                                                        <div className={`mt-1 h-5 w-5 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:border-purple-200 transition-colors`}>
-                                                            <Check className={`w-3 h-3 ${pkg.code === 'kurumsal' ? 'text-[#7b3ff2]' : 'text-[#5d2b72]'} stroke-[4]`} />
-                                                        </div>
-                                                        <span className="text-sm font-semibold text-slate-600 leading-tight">{feature}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-
-                                            <button className={`w-full py-4 rounded-2xl font-black text-[15px] flex items-center justify-center gap-2 transition-all group-active:scale-95
-                                                ${pkg.code === 'kurumsal'
-                                                    ? 'bg-[#7b3ff2] text-white shadow-[0_12px_24px_-8px_rgba(123,63,242,0.4)] hover:shadow-[0_16px_32px_-8px_rgba(123,63,242,0.5)]'
-                                                    : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 hover:bg-slate-800'}`}>
-                                                Seç ve İlerle <ArrowRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </motion.div>
                         )}
@@ -266,43 +277,47 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                             </div>
                                         )}
 
-                                        {paymentMethod === 'cc' ? (
-                                            <form onSubmit={handlePayment} className="space-y-5">
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[11px] font-black text-slate-400 tracking-wider uppercase ml-1">KART ÜZERİNDEKİ İSİM</label>
-                                                    <input type="text" required value={ccName} onChange={(e) => setCcName(e.target.value.toUpperCase())} className="w-full h-14 px-5 bg-slate-50 border-2 border-slate-50 focus:border-[#7b3ff2]/20 focus:bg-white rounded-2xl outline-none transition-all font-bold text-slate-900" placeholder="AD SOYAD" />
+                                        {paytrToken ? (
+                                            <div className="w-full relative min-h-[500px] bg-slate-50 rounded-3xl overflow-hidden border border-slate-100 shadow-inner">
+                                                <iframe
+                                                    src={`https://www.paytr.com/odeme/guvenli/${paytrToken}`}
+                                                    id="paytriframe"
+                                                    frameBorder="0"
+                                                    scrolling="no"
+                                                    style={{ width: '100%', minHeight: '600px' }}
+                                                ></iframe>
+                                                <Script
+                                                    src="https://www.paytr.com/js/iframeResizer.min.js"
+                                                    strategy="lazyOnload"
+                                                    onLoad={() => {
+                                                        // @ts-ignore
+                                                        if (window.iFrameResize) window.iFrameResize({}, '#paytriframe');
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : paymentMethod === 'cc' ? (
+                                            <div className="text-center py-12 px-6">
+                                                <div className="w-20 h-20 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-purple-500/10">
+                                                    <CreditCard className="w-10 h-10" />
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-[11px] font-black text-slate-400 tracking-wider uppercase ml-1">KART NUMARASI</label>
-                                                    <div className="relative">
-                                                        <input type="text" required maxLength={19} value={ccNumber} onChange={(e) => setCcNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())} className="w-full h-14 pl-14 pr-5 bg-slate-50 border-2 border-slate-50 focus:border-[#7b3ff2]/20 focus:bg-white rounded-2xl outline-none transition-all font-mono font-bold text-slate-900" placeholder="0000 0000 0000 0000" />
-                                                        <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-5">
-                                                    <div className="space-y-1.5">
-                                                        <label className="text-[11px] font-black text-slate-400 tracking-wider uppercase ml-1">SON KULLANMA</label>
-                                                        <input type="text" required maxLength={5} value={ccExpiry} onChange={(e) => {
-                                                            let val = e.target.value.replace(/\D/g, '');
-                                                            if (val.length >= 2) val = val.substring(0, 2) + '/' + val.substring(2, 4);
-                                                            setCcExpiry(val);
-                                                        }} className="w-full h-14 px-5 bg-slate-50 border-2 border-slate-50 focus:border-[#7b3ff2]/20 focus:bg-white rounded-2xl outline-none transition-all font-mono font-bold text-slate-900 text-center" placeholder="AA/YY" />
-                                                    </div>
-                                                    <div className="space-y-1.5">
-                                                        <label className="text-[11px] font-black text-slate-400 tracking-wider uppercase ml-1">CVV / CVC</label>
-                                                        <input type="text" required maxLength={3} value={ccCvv} onChange={(e) => setCcCvv(e.target.value.replace(/\D/g, ''))} className="w-full h-14 px-5 bg-slate-50 border-2 border-slate-50 focus:border-[#7b3ff2]/20 focus:bg-white rounded-2xl outline-none transition-all font-mono font-bold text-slate-900 text-center" placeholder="•••" />
-                                                    </div>
-                                                </div>
-                                                <button type="submit" disabled={loading} className="w-full h-16 mt-6 bg-slate-900 hover:bg-black text-white font-black text-[16px] rounded-2xl shadow-xl shadow-slate-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70">
-                                                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><ShieldCheck className="w-5 h-5" /> Ödemeyi Tamamla</>}
+                                                <h3 className="text-2xl font-black text-slate-900 mb-4">Güvenli Kredi Kartı Ödemesi</h3>
+                                                <p className="text-slate-500 font-medium mb-10 max-w-sm mx-auto leading-relaxed">
+                                                    Ödemenizi 256-bit SSL korumalı PayTR altyapısı üzerinden güvenle gerçekleştirebilirsiniz.
+                                                </p>
+                                                <button
+                                                    onClick={handlePayment}
+                                                    disabled={loading}
+                                                    className="w-full h-16 bg-slate-900 hover:bg-black text-white font-black text-[16px] rounded-2xl shadow-xl shadow-slate-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70"
+                                                >
+                                                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><ShieldCheck className="w-5 h-5" /> PayTR ile Güvenli Öde</>}
                                                 </button>
-                                            </form>
+                                            </div>
                                         ) : (
                                             <div className="space-y-6">
                                                 <div className="p-5 bg-indigo-50 border border-indigo-100 rounded-[1.5rem] flex items-start gap-4">
                                                     <Building className="w-6 h-6 text-indigo-600 shrink-0 mt-0.5" />
                                                     <p className="text-sm font-semibold text-indigo-900 leading-relaxed">
-                                                        Banka havalesi ile ödeme yaparken açıklama kısmına <strong>işyeri adınızı</strong> yazmayı unutmayın. Yönetim ekibi onayladığında paketiniz aktif edilecektir.
+                                                        Banka havalesi ile ödeme yaparken açıklama kısmına <strong>{session?.user?.studioName || session?.user?.name || 'Isyeriniz'}</strong> yazmayı unutmayın. Yönetim ekibi onayladığında paketiniz aktif edilecektir.
                                                     </p>
                                                 </div>
                                                 <div className="p-6 bg-slate-50 rounded-[1.5rem] space-y-4">
@@ -321,7 +336,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <button onClick={() => handlePayment()} disabled={loading} className="w-full h-16 bg-[#7b3ff2] hover:bg-[#6A32DE] text-white font-black text-[16px] rounded-2xl shadow-xl shadow-purple-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
+                                                <button onClick={() => { setStep(3); }} disabled={loading} className="w-full h-16 bg-[#7b3ff2] hover:bg-[#6A32DE] text-white font-black text-[16px] rounded-2xl shadow-xl shadow-purple-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98]">
                                                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Havale Bildirimi Yap <ArrowRight className="w-5 h-5" /></>}
                                                 </button>
                                             </div>
@@ -336,30 +351,32 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                                             </h4>
 
                                             <div className="mb-8">
-                                                <p className="text-2xl font-black text-slate-900 mb-1">{PACKAGES_DATA[selectedPackage!].name}</p>
+                                                <p className="text-2xl font-black text-slate-900 mb-1">{selectedPackage!.name}</p>
                                                 <p className="text-sm font-bold text-[#7b3ff2] uppercase tracking-wide">Yıllık Lisans</p>
                                             </div>
 
                                             <div className="space-y-4 mb-10">
-                                                {PACKAGES_DATA[selectedPackage!].features.slice(0, 5).map((f, i) => (
+                                                {selectedPackage!.features?.slice(0, 5).map((f: string, i: number) => (
                                                     <div key={i} className="flex items-center gap-3 text-[13px] font-bold text-slate-500">
                                                         <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> {f}
                                                     </div>
                                                 ))}
-                                                <div className="pt-2 text-[12px] font-black text-[#7b3ff2] flex items-center gap-1.5 cursor-help group">
-                                                    + {PACKAGES_DATA[selectedPackage!].features.length - 5} Diğer Özellik <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                                                </div>
+                                                {selectedPackage!.features?.length > 5 && (
+                                                    <div className="pt-2 text-[12px] font-black text-[#7b3ff2] flex items-center gap-1.5 cursor-help group">
+                                                        + {selectedPackage!.features.length - 5} Diğer Özellik <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="pt-8 border-t border-slate-200 space-y-4">
                                                 <div className="flex justify-between items-center text-slate-500 font-bold">
                                                     <span>Ara Toplam</span>
-                                                    <span>{PACKAGES_DATA[selectedPackage!].price}</span>
+                                                    <span>{selectedPackage!.price.toLocaleString('tr-TR')} ₺</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-slate-900 font-black text-xl pt-2">
                                                     <span>Ödenecek</span>
                                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-indigo-900 tracking-tight">
-                                                        {PACKAGES_DATA[selectedPackage!].price}
+                                                        {selectedPackage!.price.toLocaleString('tr-TR')} ₺
                                                     </span>
                                                 </div>
                                             </div>

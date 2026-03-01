@@ -28,6 +28,14 @@ const SubscriberSchema = new mongoose.Schema({
     registeredAt: {
         type: Date,
         default: Date.now
+    },
+    legalConsents: {
+        privacyPolicyConfirmed: { type: Boolean, default: false },
+        termsOfUseConfirmed: { type: Boolean, default: false },
+        distanceSalesAgreementConfirmed: { type: Boolean, default: false },
+        kvkkConfirmed: { type: Boolean, default: false },
+        confirmedAt: { type: Date },
+        ipAddress: { type: String }
     }
 }, { timestamps: true });
 

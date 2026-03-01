@@ -17,9 +17,18 @@ const COL_COMPANY = [
 ];
 
 const COL_LEGAL = [
-    { href: '#', label: 'Gizlilik Politikası' },
-    { href: '#', label: 'Kullanım Şartları' },
-    { href: '#', label: 'KVKK' },
+    { href: '/gizlilik-politikasi', label: 'Gizlilik Politikası' },
+    { href: '/kullanim-sartlari', label: 'Kullanım Şartları' },
+    { href: '/mesafeli-satis-sozlesmesi', label: 'Mesafeli Satış Sözleşmesi' },
+    { href: '/kvkk', label: 'KVKK' },
+];
+
+const POPULAR_KEYWORDS = [
+    { label: 'Fotoğrafçı Yazılımı', href: '/' },
+    { label: 'Stüdyo Yönetim Sistemi', href: '/' },
+    { label: 'Fotoğraf Stüdyosu Otomasyonu', href: '/' },
+    { label: 'Müşteri Takip Yazılımı', href: '/' },
+    { label: 'Dijital Fotoğraf Galerisi', href: '/' },
 ];
 
 export default function PublicFooter() {
@@ -83,20 +92,37 @@ export default function PublicFooter() {
                         <h4 className="font-bold text-sm mb-5 text-gray-200">Yasal</h4>
                         <nav className="space-y-3">
                             {COL_LEGAL.map(l => (
-                                <a key={l.label} href={l.href} className="block text-[14px] text-gray-400 hover:text-white transition-colors">
+                                <Link key={l.label} href={l.href} className="block text-[14px] text-gray-400 hover:text-white transition-colors">
                                     {l.label}
-                                </a>
+                                </Link>
                             ))}
                         </nav>
                     </div>
                 </div>
 
+                {/* SEO Keywords Section */}
+                <div className="py-8 border-b border-white/10">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Popüler Aramalar</h4>
+                    <div className="flex flex-wrap gap-x-6 gap-y-2">
+                        {POPULAR_KEYWORDS.map(item => (
+                            <Link key={item.label} href={item.href} className="text-[13px] text-gray-400 hover:text-purple-400 transition-colors">
+                                {item.label}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Bottom row */}
-                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-gray-500 text-[13px]">
-                        © {new Date().getFullYear()} Weey.NET. Tüm hakları saklıdır.
-                    </p>
-                    <div className="flex items-center gap-2">
+                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-2 text-center md:text-left">
+                        <p className="text-gray-500 text-[13px]">
+                            © {new Date().getFullYear()} Weey.NET. Tüm hakları saklıdır.
+                        </p>
+                        <p className="text-gray-600 text-[12px] max-w-xl italic leading-relaxed">
+                            Türkiye'nin en kapsamlı <strong className="text-gray-500 font-semibold">fotoğrafçı yazılımı</strong> ve stüdyo yönetim platformu. Fotoğraf stüdyonuzu dijital dünyaya taşıyın, müşteri memnuniyetini ve verimliliğinizi artırın.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
                         <Lock className="w-3.5 h-3.5 text-gray-600" />
                         <span className="text-gray-500 text-[12px]">256-bit SSL şifreleme ile korunmaktadır</span>
                     </div>
