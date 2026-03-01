@@ -126,6 +126,10 @@ export async function POST(req: Request) {
         // --------------- Create User ---------------
         const Subscriber = (await import('@/models/Subscriber')).default;
 
+        // Fallback for verification token if missing in draft data
+        const verificationToken = draftUser.verificationToken || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const verificationTokenExpiry = draftUser.verificationTokenExpiry || new Date(Date.now() + 24 * 60 * 60 * 1000);
+
         const newUser = await User.create({
             name: draftUser.name,
             studioName: draftUser.studioName,
@@ -142,7 +146,7 @@ export async function POST(req: Request) {
             ...limits,
             subscriptionExpiry,
             billingInfo: draftUser.billingInfo,
-            isActive: true,
+            isActive: true, // Mark as active (paid) immediately
             isEmailVerified: false,
             verificationToken: verificationToken,
             verificationTokenExpiry: verificationTokenExpiry,
