@@ -49,11 +49,25 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
                 }}
             >
                 <div className="text-center text-white px-6 max-w-4xl mx-auto animate-fade-in-up">
+                    {/* Top Detail Badge: Studio Name & Phone */}
+                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/10 mb-8 mx-auto shadow-lg hover:bg-black/40 transition-colors">
+                        <span className="font-semibold text-sm tracking-wide text-white/90">{studioName}</span>
+                        {photographer.phone && (
+                            <>
+                                <span className="w-1 h-1 rounded-full bg-white/50" />
+                                <div className="flex items-center gap-1.5 text-white/80">
+                                    <Phone className="w-3.5 h-3.5" />
+                                    <span className="text-sm font-medium tracking-wider">{photographer.phone}</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
                     {photographer.logo && (
                         <img
                             src={photographer.logo}
                             alt={studioName}
-                            className="h-24 md:h-32 w-auto mx-auto mb-8 drop-shadow-2xl"
+                            className="h-24 md:h-32 w-auto mx-auto mb-6 drop-shadow-2xl"
                         />
                     )}
 

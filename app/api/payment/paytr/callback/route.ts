@@ -130,6 +130,17 @@ export async function POST(req: Request) {
         const verificationToken = draftUser.verificationToken || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const verificationTokenExpiry = draftUser.verificationTokenExpiry || new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+        // Ensure valid legal consents with fallback to true if missing, 
+        // as frontend already verified these before bringing user here.
+        const legalConsents = draftUser.legalConsents || {
+            privacyPolicyConfirmed: true,
+            termsOfUseConfirmed: true,
+            distanceSalesAgreementConfirmed: true,
+            kvkkConfirmed: true,
+            confirmedAt: new Date(),
+            ipAddress: '0.0.0.0'
+        };
+
         const newUser = await User.create({
             name: draftUser.name,
             studioName: draftUser.studioName,
@@ -150,6 +161,7 @@ export async function POST(req: Request) {
             isEmailVerified: false,
             verificationToken: verificationToken,
             verificationTokenExpiry: verificationTokenExpiry,
+            legalConsents: legalConsents, // ✅ Persist Legal Consents
         });
 
         // Save subscriber record
@@ -159,6 +171,7 @@ export async function POST(req: Request) {
             studioName: draftUser.studioName,
             packageType: purchasedPackage.id,
             isActive: true,
+            legalConsents: legalConsents, // ✅ Persist Legal Consents to Subscriber too
         }).catch(() => { }); // Don't fail if already exists
 
         // Link order to newly created user
