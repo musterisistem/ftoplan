@@ -13,6 +13,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Weey.NET - Fotoğrafçı Yönetim Paneli",
   description: "Düğün ve dış çekim yönetim sistemi",
+  verification: {
+    google: "QOn3OMEXbguC2knuK8YCYqUEZXzf1bLW-ez4-i53tIg",
+  },
 };
 
 import NextTopLoader from 'nextjs-toploader';
