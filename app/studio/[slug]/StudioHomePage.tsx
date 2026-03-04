@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, ChevronDown, MessageCircle, Phone, Instagram, ArrowRight } from 'lucide-react';
 import StudioHeader from '@/components/studio/StudioHeader';
 
@@ -24,6 +24,26 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
     const primaryColor = photographer.primaryColor || '#ec4899';
     const studioName = photographer.studioName || photographer.name || 'Stüdyo';
 
+    // Animated background slider
+    const sliderImages = photographer.portfolioPhotos && photographer.portfolioPhotos.length > 0
+        ? photographer.portfolioPhotos.slice(0, 8).map(p => p.url)
+        : [
+            'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?auto=format&fit=crop&w=1920&q=80',
+            'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80',
+            'https://images.unsplash.com/photo-1522673607200-1645062cd958?auto=format&fit=crop&w=1920&q=80',
+            'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1920&q=80',
+        ];
+
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    useEffect(() => {
+        if (sliderImages.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentSlide(prev => (prev + 1) % sliderImages.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, [sliderImages.length]);
+
     const services = [
         { title: 'Düğün Hikayesi', image: 'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?auto=format&fit=crop&q=80', description: 'En özel anlarınızın masalsı hikayesi.' },
         { title: 'Dış Çekim', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80', description: 'Doğanın içinde aşkınızın yansıması.' },
@@ -39,29 +59,50 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
         <div className="min-h-screen bg-white">
             <StudioHeader photographer={photographer} primaryColor={primaryColor} />
 
-            {/* Hero Section */}
-            <section
-                className="relative min-h-screen flex items-center justify-center pt-20"
-                style={{
-                    background: photographer.bannerImage
-                        ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6)), url(${photographer.bannerImage}) center/cover fixed`
-                        : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 50%, ${primaryColor}99 100%)`
-                }}
-            >
-                <div className="text-center text-white px-6 max-w-4xl mx-auto animate-fade-in-up">
-                    {/* Top Detail Badge: Studio Name & Phone */}
-                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/10 mb-8 mx-auto shadow-lg hover:bg-black/40 transition-colors">
-                        <span className="font-semibold text-sm tracking-wide text-white/90">{studioName}</span>
-                        {photographer.phone && (
-                            <>
-                                <span className="w-1 h-1 rounded-full bg-white/50" />
-                                <div className="flex items-center gap-1.5 text-white/80">
-                                    <Phone className="w-3.5 h-3.5" />
-                                    <span className="text-sm font-medium tracking-wider">{photographer.phone}</span>
-                                </div>
-                            </>
-                        )}
+            {/* Hero Section with animated background slider */}
+            <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+                {/* Animated background slides */}
+                {sliderImages.map((img, i) => (
+                    <div
+                        key={i}
+                        className="absolute inset-0 transition-opacity duration-1500"
+                        style={{
+                            opacity: i === currentSlide ? 1 : 0,
+                            backgroundImage: `url(${img})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            transitionDuration: '1500ms',
+                        }}
+                    />
+                ))}
+                {/* Dark overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
+
+                {/* Slide indicator dots */}
+                {sliderImages.length > 1 && (
+                    <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                        {sliderImages.map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setCurrentSlide(i)}
+                                className="w-2 h-2 rounded-full transition-all duration-300"
+                                style={{
+                                    backgroundColor: i === currentSlide ? 'white' : 'rgba(255,255,255,0.4)',
+                                    width: i === currentSlide ? '24px' : '8px',
+                                }}
+                            />
+                        ))}
                     </div>
+                )}
+
+                <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto animate-fade-in-up">
+                    {/* Phone badge — studio name is already the h1 below, no duplication */}
+                    {photographer.phone && (
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/10 mb-8 mx-auto shadow-lg">
+                            <Phone className="w-3.5 h-3.5 text-white/80" />
+                            <span className="text-sm font-medium tracking-wider text-white/90">{photographer.phone}</span>
+                        </div>
+                    )}
 
                     {photographer.logo && (
                         <img
@@ -93,6 +134,7 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
                     </div>
                 </div>
             </section>
+
 
             {/* Services Section */}
             <section id="services" className="py-24 px-4 bg-gray-50">
