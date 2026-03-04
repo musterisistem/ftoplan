@@ -7,7 +7,7 @@ import {
     Zap, Award, Globe, Check, ArrowRight, XCircle,
     Sparkles, Clock, Lock, Eye, EyeOff, Loader2,
     ShieldCheck, Star, CheckCircle, AlertCircle, ChevronRight,
-    ShieldAlert, Info
+    ShieldAlert, Info, Smartphone
 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import PublicHeader from '@/components/layout/PublicHeader';
@@ -343,19 +343,47 @@ function PackagesContent() {
                 }
 
                 // Format db package to match UI expectations
-                const formatted = data.map((pkg: any) => ({
-                    id: pkg.id,
-                    name: pkg.name,
-                    price: pkg.price,
-                    icon: pkg.id === 'trial' ? Sparkles : (pkg.id === 'kurumsal' ? Globe : Award),
-                    iconBg: pkg.id === 'trial' ? 'bg-amber-400' : (pkg.id === 'kurumsal' ? 'bg-indigo-600' : 'bg-[#5d2b72]'),
-                    badge: pkg.popular ? 'En Popüler' : null,
-                    highlight: pkg.popular,
-                    tagline: pkg.price > 0 ? `₺${Math.floor(pkg.price / 12)}/ay · Yıllık faturalandırma` : 'Kredi kartı gerekmez',
-                    desc: pkg.description,
-                    features: pkg.features || [],
-                    missing: []
-                }));
+                const standartPkg = data.find((p: any) => p.id === 'standart');
+                const kurumsalPkg = data.find((p: any) => p.id === 'kurumsal');
+
+                let masterFeatures: string[] = [];
+                if (kurumsalPkg) {
+                    const filtered = (kurumsalPkg.features || []).filter((f: string) => !f.toLowerCase().includes('standart özellikler'));
+                    const stdFeatures = (standartPkg?.features || []).filter((f: string) => !f.toLowerCase().includes('10 gb'));
+                    masterFeatures = [...stdFeatures, ...filtered];
+                }
+
+                const formatted = data.map((pkg: any) => {
+                    let finalFeatures = pkg.features || [];
+                    if (pkg.id === 'kurumsal' && standartPkg?.features) {
+                        const filtered = finalFeatures.filter((f: string) => !f.toLowerCase().includes('standart özellikler'));
+                        const stdFeatures = standartPkg.features.filter((f: string) => !f.toLowerCase().includes('10 gb'));
+                        finalFeatures = [...stdFeatures, '---', ...filtered];
+                    }
+
+                    // Compute missing features by comparing against masterFeatures
+                    const missingFeatures = masterFeatures.filter((f: string) => {
+                        const cleanF = f.replace('HIGHLIGHT:', '').trim();
+                        if (!cleanF || cleanF === '---') return false;
+
+                        const cleanFinal = finalFeatures.map((ff: string) => ff.replace('HIGHLIGHT:', '').trim());
+                        return !cleanFinal.includes(cleanF);
+                    });
+
+                    return {
+                        id: pkg.id,
+                        name: pkg.name,
+                        price: pkg.price,
+                        icon: pkg.id === 'trial' ? Sparkles : (pkg.id === 'kurumsal' ? Globe : Award),
+                        iconBg: pkg.id === 'trial' ? 'bg-amber-400' : (pkg.id === 'kurumsal' ? 'bg-indigo-600' : 'bg-[#5d2b72]'),
+                        badge: pkg.popular ? 'En Popüler' : null,
+                        highlight: pkg.popular,
+                        tagline: pkg.price > 0 ? `₺${Math.floor(pkg.price / 12)}/ay · Yıllık faturalandırma` : 'Kredi kartı gerekmez',
+                        desc: pkg.description,
+                        features: finalFeatures,
+                        missing: missingFeatures.map((f: string) => f.replace('HIGHLIGHT:', '').trim())
+                    };
+                });
                 setPackages(formatted.length > 0 ? formatted : FALLBACK_PACKAGES);
             } catch (e) {
                 setPackages(FALLBACK_PACKAGES);
@@ -411,13 +439,15 @@ function PackagesContent() {
                                 return (
                                     <motion.button key={pkg.id} onClick={() => setSelectedPkg(pkg.id)}
                                         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: formOpen ? 0 : 0.07 * i }}
-                                        className={`relative text-left w-full rounded-2xl border-2 transition-all duration-300 group overflow-hidden
-                                            ${formOpen ? 'p-5' : 'p-7'}
+                                        className={`relative text-left w-full h-full flex flex-col rounded-2xl border-2 transition-all duration-500 group overflow-hidden
+                                            ${formOpen ? 'p-5' : 'pt-7 px-7 pb-6'}
                                             ${isSelected
-                                                ? 'border-[#5d2b72] bg-white shadow-[0_4px_24px_rgba(93,43,114,0.12)]'
-                                                : pkg.highlight && !formOpen
-                                                    ? 'border-[#5d2b72]/20 bg-white shadow-[0_8px_40px_rgba(93,43,114,0.08)] md:-translate-y-3 hover:border-[#5d2b72]/40'
-                                                    : 'border-slate-100 bg-white shadow-sm hover:border-[#5d2b72]/25 hover:shadow-md'}`}>
+                                                ? 'border-[#5d2b72] bg-white shadow-[0_4px_24px_rgba(93,43,114,0.12)] z-10 scale-100'
+                                                : !formOpen
+                                                    ? (pkg.id === 'standart'
+                                                        ? 'border-[#5d2b72]/30 bg-white shadow-[0_16px_40px_rgba(93,43,114,0.15)] md:-translate-y-4 scale-[1.02] z-10 hover:border-[#5d2b72]/60'
+                                                        : 'border-slate-100 bg-white shadow-sm scale-95 opacity-80 hover:scale-100 hover:opacity-100 hover:border-[#5d2b72]/30 hover:shadow-md z-0')
+                                                    : 'border-slate-100 bg-white shadow-sm hover:border-[#5d2b72]/25 hover:shadow-md scale-100'}`}>
 
                                         {pkg.badge && !formOpen && (
                                             <span className="absolute -top-px left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-b-2xl shadow-[0_4px_12px_rgba(93,43,114,0.3)] whitespace-nowrap z-10 animate-pulse">
@@ -425,77 +455,128 @@ function PackagesContent() {
                                             </span>
                                         )}
 
-                                        <div className={`flex ${formOpen ? 'items-center gap-4' : 'flex-col'}`}>
-                                            <div className={`${pkg.iconBg} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform shrink-0
-                                                ${formOpen ? 'w-10 h-10' : 'w-14 h-14 mb-6'}`}>
-                                                <Icon className={formOpen ? 'w-5 h-5' : 'w-7 h-7'} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <p className={`font-black text-slate-900 tracking-tight ${formOpen ? 'text-base' : 'text-2xl'}`}>{pkg.name}</p>
-                                                    {isSelected && <CheckCircle className="w-6 h-6 text-[#5d2b72] shrink-0" />}
+                                        <div className="flex-1 flex flex-col w-full">
+                                            <div className={`flex ${formOpen ? 'items-center gap-4' : 'flex-col items-start w-full'}`}>
+                                                <div className={`${pkg.iconBg} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-6 transition-transform shrink-0
+                                                    ${formOpen ? 'w-10 h-10' : 'w-14 h-14 mb-4'}`}>
+                                                    <Icon className={formOpen ? 'w-5 h-5' : 'w-7 h-7'} />
                                                 </div>
-                                                <p className={`font-bold text-[#5d2b72] ${formOpen ? 'text-[12px]' : 'text-lg mt-1'}`}>
-                                                    {pkg.price === 0 ? 'Ücretsiz Başlangıç' : `₺${pkg.price.toLocaleString('tr-TR')}`}
-                                                    {pkg.price > 0 && <span className="text-slate-400 text-sm font-medium ml-1">/yıl</span>}
-                                                </p>
-                                                {!formOpen && <p className="text-[13px] font-medium text-slate-400 mt-1">{pkg.tagline}</p>}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className={`font-black text-slate-900 tracking-tight ${formOpen ? 'text-base' : 'text-2xl'}`}>{pkg.name}</p>
+                                                        {isSelected && <CheckCircle className="w-6 h-6 text-[#5d2b72] shrink-0" />}
+                                                    </div>
+                                                    <p className={`font-bold text-[#5d2b72] ${formOpen ? 'text-[12px]' : 'text-lg mt-1'}`}>
+                                                        {pkg.price === 0 ? 'Ücretsiz Başlangıç' : `₺${pkg.price.toLocaleString('tr-TR')}`}
+                                                        {pkg.price > 0 && <span className="text-slate-400 text-sm font-medium ml-1">/yıl</span>}
+                                                    </p>
+                                                    {pkg.price > 0 && !formOpen && (
+                                                        <p className="text-[13px] font-black text-slate-500 mt-0.5 bg-slate-50 inline-block px-2 py-0.5 rounded-md border border-slate-100">
+                                                            Aylık: ₺{Math.floor(pkg.price / 12).toLocaleString('tr-TR')}
+                                                        </p>
+                                                    )}
+                                                    {!formOpen && <p className="text-[13px] font-medium text-slate-400 mt-1">{pkg.tagline}</p>}
+                                                </div>
                                             </div>
+
+                                            {!formOpen && (
+                                                <>
+                                                    {(pkg.id === 'standart' || pkg.id === 'kurumsal') && (
+                                                        <div className="mt-6 pt-4 border-t border-slate-100 animate-in fade-in duration-500">
+                                                            <div className="flex items-start gap-3 mb-3">
+                                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5d2b72] to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+                                                                    <Smartphone className="w-4 h-4 text-white" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-[14px] font-black text-slate-900 tracking-tight">
+                                                                        {pkg.id === 'kurumsal' ? 'Panel + Uygulama + Özel Web Site' : 'Panel + Mobil Uygulama'}
+                                                                    </p>
+                                                                    <p className="text-[12px] text-slate-500 mt-0.5 font-medium leading-relaxed">
+                                                                        {pkg.id === 'kurumsal'
+                                                                            ? 'iOS/Android uygulamanız ve size özel marka web siteniz ile eksiksiz çözüm.'
+                                                                            : 'iOS ve Android uygulamalarını özel panelinizden yönetin.'}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2 items-center mt-3">
+                                                                <div className="flex items-center justify-center bg-zinc-900 text-white px-2 py-1.5 rounded-lg hover:bg-black transition-colors flex-1 cursor-default shadow-sm border border-zinc-800">
+                                                                    <svg viewBox="0 0 384 512" className="w-5 h-5 mr-1.5 fill-current">
+                                                                        <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+                                                                    </svg>
+                                                                    <div className="flex flex-col items-start leading-none">
+                                                                        <span className="text-[7.5px] font-medium text-slate-300">Download on the</span>
+                                                                        <span className="text-[12px] font-bold tracking-tight">App Store</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center justify-center bg-zinc-900 text-white px-2 py-1.5 rounded-lg hover:bg-black transition-colors flex-1 cursor-default shadow-sm border border-zinc-800">
+                                                                    <svg viewBox="0 0 512 512" className="w-5 h-5 mr-1.5 fill-current">
+                                                                        <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z" />
+                                                                    </svg>
+                                                                    <div className="flex flex-col items-start leading-none">
+                                                                        <span className="text-[7.5px] font-medium text-slate-300">GET IT ON</span>
+                                                                        <span className="text-[12px] font-bold tracking-tight">Google Play</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    <p className="text-[14px] text-slate-600 mt-6 mb-6 leading-relaxed font-medium">{pkg.desc}</p>
+                                                    <div className="space-y-4 mb-10">
+                                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Neler Dahil?</p>
+                                                        <ul className="space-y-3">
+                                                            {pkg.features.map((f: string, fi: number) => {
+                                                                const isHighlight = f.startsWith('HIGHLIGHT:');
+                                                                const isDivider = f.startsWith('---');
+                                                                const cleanF = f.replace('HIGHLIGHT:', '').replace('---', '').trim();
+
+                                                                if (isDivider) {
+                                                                    return (
+                                                                        <li key={fi} className="py-2 flex items-center gap-3">
+                                                                            <div className="h-px bg-slate-100 flex-1" />
+                                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-2">{cleanF}</span>
+                                                                            <div className="h-px bg-slate-100 flex-1" />
+                                                                        </li>
+                                                                    );
+                                                                }
+
+                                                                return (
+                                                                    <motion.li
+                                                                        key={fi}
+                                                                        initial={{ opacity: 0, x: -10 }}
+                                                                        animate={{ opacity: 1, x: 0 }}
+                                                                        transition={{ delay: 0.1 + fi * 0.05 }}
+                                                                        className={`flex items-start gap-3 text-[14px] font-semibold leading-snug rounded-lg transition-colors
+                                                                        ${isHighlight ? 'bg-emerald-50 p-2 text-emerald-700 ring-1 ring-emerald-100' : 'text-slate-700'}`}
+                                                                    >
+                                                                        <div className={`mt-1 w-4 h-4 rounded-full flex items-center justify-center shrink-0
+                                                                        ${isHighlight ? 'bg-emerald-500' : 'bg-emerald-50'}`}>
+                                                                            <Check className={`w-2.5 h-2.5 stroke-[3] ${isHighlight ? 'text-white' : 'text-emerald-500'}`} />
+                                                                        </div>
+                                                                        {cleanF}
+                                                                    </motion.li>
+                                                                );
+                                                            })}
+                                                            {pkg.missing?.map((f: string, fi: number) => (
+                                                                <li key={fi} className="flex items-start gap-3 text-[14px] font-medium text-slate-300 leading-snug px-2">
+                                                                    <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                                                    {f}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {!formOpen && (
-                                            <>
-                                                <p className="text-[14px] text-slate-600 mt-6 mb-8 leading-relaxed font-medium">{pkg.desc}</p>
-                                                <div className="space-y-4 mb-10">
-                                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Neler Dahil?</p>
-                                                    <ul className="space-y-3">
-                                                        {pkg.features.map((f: string, fi: number) => {
-                                                            const isHighlight = f.startsWith('HIGHLIGHT:');
-                                                            const isDivider = f.startsWith('---');
-                                                            const cleanF = f.replace('HIGHLIGHT:', '').replace('---', '').trim();
-
-                                                            if (isDivider) {
-                                                                return (
-                                                                    <li key={fi} className="py-2 flex items-center gap-3">
-                                                                        <div className="h-px bg-slate-100 flex-1" />
-                                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-2">{cleanF}</span>
-                                                                        <div className="h-px bg-slate-100 flex-1" />
-                                                                    </li>
-                                                                );
-                                                            }
-
-                                                            return (
-                                                                <motion.li
-                                                                    key={fi}
-                                                                    initial={{ opacity: 0, x: -10 }}
-                                                                    animate={{ opacity: 1, x: 0 }}
-                                                                    transition={{ delay: 0.1 + fi * 0.05 }}
-                                                                    className={`flex items-start gap-3 text-[14px] font-semibold leading-snug rounded-lg transition-colors
-                                                                        ${isHighlight ? 'bg-emerald-50 p-2 text-emerald-700 ring-1 ring-emerald-100' : 'text-slate-700'}`}
-                                                                >
-                                                                    <div className={`mt-1 w-4 h-4 rounded-full flex items-center justify-center shrink-0
-                                                                        ${isHighlight ? 'bg-emerald-500' : 'bg-emerald-50'}`}>
-                                                                        <Check className={`w-2.5 h-2.5 stroke-[3] ${isHighlight ? 'text-white' : 'text-emerald-500'}`} />
-                                                                    </div>
-                                                                    {cleanF}
-                                                                </motion.li>
-                                                            );
-                                                        })}
-                                                        {pkg.missing?.map((f: string, fi: number) => (
-                                                            <li key={fi} className="flex items-start gap-3 text-[14px] font-medium text-slate-300 leading-snug px-2">
-                                                                <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                                                                {f}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
+                                            <div className="mt-auto w-full pt-4">
                                                 <div className={`w-full py-4 rounded-2xl text-[15px] font-black flex items-center justify-center gap-2 transition-all shadow-sm
-                                                    ${pkg.highlight
+                                                    ${pkg.highlight || pkg.id === 'standart'
                                                         ? 'bg-[#5d2b72] text-white shadow-[0_8px_25px_rgba(93,43,114,0.25)] group-hover:shadow-[0_12px_35px_rgba(93,43,114,0.35)] group-hover:-translate-y-0.5'
                                                         : 'bg-slate-50 text-slate-700 group-hover:bg-slate-100 group-hover:text-slate-900 group-hover:-translate-y-0.5'}`}>
                                                     Bu Planla Başla <ArrowRight className="w-5 h-5" />
                                                 </div>
-                                            </>
+                                            </div>
                                         )}
                                     </motion.button>
                                 );

@@ -69,7 +69,7 @@ export default function IletisimPage() {
                         </div>
                         <h1 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 leading-[1.05] tracking-tight">
                             Bize{' '}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5d2b72] via-purple-600 to-purple-800">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5d2b72] to-purple-700">
                                 Ulaşın
                             </span>
                         </h1>
@@ -79,35 +79,13 @@ export default function IletisimPage() {
                         </p>
                     </div>
 
-                    {/* Contact Info Cards */}
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
-                        {contactInfo.map((c, i) => {
-                            const Icon = ICON_MAP[c.icon] || Mail;
-                            return (
-                                <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.08 * i, duration: 0.5 }}
-                                    className="group bg-white p-6 rounded-[24px] border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300"
-                                >
-                                    <div className={`w-12 h-12 ${c.color} rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                                        <Icon className="w-5 h-5" />
-                                    </div>
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-1">{c.label}</p>
-                                    <p className="text-[14px] font-semibold text-slate-800 leading-snug">{c.value}</p>
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Form + Map grid */}
+                    {/* Form + Info grid */}
                     <div className="grid md:grid-cols-2 gap-10">
                         {/* Form */}
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2, duration: 0.5 }}
+                            transition={{ delay: 0.1, duration: 0.5 }}
                             className="bg-white rounded-[32px] border border-slate-100 shadow-[0_8px_40px_rgba(0,0,0,0.06)] p-8 md:p-10"
                         >
                             <h2 className="text-xl font-black text-slate-900 mb-6">Mesaj Gönderin</h2>
@@ -128,7 +106,7 @@ export default function IletisimPage() {
                                             <input
                                                 type="text" required
                                                 value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                                                className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#5d2b72] transition-all"
+                                                className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-[#5d2b72]/10 focus:border-[#5d2b72] transition-all"
                                                 placeholder="Adınız Soyadınız"
                                             />
                                         </div>
@@ -137,7 +115,7 @@ export default function IletisimPage() {
                                             <input
                                                 type="tel"
                                                 value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
-                                                className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#5d2b72] transition-all"
+                                                className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-[#5d2b72]/10 focus:border-[#5d2b72] transition-all"
                                                 placeholder="+90 (___) ___ __ __"
                                             />
                                         </div>
@@ -147,7 +125,7 @@ export default function IletisimPage() {
                                         <input
                                             type="email" required
                                             value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                                            className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#5d2b72] transition-all"
+                                            className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-[#5d2b72]/10 focus:border-[#5d2b72] transition-all"
                                             placeholder="ornek@email.com"
                                         />
                                     </div>
@@ -155,7 +133,7 @@ export default function IletisimPage() {
                                         <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.1em] mb-1.5">Konu</label>
                                         <select
                                             value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
-                                            className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] text-slate-700 focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#5d2b72] transition-all"
+                                            className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] text-slate-700 focus:outline-none focus:ring-4 focus:ring-[#5d2b72]/10 focus:border-[#5d2b72] transition-all"
                                         >
                                             <option value="">Konu seçin...</option>
                                             <option>Teknik Destek</option>
@@ -170,14 +148,14 @@ export default function IletisimPage() {
                                         <textarea
                                             required rows={5}
                                             value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
-                                            className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-purple-500/5 focus:border-[#5d2b72] shadow-sm resize-none"
+                                            className="w-full px-4 py-3.5 bg-[#f8faff] border border-slate-200 rounded-2xl font-medium text-[15px] focus:outline-none focus:ring-4 focus:ring-[#5d2b72]/10 focus:border-[#5d2b72] shadow-sm resize-none"
                                             placeholder="Mesajınızı buraya yazın..."
                                         />
                                     </div>
                                     <button
                                         type="submit"
                                         disabled={sending}
-                                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#5d2b72] to-purple-800 text-white font-black text-[15px] shadow-[0_8px_25px_rgba(93,43,114,0.25)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.35)] hover:-translate-y-0.5 transition-all disabled:opacity-70 flex items-center justify-center gap-2 mt-2"
+                                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#5d2b72] to-purple-800 text-white font-black text-[15px] shadow-[0_8px_25px_rgba(93,43,114,0.3)] hover:shadow-[0_12px_35px_rgba(93,43,114,0.4)] hover:-translate-y-0.5 transition-all disabled:opacity-70 flex items-center justify-center gap-2 mt-2"
                                     >
                                         {sending
                                             ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -192,58 +170,46 @@ export default function IletisimPage() {
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
+                            transition={{ delay: 0.2, duration: 0.5 }}
                             className="flex flex-col gap-6"
                         >
-                            {/* Map placeholder */}
+                            {/* Address Box */}
                             <div className="bg-white rounded-[32px] border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden flex-1 min-h-[200px] flex items-center justify-center">
                                 <div className="text-center p-10">
                                     <div className="w-16 h-16 bg-purple-50 border border-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <MapPin className="w-8 h-8 text-[#5d2b72]" />
                                     </div>
-                                    <p className="font-black text-slate-800 mb-1">
-                                        {contactInfo.find(c => c.label.toLowerCase().includes('adres'))?.value?.split(',')[0] || 'Şişli, İstanbul'}
-                                    </p>
-                                    <p className="text-sm text-slate-400">
-                                        {contactInfo.find(c => c.label.toLowerCase().includes('adres'))?.value || 'Levent Mah. Büyükdere Cad. No:123'}
+                                    <p className="font-bold text-slate-800 mb-1">Merkez Ofis</p>
+                                    <p className="text-sm text-slate-500 leading-relaxed max-w-[250px] mx-auto">
+                                        Levent Mah. Büyükdere Cad. No:123 Kat:8, 34394 Şişli / İstanbul
                                     </p>
                                 </div>
                             </div>
 
                             {/* Quick contact card */}
                             <div className="bg-gradient-to-br from-[#5d2b72] via-purple-700 to-purple-800 rounded-[32px] p-8 text-white shadow-2xl shadow-purple-200">
-                                <h3 className="text-lg font-black mb-2">Hızlı Destek</h3>
-                                <p className="text-purple-200 text-sm mb-6">Mesai saatleri içinde 30 dakika içinde geri dönüyoruz.</p>
+                                <h3 className="text-lg font-black mb-2">Hızlı İletişim</h3>
+                                <p className="text-purple-200 text-sm mb-6">Her türlü sorunuz için bize e-posta yoluyla ulaşabilirsiniz.</p>
 
-                                {contactInfo.find(c => c.label.toLowerCase().includes('e-posta')) && (
-                                    <a
-                                        href={`mailto:${contactInfo.find(c => c.label.toLowerCase().includes('e-posta'))?.value}`}
-                                        className="flex items-center gap-3 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10 mb-3"
-                                    >
-                                        <Mail className="w-5 h-5 text-purple-200" />
-                                        <div>
-                                            <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">E-posta</p>
-                                            <p className="font-bold text-white text-sm">
-                                                {contactInfo.find(c => c.label.toLowerCase().includes('e-posta'))?.value}
-                                            </p>
-                                        </div>
-                                    </a>
-                                )}
+                                <a href="mailto:destek@weey.net" className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10 mb-3 group">
+                                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                                        <Mail className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">Teknik Destek</p>
+                                        <p className="font-bold text-white text-base tracking-wide">destek@weey.net</p>
+                                    </div>
+                                </a>
 
-                                {contactInfo.find(c => c.label.toLowerCase().includes('telefon')) && (
-                                    <a
-                                        href={`tel:${contactInfo.find(c => c.label.toLowerCase().includes('telefon'))?.value}`}
-                                        className="flex items-center gap-3 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10"
-                                    >
-                                        <Phone className="w-5 h-5 text-purple-200" />
-                                        <div>
-                                            <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">Telefon</p>
-                                            <p className="font-bold text-white text-sm">
-                                                {contactInfo.find(c => c.label.toLowerCase().includes('telefon'))?.value}
-                                            </p>
-                                        </div>
-                                    </a>
-                                )}
+                                <a href="mailto:info@weey.net" className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl hover:bg-white/20 transition-colors border border-white/10 group">
+                                    <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                                        <Globe className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">Genel Bilgi</p>
+                                        <p className="font-bold text-white text-base tracking-wide">info@weey.net</p>
+                                    </div>
+                                </a>
                             </div>
                         </motion.div>
                     </div>

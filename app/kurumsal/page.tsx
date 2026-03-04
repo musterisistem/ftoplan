@@ -8,15 +8,15 @@ import {
 
 const VALUES = [
     { icon: <Zap className="w-6 h-6" />, color: 'bg-[#ead5f5] text-[#5d2b72]', title: 'Hız & Verimlilik', desc: 'Manuel işlemleri sıfıra indirip stüdyonuzu hızlandıracak akıllı otomasyonlar.' },
-    { icon: <Shield className="w-6 h-6" />, color: 'bg-emerald-100 text-emerald-600', title: 'Güvenlik', desc: '256-bit SSL şifreleme ve yedeklenmiş bulut altyapısıyla verileriniz her zaman güvende.' },
-    { icon: <Globe className="w-6 h-6" />, color: 'bg-blue-100 text-blue-600', title: 'Erişilebilirlik', desc: 'Telefon, tablet veya bilgisayardan, istediğiniz yerden stüdyonuzu yönetin.' },
-    { icon: <Award className="w-6 h-6" />, color: 'bg-amber-100 text-amber-600', title: 'Kalite', desc: 'Fotoğra stüdyolarının gerçek ihtiyaçlarından doğan, sürekli güncellenen bir platform.' },
+    { icon: <Shield className="w-6 h-6" />, color: 'bg-purple-100 text-purple-700', title: 'Güvenlik', desc: '256-bit SSL şifreleme ve yedeklenmiş bulut altyapısıyla verileriniz her zaman güvende.' },
+    { icon: <Globe className="w-6 h-6" />, color: 'bg-indigo-100 text-indigo-700', title: 'Erişilebilirlik', desc: 'Telefon, tablet veya bilgisayardan, istediğiniz yerden stüdyonuzu yönetin.' },
+    { icon: <Award className="w-6 h-6" />, color: 'bg-fuchsia-100 text-fuchsia-700', title: 'Kalite', desc: 'Fotoğra stüdyolarının gerçek ihtiyaçlarından doğan, sürekli güncellenen bir platform.' },
 ];
 
 const TEAM = [
-    { name: 'Ortak Yazılım Mühendisliği', role: 'Ürün & Teknoloji', initial: 'T', color: 'from-[#7a3a94] to-[#7a3a94]' },
-    { name: 'Stüdyo Operasyon Ekibi', role: 'Müşteri Başarısı', initial: 'M', color: 'from-pink-500 to-rose-500' },
-    { name: 'Tasarım Departmanı', role: 'Kullanıcı Deneyimi', initial: 'D', color: 'from-emerald-500 to-teal-500' },
+    { name: 'Ortak Yazılım Mühendisliği', role: 'Ürün & Teknoloji', initial: 'T', color: 'from-[#7a3a94] to-[#4a2260]' },
+    { name: 'Stüdyo Operasyon Ekibi', role: 'Müşteri Başarısı', initial: 'M', color: 'from-[#5d2b72] to-purple-800' },
+    { name: 'Tasarım Departmanı', role: 'Kullanıcı Deneyimi', initial: 'D', color: 'from-indigo-600 to-purple-700' },
 ];
 
 export default function KurumsalPage() {

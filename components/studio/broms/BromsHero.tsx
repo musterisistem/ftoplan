@@ -74,7 +74,7 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
                 >
                     <div
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url(${encodeURI(images[currentSlide])})` }}
+                        style={{ backgroundImage: `url("${encodeURI(images[currentSlide])}")` }}
                     />
                     <div className={`absolute inset-0 ${overlayClass} transition-colors duration-700`} />
                 </motion.div>
