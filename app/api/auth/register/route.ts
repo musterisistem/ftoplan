@@ -32,26 +32,24 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Bu email adresi zaten kullanılıyor.' }, { status: 400 });
         }
 
-        // Generate Slug
-        let baseSlug = (body.slug || studioName).toLowerCase()
-            .replace(/ğ/g, 'g')
-            .replace(/ü/g, 'u')
-            .replace(/ş/g, 's')
-            .replace(/ı/g, 'i')
-            .replace(/ö/g, 'o')
-            .replace(/ç/g, 'c')
-            .replace(/[^a-z0-9-]/g, '-') // Replace non-alphanumeric with hyphen
-            .replace(/-+/g, '-') // collapse hyphens
-            .replace(/^-|-$/g, ''); // trim hyphens
+        // Generate sequential numeric slug (0111, 0112, ...)
+        // Find the highest existing numeric slug and increment
+        const latestUser = await User.findOne(
+            { slug: /^\d{4}$/ },
+            { slug: 1 },
+            { sort: { slug: -1 } }
+        );
 
-        let slug = baseSlug;
-        let counter = 1;
-
-        // Ensure unique slug
-        while (await User.findOne({ slug })) {
-            slug = `${baseSlug}-${counter}`;
-            counter++;
+        let nextNumber = 111; // Start from 0111
+        if (latestUser && latestUser.slug) {
+            const parsed = parseInt(latestUser.slug, 10);
+            if (!isNaN(parsed)) {
+                nextNumber = parsed + 1;
+            }
         }
+
+        const slug = nextNumber.toString().padStart(4, '0');
+
 
         // Hash Password
         const hashedPassword = await bcrypt.hash(password, 12);
