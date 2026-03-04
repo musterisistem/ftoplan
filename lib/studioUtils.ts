@@ -16,6 +16,13 @@ export const getPhotographer = async (slug: string) => {
     console.log(`[StudioUtils] Fetching photographer for slug: ${slug}`, photographer ? `Found: ${photographer.studioName} Theme: ${photographer.siteTheme}` : 'Not Found');
 
     if (photographer) {
+        // Fallback: If photographer has no portfolio photos, provide the 15 demo images
+        if (!photographer.portfolioPhotos || photographer.portfolioPhotos.length === 0) {
+            photographer.portfolioPhotos = Array.from({ length: 15 }, (_, i) => ({
+                url: `/demo/images/images/demof (${i + 1}).png`,
+                title: 'Demo'
+            }));
+        }
         // Deep serialize to handle all _id (including in subarrays) and Dates
         return JSON.parse(JSON.stringify(photographer));
     }
@@ -26,7 +33,6 @@ export const getPhotographer = async (slug: string) => {
 export const getAllStudioPhotos = async (photographerId: string) => {
     noStore(); // Opt out of static caching
     await dbConnect();
-
 
     // 1. Get Customers of this photographer
     const customers = await Customer.find({
@@ -65,12 +71,20 @@ export const getAllStudioPhotos = async (photographerId: string) => {
     })) || [];
 
     // Combine and Shuffle
-    const allPhotos = [...portfolioPhotos, ...galleryPhotos];
+    let allPhotos = [...portfolioPhotos, ...galleryPhotos];
 
-    // Shuffle
-    for (let i = allPhotos.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [allPhotos[i], allPhotos[j]] = [allPhotos[j], allPhotos[i]];
+    // Fallback: If no real photos exist at all, return the 15 demo images
+    if (allPhotos.length === 0) {
+        allPhotos = Array.from({ length: 15 }, (_, i) => ({
+            url: `/demo/images/images/demof (${i + 1}).png`,
+            title: 'Demo'
+        }));
+    } else {
+        // Shuffle only if they are real photos
+        for (let i = allPhotos.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allPhotos[i], allPhotos[j]] = [allPhotos[j], allPhotos[i]];
+        }
     }
 
     // Deep serialize result just in case

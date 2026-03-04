@@ -22,7 +22,7 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Format slider images
-    const defaultDemoImages = Array.from({ length: 15 }, (_, i) => `https://fotoplan.b-cdn.net/demo/demof_${i + 1}.png`);
+    const defaultDemoImages = Array.from({ length: 15 }, (_, i) => `/demo/images/images/demof (${i + 1}).png`);
 
     const images = sliderImages && sliderImages.length > 0
         ? sliderImages.map(img => img.url).slice(0, 5)
@@ -74,7 +74,7 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
                 >
                     <div
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url(${images[currentSlide]})` }}
+                        style={{ backgroundImage: `url(${encodeURI(images[currentSlide])})` }}
                     />
                     <div className={`absolute inset-0 ${overlayClass} transition-colors duration-700`} />
                 </motion.div>
@@ -98,13 +98,9 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
                     transition={{ duration: 1, delay: 0.5 }}
                     className="max-w-4xl"
                 >
-                    <h1 className="text-sm md:text-base font-bold tracking-[0.5em] uppercase mb-4 opacity-80">
-                        {studioName}
-                    </h1>
-
-                    <h2 className="text-5xl md:text-8xl font-bold tracking-tighter mb-8 font-syne drop-shadow-sm">
+                    <h1 className="text-5xl md:text-8xl font-bold tracking-tighter mb-8 font-syne drop-shadow-sm">
                         {heroTitle || studioName}
-                    </h2>
+                    </h1>
 
                     <p className={`text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed mb-12 ${subTextColor}`}>
                         {heroSubtitle || "Profesyonel stüdyo çekimleri ve dış mekan fotoğrafçılığı ile en özel anlarınızı ölümsüzleştiriyoruz."}
