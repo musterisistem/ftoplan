@@ -361,6 +361,12 @@ function PackagesContent() {
                         finalFeatures = [...stdFeatures, '---', ...filtered];
                     }
 
+                    // Fix for small decimal parsed prices (i.e. '11.999' from db text input)
+                    let finalPrice = Number(pkg.price) || 0;
+                    if (finalPrice > 0 && finalPrice < 100) {
+                        finalPrice = Math.round(finalPrice * 1000);
+                    }
+
                     // Compute missing features by comparing against masterFeatures
                     const missingFeatures = masterFeatures.filter((f: string) => {
                         const cleanF = f.replace('HIGHLIGHT:', '').trim();
@@ -373,12 +379,12 @@ function PackagesContent() {
                     return {
                         id: pkg.id,
                         name: pkg.name,
-                        price: pkg.price,
+                        price: finalPrice,
                         icon: pkg.id === 'trial' ? Sparkles : (pkg.id === 'kurumsal' ? Globe : Award),
                         iconBg: pkg.id === 'trial' ? 'bg-amber-400' : (pkg.id === 'kurumsal' ? 'bg-indigo-600' : 'bg-[#5d2b72]'),
                         badge: pkg.popular ? 'En Popüler' : null,
                         highlight: pkg.popular,
-                        tagline: pkg.price > 0 ? `₺${Math.floor(pkg.price / 12)}/ay · Yıllık faturalandırma` : 'Kredi kartı gerekmez',
+                        tagline: finalPrice > 0 ? `Yıllık faturalandırılır (KDV dahildir)` : 'Kredi kartı gerekmez',
                         desc: pkg.description,
                         features: finalFeatures,
                         missing: missingFeatures.map((f: string) => f.replace('HIGHLIGHT:', '').trim())
@@ -462,20 +468,40 @@ function PackagesContent() {
                                                     <Icon className={formOpen ? 'w-5 h-5' : 'w-7 h-7'} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between gap-2">
+                                                    <div className="flex items-center justify-between gap-2 mb-3">
                                                         <p className={`font-black text-slate-900 tracking-tight ${formOpen ? 'text-base' : 'text-2xl'}`}>{pkg.name}</p>
                                                         {isSelected && <CheckCircle className="w-6 h-6 text-[#5d2b72] shrink-0" />}
                                                     </div>
-                                                    <p className={`font-bold text-[#5d2b72] ${formOpen ? 'text-[12px]' : 'text-lg mt-1'}`}>
+
+                                                    <div className={`font-black tracking-tight ${formOpen ? 'text-[12px] text-[#5d2b72]' : 'text-[32px] text-slate-900'}`}>
                                                         {pkg.price === 0 ? 'Ücretsiz Başlangıç' : `₺${pkg.price.toLocaleString('tr-TR')}`}
-                                                        {pkg.price > 0 && <span className="text-slate-400 text-sm font-medium ml-1">/yıl</span>}
-                                                    </p>
-                                                    {pkg.price > 0 && !formOpen && (
-                                                        <p className="text-[13px] font-black text-slate-500 mt-0.5 bg-slate-50 inline-block px-2 py-0.5 rounded-md border border-slate-100">
-                                                            Aylık: ₺{Math.floor(pkg.price / 12).toLocaleString('tr-TR')}
+                                                        {pkg.price > 0 && <span className="text-slate-400 text-lg font-medium ml-1">/yıl</span>}
+                                                    </div>
+
+                                                    {pkg.price > 0 && (
+                                                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                            KDV DAHİL VE FATURALI HİZMET
                                                         </p>
                                                     )}
-                                                    {!formOpen && <p className="text-[13px] font-medium text-slate-400 mt-1">{pkg.tagline}</p>}
+
+                                                    {pkg.price > 0 && !formOpen && (
+                                                        <div className="mt-4 inline-flex items-center gap-2.5 px-4 py-3 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100/80 rounded-2xl shadow-sm relative w-full mb-1 group-hover:border-emerald-200 transition-colors">
+                                                            <div className="absolute -top-3 -right-2 bg-gradient-to-r from-[#5d2b72] to-fuchsia-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-full shadow-md animate-pulse tracking-wider">
+                                                                Avantajlı
+                                                            </div>
+                                                            <div className="flex flex-col items-start leading-none w-full">
+                                                                <span className="text-[10px] font-black text-emerald-600/80 uppercase tracking-widest mb-1.5">Aylık Sadece</span>
+                                                                <div className="flex items-baseline gap-1.5 w-full">
+                                                                    <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
+                                                                        ₺{Math.floor(pkg.price / 12).toLocaleString('tr-TR')}
+                                                                    </span>
+                                                                    <span className="text-[11px] font-bold text-emerald-600/60 tracking-wider">'ye denk gelir</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {!formOpen && <p className="text-[12px] font-semibold text-slate-400 mt-2">{pkg.tagline}</p>}
                                                 </div>
                                             </div>
 
