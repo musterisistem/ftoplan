@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 
@@ -102,6 +103,22 @@ export async function PUT(
                 });
             } catch (err) {
                 console.error('Failed to send plan update email:', err);
+            }
+        }
+
+        // Süper admin düzenlemesi sonrası müşteri sitesini ANINDA güncelle
+        if (photographer.slug) {
+            try {
+                const studioBase = `/studio/${photographer.slug}`;
+                revalidatePath(studioBase, 'layout');
+                revalidatePath(studioBase, 'page');
+                revalidatePath(`${studioBase}/gallery`, 'page');
+                revalidatePath(`${studioBase}/packages`, 'page');
+                revalidatePath(`${studioBase}/about`, 'page');
+                revalidatePath(`${studioBase}/contact`, 'page');
+                revalidatePath(`${studioBase}/selection`, 'page');
+            } catch (err) {
+                console.error('Revalidation error:', err);
             }
         }
 

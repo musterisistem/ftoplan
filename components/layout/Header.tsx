@@ -5,10 +5,13 @@ import { Bell, Search, Menu, Zap, ChevronDown, MessageCircle, LogOut, Settings, 
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useNotifications } from '@/hooks/useNotifications';
-import NotificationDropdown from '@/components/notifications/NotificationDropdown';
-import UpgradeModal from '@/components/admin/UpgradeModal';
-import VerifyEmailModal from '@/components/admin/VerifyEmailModal';
+
+// Lazy Loaded Components
+const NotificationDropdown = dynamic(() => import('@/components/notifications/NotificationDropdown'), { ssr: false });
+const UpgradeModal = dynamic(() => import('@/components/admin/UpgradeModal'), { ssr: false });
+const VerifyEmailModal = dynamic(() => import('@/components/admin/VerifyEmailModal'), { ssr: false });
 
 export default function Header() {
     const { data: session } = useSession();
@@ -310,6 +313,7 @@ export default function Header() {
                                                 <Link
                                                     key={item.href}
                                                     href={item.href}
+                                                    prefetch={true}
                                                     onClick={() => setProfileOpen(false)}
                                                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-sm font-medium text-gray-700 hover:text-[#7B3FF2] transition-colors"
                                                 >

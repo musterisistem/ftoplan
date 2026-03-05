@@ -10,6 +10,7 @@ const navLinks = [
     { href: '/ozellikler', label: 'Özellikler' },
     { href: '/neden-biz', label: 'Neden Biz?' },
     { href: '/paketler', label: 'Paketler' },
+    { href: '/referanslar', label: 'Referanslarımız' },
     { href: '/iletisim', label: 'İletişim' },
 ];
 

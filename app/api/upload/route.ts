@@ -29,8 +29,14 @@ export async function POST(req: Request) {
         const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
         const filename = `${timestamp}-${cleanName}`;
 
-        // Centralized folder structure: images/{subfolder}/{filename}
-        const folder = `images/${subfolder}`;
+        // Centralized folder structure:
+        // If subfolder starts with 'app/', make it `app/{slug}/images`
+        // Otherwise default to `images/{subfolder}`
+        let folder = `images/${subfolder}`;
+        if (subfolder.startsWith('app/')) {
+            // e.g. "app/gullugil" -> "app/gullugil/images"
+            folder = `${subfolder}/images`;
+        }
 
         const url = await uploadToBunny(file, filename, folder);
 

@@ -61,21 +61,21 @@ export default function FeaturePage() {
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="text-center mb-20 max-w-3xl mx-auto"
+                    className="mb-20 w-full"
                 >
                     <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-purple-100 rounded-full text-[#5d2b72] text-[12px] font-black uppercase tracking-[0.15em] mb-8 shadow-sm">
                         <Zap className="w-3.5 h-3.5" /> Tüm Özellikler
                     </span>
                     <h1 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 leading-[1.05] tracking-tight">
-                        İş Akışınızı <br />
+                        İş Akışınızı{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5d2b72] via-purple-600 to-indigo-600">
                             Basitleştirin.
                         </span>
                     </h1>
-                    <p className="text-slate-500 text-lg leading-relaxed font-medium mb-10">
+                    <p className="text-slate-500 text-lg leading-relaxed font-medium mb-10 max-w-2xl">
                         Fotoğrafçılar için özel olarak tasarlanmış güçlü araçlarla stüdyonuzu profesyonelce yönetin.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <Link href="/packages" className="px-8 py-4 bg-[#5d2b72] text-white rounded-full font-black text-base shadow-[0_8px_30px_rgba(93,43,114,0.3)] hover:scale-105 transition-all inline-flex items-center gap-2">
                             Ücretsiz Başla <ArrowRight className="w-5 h-5" />
                         </Link>

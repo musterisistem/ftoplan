@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { User, LogOut } from 'lucide-react';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 import CustomerLoginModal from './CustomerLoginModal';
@@ -16,6 +18,18 @@ export default function StudioTopNav({ studioName, logo, theme = 'warm', slug }:
     const { customer, isLoading, logout } = useCustomerAuth();
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const pathname = usePathname();
+
+    const navItems = [
+        { label: 'Ana Sayfa', href: `/studio/${slug}` },
+        ...(customer
+            ? [{ label: 'Panelim', href: `/studio/${slug}/selection` }]
+            : [{ label: 'Hakkımızda', href: `/studio/${slug}/about` }]
+        ),
+        { label: 'Galeri', href: `/studio/${slug}/gallery` },
+        { label: 'Paketler', href: `/studio/${slug}/packages` },
+        { label: 'İletişim', href: `/studio/${slug}/contact` },
+    ];
 
     useEffect(() => {
         const handleScroll = () => {
@@ -74,12 +88,29 @@ export default function StudioTopNav({ studioName, logo, theme = 'warm', slug }:
                     )}
                 </div>
 
-                {isLoading ? (
-                    <div className={`${buttonBaseClass} ${loginBtnClass} opacity-50 cursor-wait`}>
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs font-bold tracking-widest uppercase hidden md:inline">Yükleniyor...</span>
-                    </div>
-                ) : customer ? (
+                {/* Desktop Menu - Hidden on mobile */}
+                <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+                    {navItems.map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`text-sm font-bold tracking-widest uppercase transition-all duration-300 relative group
+                                    ${isActive ? textColorClass : (isPinkTheme ? 'text-white/70 hover:text-white' : 'text-white/60 hover:text-white')}
+                                `}
+                            >
+                                {item.label}
+                                {/* Active indicator */}
+                                <span className={`absolute -bottom-2 left-0 h-[2px] transition-all duration-300
+                                    ${isActive ? 'w-full bg-current opacity-100' : 'w-0 bg-current group-hover:w-full opacity-50'}
+                                `} />
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {customer ? (
                     <button
                         onClick={handleLogout}
                         className={`${buttonBaseClass} ${logoutBtnClass}`}

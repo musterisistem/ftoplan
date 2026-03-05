@@ -1,7 +1,7 @@
 'use client';
 
 import { X, Lock, ArrowRight, User, Loader2, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 
@@ -22,7 +22,14 @@ export default function CustomerLoginModal({ isOpen, onClose, logo, studioName, 
     const [success, setSuccess] = useState(false);
 
     const router = useRouter();
-    const { login } = useCustomerAuth();
+    const { login, verifySession } = useCustomerAuth();
+
+    // Popup açılınca oturum kontrolü yap (sayfa açılışında değil!)
+    useEffect(() => {
+        if (isOpen) {
+            verifySession();
+        }
+    }, [isOpen]);
 
     // Theme Logic
     const isPink = theme === 'light';

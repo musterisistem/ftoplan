@@ -1,5 +1,4 @@
 'use client';
-import { MessageCircle } from 'lucide-react';
 
 interface WhatsAppButtonProps {
     phoneNumber: string;
@@ -8,13 +7,44 @@ interface WhatsAppButtonProps {
 export default function WhatsAppButton({ phoneNumber }: WhatsAppButtonProps) {
     if (!phoneNumber) return null;
 
-    // Format number: remove all non-digits
-    const formattedNumber = phoneNumber.replace(/\D/g, '');
-    const whatsappUrl = `https://wa.me/${formattedNumber}`;
+    // Sadece rakamları al
+    let digits = phoneNumber.replace(/\D/g, '');
+
+    // Türkiye numarası: başta 0 varsa kaldır, 90 ekle
+    // Örnek: 05321234567 → 905321234567
+    if (digits.startsWith('0')) {
+        digits = '90' + digits.slice(1);
+    }
+    // Eğer 90 ile başlamıyorsa (örn: 5321234567) 90 ekle
+    else if (!digits.startsWith('90')) {
+        digits = '90' + digits;
+    }
+
+    // wa.me linki — hem web hem mobil tarayıcıda çalışır
+    const waUrl = `https://wa.me/${digits}`;
+    // whatsapp:// deep link — native mobil app açar
+    const deepLink = `whatsapp://send?phone=${digits}`;
+
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        // Mobil uygulamalarda deep link önce denenir
+        if (typeof window !== 'undefined') {
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobile) {
+                e.preventDefault();
+                // Deep link ile WhatsApp'ı direkt aç
+                window.location.href = deepLink;
+                // 1.5 saniye sonra WhatsApp açılmadıysa wa.me'ye yönlendir
+                setTimeout(() => {
+                    window.location.href = waUrl;
+                }, 1500);
+            }
+        }
+    };
 
     return (
         <a
-            href={whatsappUrl}
+            href={waUrl}
+            onClick={handleClick}
             target="_blank"
             rel="noopener noreferrer"
             className="fixed bottom-32 right-6 z-50 w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300 group"
@@ -23,7 +53,7 @@ export default function WhatsAppButton({ phoneNumber }: WhatsAppButtonProps) {
             {/* Pulse animation */}
             <span className="absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75 animate-ping"></span>
 
-            {/* Icon */}
+            {/* WhatsApp SVG Icon */}
             <svg
                 viewBox="0 0 24 24"
                 className="relative w-8 h-8 fill-white"

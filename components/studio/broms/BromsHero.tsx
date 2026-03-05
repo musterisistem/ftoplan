@@ -22,7 +22,7 @@ export default function BromsHero({ studioName, bannerImage, primaryColor, slide
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Format slider images
-    const defaultDemoImages = Array.from({ length: 15 }, (_, i) => `/demo/images/images/demof (${i + 1}).png`);
+    const defaultDemoImages = Array.from({ length: 8 }, (_, i) => `https://fotoplan.b-cdn.net/demo/d-${i + 1}.jpg`);
 
     const images = sliderImages && sliderImages.length > 0
         ? sliderImages.map(img => img.url).slice(0, 5)

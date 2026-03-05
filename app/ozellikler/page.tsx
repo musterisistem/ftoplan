@@ -36,17 +36,17 @@ export default function OzelliklerPage() {
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
                     {/* Hero */}
-                    <div className="text-center mb-20 max-w-3xl mx-auto">
+                    <div className="mb-20 w-full">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-purple-100 rounded-full text-[#5d2b72] text-[12px] font-black uppercase tracking-[0.15em] mb-8 shadow-sm">
                             <Zap className="w-3.5 h-3.5" /> Tüm Özellikler
                         </div>
                         <h1 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 leading-[1.05] tracking-tight">
-                            Fotoğrafçının İhtiyacı Olan<br />
+                            Fotoğrafçının İhtiyacı Olan{' '}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5d2b72] via-purple-600 to-indigo-600">
                                 Her Şey Tek Yerde
                             </span>
                         </h1>
-                        <p className="text-slate-500 text-lg leading-relaxed font-medium">
+                        <p className="text-slate-500 text-lg leading-relaxed font-medium max-w-2xl">
                             Randevudan teslimatına, ödemeden sözleşmeye — tüm süreçler dijital,
                             otomatik ve organize.
                         </p>

@@ -15,31 +15,29 @@ interface CustomerAuthContextType {
     isLoading: boolean;
     login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => Promise<void>;
+    verifySession: () => Promise<void>;
 }
 
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
 
 export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     const [customer, setCustomer] = useState<CustomerUser | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false); // false ile başla — sayfa açılışını bloklamasın
 
-    // Verify session on mount
-    useEffect(() => {
-        verifySession();
-    }, []);
+    // Sayfa açılışında otomatik API çağrısı YOK.
+    // verifySession sadece login popup'ı açıldığında çağrılır.
 
     const verifySession = async () => {
+        setIsLoading(true);
         try {
             const res = await fetch('/api/auth/customer/verify');
-
             if (res.ok) {
                 const data = await res.json();
                 setCustomer(data.customer);
             } else {
                 setCustomer(null);
             }
-        } catch (error) {
-            console.error('Session verification failed:', error);
+        } catch {
             setCustomer(null);
         } finally {
             setIsLoading(false);
@@ -78,7 +76,7 @@ export function CustomerAuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <CustomerAuthContext.Provider value={{ customer, isLoading, login, logout }}>
+        <CustomerAuthContext.Provider value={{ customer, isLoading, login, logout, verifySession }}>
             {children}
         </CustomerAuthContext.Provider>
     );

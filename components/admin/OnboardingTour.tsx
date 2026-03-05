@@ -29,10 +29,11 @@ export default function OnboardingTour() {
             const timer = setTimeout(() => {
                 const driverObj = driver({
                     showProgress: true,
-                    allowClose: false, // Force them to go through it or use the Close button
+                    allowClose: true, // Kullanici disari tiklayarak siyah golgeyi kapatabilsin
                     doneBtnText: 'Bitir & Başla',
                     nextBtnText: 'İleri ➔',
                     prevBtnText: '⬅ Geri',
+                    showButtons: ['next', 'previous', 'close'],
                     overlayColor: 'rgba(15, 23, 42, 0.85)', // Darker, more premium overlay
                     popoverClass: 'driverjs-theme-premium', // Custom class for external CSS if needed
                     steps: [

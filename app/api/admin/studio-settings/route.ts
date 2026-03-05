@@ -80,12 +80,19 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
         }
 
-        // Revalidate the studio site path to show changes immediately
+        // Kaydetme sonrası müşteri sitesini ANINDA güncelle
         if (user.slug) {
             try {
-                console.log('Revalidating studio path:', `/studio/${user.slug}`);
-                revalidatePath(`/studio/${user.slug}`, 'layout');
-                revalidatePath(`/studio/${user.slug}`, 'page');
+                const studioBase = `/studio/${user.slug}`;
+                // Ana layout + page
+                revalidatePath(studioBase, 'layout');
+                revalidatePath(studioBase, 'page');
+                // Tüm alt sayfalar
+                revalidatePath(`${studioBase}/gallery`, 'page');
+                revalidatePath(`${studioBase}/packages`, 'page');
+                revalidatePath(`${studioBase}/about`, 'page');
+                revalidatePath(`${studioBase}/contact`, 'page');
+                revalidatePath(`${studioBase}/selection`, 'page');
             } catch (err) {
                 console.error('Revalidation error:', err);
             }

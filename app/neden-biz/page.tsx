@@ -134,7 +134,7 @@ export default function NedenBizPage() {
             </div>
 
             {/* Hero */}
-            <section className="pt-40 pb-20 px-6 text-center">
+            <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -144,12 +144,12 @@ export default function NedenBizPage() {
                         <Award className="w-3.5 h-3.5" /> Neden Biz?
                     </span>
                     <h1 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 leading-[1.05] tracking-tight">
-                        Sıradan Bir Takvim<br />
+                        Sıradan Bir Takvim{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5d2b72] to-purple-600">
                             Uygulaması Değiliz.
                         </span>
                     </h1>
-                    <p className="text-slate-500 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
+                    <p className="text-slate-500 max-w-2xl text-lg leading-relaxed font-medium">
                         Yüzlerce stüdyo sahibi ile konuştuk, her birinin aynı sorunları
                         yaşadığını gördük. Çözümü sadece fotoğrafçılar için tasarladık.
                     </p>

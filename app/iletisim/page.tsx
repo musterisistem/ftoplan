@@ -63,7 +63,7 @@ export default function IletisimPage() {
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                 >
                     {/* Hero */}
-                    <div className="text-center mb-16 max-w-3xl mx-auto">
+                    <div className="mb-16 w-full">
                         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-purple-100 rounded-full text-[#5d2b72] text-[12px] font-black uppercase tracking-[0.15em] mb-8 shadow-sm">
                             <Mail className="w-3.5 h-3.5" /> İletişim
                         </div>
@@ -73,7 +73,7 @@ export default function IletisimPage() {
                                 Ulaşın
                             </span>
                         </h1>
-                        <p className="text-slate-500 text-lg leading-relaxed font-medium">
+                        <p className="text-slate-500 text-lg leading-relaxed font-medium max-w-2xl">
                             Sorularınız, önerileriniz veya teknik destek talepleriniz için buradayız.
                             En kısa sürede geri döneceğiz.
                         </p>

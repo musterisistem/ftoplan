@@ -28,10 +28,10 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
     const sliderImages = photographer.portfolioPhotos && photographer.portfolioPhotos.length > 0
         ? photographer.portfolioPhotos.slice(0, 8).map(p => p.url)
         : [
-            'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?auto=format&fit=crop&w=1920&q=80',
-            'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1920&q=80',
-            'https://images.unsplash.com/photo-1522673607200-1645062cd958?auto=format&fit=crop&w=1920&q=80',
-            'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1920&q=80',
+            'https://fotoplan.b-cdn.net/demo/d-1.jpg',
+            'https://fotoplan.b-cdn.net/demo/d-2.jpg',
+            'https://fotoplan.b-cdn.net/demo/d-3.jpg',
+            'https://fotoplan.b-cdn.net/demo/d-4.jpg',
         ];
 
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -45,10 +45,10 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
     }, [sliderImages.length]);
 
     const services = [
-        { title: 'Düğün Hikayesi', image: 'https://images.unsplash.com/photo-1511285560982-1351cdeb9821?auto=format&fit=crop&q=80', description: 'En özel anlarınızın masalsı hikayesi.' },
-        { title: 'Dış Çekim', image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80', description: 'Doğanın içinde aşkınızın yansıması.' },
-        { title: 'Nişan & Söz', image: 'https://images.unsplash.com/photo-1522673607200-1645062cd958?auto=format&fit=crop&q=80', description: 'İlk adımınızda yanınızdayız.' },
-        { title: 'Save The Date', image: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80', description: 'Tarihinizi estetikle kaydedin.' },
+        { title: 'Düğün Hikayesi', image: 'https://fotoplan.b-cdn.net/demo/d-5.jpg', description: 'En özel anlarınızın masalsı hikayesi.' },
+        { title: 'Dış Çekim', image: 'https://fotoplan.b-cdn.net/demo/d-6.jpg', description: 'Doğanın içinde aşkınızın yansıması.' },
+        { title: 'Nişan & Söz', image: 'https://fotoplan.b-cdn.net/demo/d-7.jpg', description: 'İlk adımınızda yanınızdayız.' },
+        { title: 'Save The Date', image: 'https://fotoplan.b-cdn.net/demo/d-8.jpg', description: 'Tarihinizi estetikle kaydedin.' },
     ];
 
     const scrollToSection = (id: string) => {
@@ -73,7 +73,13 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
                             backgroundPosition: 'center',
                             transitionDuration: '1500ms',
                         }}
-                    />
+                    >
+                        {/* Preload the first slide's image */}
+                        {i === 0 && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={img} alt="" fetchPriority="high" loading="eager" className="hidden" />
+                        )}
+                    </div>
                 ))}
                 {/* Dark overlay */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
@@ -151,6 +157,7 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
                                 <img
                                     src={service.image}
                                     alt={service.title}
+                                    loading="lazy"
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">

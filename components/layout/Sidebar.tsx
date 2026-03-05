@@ -294,6 +294,7 @@ export default function Sidebar() {
                                                 <Link
                                                     id={item.name === 'Müşteriler' ? 'tour-sidebar-customers' : item.name === 'Çekim Paketleri' ? 'tour-sidebar-packages' : item.name === 'Panel Ayarları' ? 'tour-sidebar-settings' : undefined}
                                                     href={item.href}
+                                                    prefetch={true}
                                                     onClick={() => setMobileMenuOpen(false)}
                                                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 group relative text-left overflow-hidden ${isActive ? 'bg-gradient-to-r from-[#7A70BA]/10 to-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'hover:bg-white/5 hover:shadow-sm'}`}
                                                 >
@@ -325,16 +326,16 @@ export default function Sidebar() {
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-1.5">
                                 <div className={`w-1.5 h-1.5 rounded-full ${session?.user?.packageType === 'kurumsal'
-                                        ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
-                                        : session?.user?.packageType === 'trial'
-                                            ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]'
-                                            : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
+                                    ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                                    : session?.user?.packageType === 'trial'
+                                        ? 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]'
+                                        : 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]'
                                     }`}></div>
                                 <span className={`text-[10px] font-bold tracking-[0.15em] uppercase ${session?.user?.packageType === 'kurumsal'
-                                        ? 'text-amber-400'
-                                        : session?.user?.packageType === 'trial'
-                                            ? 'text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]'
-                                            : 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'
+                                    ? 'text-amber-400'
+                                    : session?.user?.packageType === 'trial'
+                                        ? 'text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.5)]'
+                                        : 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.5)]'
                                     }`}>
                                     {session?.user?.packageType === 'kurumsal' ? 'KURUMSAL' : session?.user?.packageType === 'trial' ? 'DENEME' : 'STANDART'}
                                 </span>

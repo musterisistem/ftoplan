@@ -128,4 +128,16 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
   }
+
+  /* Driver.js Z-Index Fix */
+  .driver-active-element {
+    position: relative !important;
+    z-index: 999999 !important;
+    /* Standart 100000 olan overlay'in uzerine cikmasi icin */
+    background-color: inherit;
+  }
+
+  .driver-popover {
+    z-index: 1000000 !important;
+  }
 }

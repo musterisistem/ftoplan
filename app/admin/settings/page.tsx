@@ -1,13 +1,14 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
     Save, Globe, Palette, Phone, Instagram, MessageCircle,
     Image as ImageIcon, X, Plus, Eye, User, Mail, Building,
-    Facebook, ExternalLink
+    Facebook, ExternalLink, Upload, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import imageCompression from 'browser-image-compression';
 
 interface StudioSettings {
     // Profile
@@ -51,6 +52,8 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState('');
     const [error, setError] = useState('');
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchSettings();
@@ -111,13 +114,65 @@ export default function SettingsPage() {
         }
     };
 
-    const addPortfolioPhoto = () => {
-        const url = prompt('Fotoğraf URL\'si girin:');
-        if (url) {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setUploadingImage(true);
+        setError('');
+
+        try {
+            const newPhotos = [...settings.portfolioPhotos];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // İstemci tarafında optimize et (~700kb, max 1920px)
+                const options = {
+                    maxSizeMB: 0.7,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true
+                };
+
+                const compressedFile = await imageCompression(file, options);
+                console.log(`Original: ${file.size / 1024 / 1024} MB, Compressed: ${compressedFile.size / 1024 / 1024} MB`);
+
+                // Sunucuya gönder (CDN'e yüklenmesi için)
+                const formData = new FormData();
+                formData.append('file', compressedFile, file.name);
+                // Fotografi gonderecegimiz alt klasor: app/{slug}
+                if (settings.slug) {
+                    formData.append('folder', `app/${settings.slug}`);
+                }
+
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    newPhotos.push({ url: data.url, title: '' });
+                } else {
+                    console.error('Fotoğraf yüklenemedi:', file.name);
+                }
+            }
+
             setSettings({
                 ...settings,
-                portfolioPhotos: [...settings.portfolioPhotos, { url, title: '' }]
+                portfolioPhotos: newPhotos
             });
+            setSuccess('Fotoğraflar başarıyla galeriye eklendi. Değişiklikleri uygulamak için "Kaydet" butonuna tıklayınız.');
+            setTimeout(() => setSuccess(''), 5000);
+
+        } catch (error) {
+            console.error('Yükleme hatası:', error);
+            setError('Fotoğraflar yüklenirken bir hata oluştu');
+        } finally {
+            setUploadingImage(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
     };
 
@@ -485,15 +540,24 @@ export default function SettingsPage() {
                                 <ImageIcon className="w-5 h-5 text-blue-600" />
                                 Portfolyo Fotoğrafları
                             </h2>
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                            />
                             <button
-                                onClick={addPortfolioPhoto}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingImage}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-purple-600 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50"
                             >
-                                <Plus className="w-4 h-4" />
-                                Ekle
+                                {uploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                {uploadingImage ? 'Yükleniyor...' : 'Fotoğraf Yükle'}
                             </button>
                         </div>
-                        <p className="text-sm text-gray-500">Müşteri sitenizin ana sayfasında görüntülenecek</p>
+                        <p className="text-sm text-gray-500">Müşteri sitenizin ana sayfasında görüntülenecek (Fotoğraflar otomatik 500-700kb olarak web hızında sıkıştırılır).</p>
 
                         {settings.portfolioPhotos.length > 0 ? (
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -518,10 +582,11 @@ export default function SettingsPage() {
                                 <ImageIcon className="w-10 h-10 mx-auto text-gray-300 mb-2" />
                                 <p className="text-gray-400">Henüz portfolyo fotoğrafı eklenmemiş</p>
                                 <button
-                                    onClick={addPortfolioPhoto}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingImage}
                                     className="mt-3 text-sm text-purple-600 hover:underline"
                                 >
-                                    İlk fotoğrafı ekle
+                                    İlk fotoğrafı yükle
                                 </button>
                             </div>
                         )}

@@ -416,17 +416,17 @@ function PackagesContent() {
             <main className="max-w-7xl mx-auto px-6 pt-32 pb-24 lg:pt-44 lg:pb-32">
                 {/* Hero */}
                 <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}
-                    className="text-center mb-14 max-w-2xl mx-auto">
+                    className="mb-14 w-full">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-purple-100 rounded-full text-[#5d2b72] text-[12px] font-black uppercase tracking-[0.15em] mb-8 shadow-sm">
                         <Zap className="w-3.5 h-3.5" /> Paket Seçin &amp; Hemen Başlayın
                     </div>
                     <h1 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 leading-[1.05] tracking-tight">
-                        Stüdyonuz İçin<br />
+                        Stüdyonuz İçin{' '}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5d2b72] to-purple-600">
                             En Doğru Plan
                         </span>
                     </h1>
-                    <p className="text-slate-500 max-w-2xl mx-auto text-lg leading-relaxed font-medium">
+                    <p className="text-slate-500 max-w-2xl text-lg leading-relaxed font-medium">
                         Bir plan seçin — sağda açılan formu doldurun — paneliniz anında hazır olsun.
                     </p>
                 </motion.div>
