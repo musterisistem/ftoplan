@@ -362,7 +362,7 @@ function PackagesContent() {
                     }
 
                     // Use exact price from database
-                    let finalPrice = Number(pkg.price) || 0;
+                    let finalPrice = Number(pkg.price?.toString().replace(/\./g, '')) || 0;
 
                     // Compute missing features by comparing against masterFeatures
                     const missingFeatures = masterFeatures.filter((f: string) => {
