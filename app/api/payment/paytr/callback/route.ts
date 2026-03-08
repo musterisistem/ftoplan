@@ -4,6 +4,7 @@ import { Order } from '@/models/Order';
 import User from '@/models/User';
 import Package from '@/models/Package';
 import { PayTRCheckout } from '@/lib/payment/paytr';
+import Coupon from '@/models/Coupon';
 
 export async function POST(req: Request) {
     try {
@@ -110,6 +111,19 @@ export async function POST(req: Request) {
                 order.status = 'completed';
                 order.completedAt = new Date();
                 await order.save();
+
+                // Increment Coupon Usage if applied
+                if (order.appliedCoupon) {
+                    try {
+                        await Coupon.findOneAndUpdate(
+                            { code: order.appliedCoupon },
+                            { $inc: { usedCount: 1 } }
+                        );
+                        console.log(`[PayTR Callback] Coupon ${order.appliedCoupon} usage incremented for upgrade.`);
+                    } catch (couponErr) {
+                        console.error('[PayTR Callback] Failed to increment coupon usage:', couponErr);
+                    }
+                }
             } else {
                 console.error(`[PayTR Callback] User ${order.userId} not found for upgrade.`);
             }
@@ -210,6 +224,19 @@ export async function POST(req: Request) {
             });
         } catch (emailErr) {
             console.error('[PayTR Callback] Failed to send welcome/verification email:', emailErr);
+        }
+
+        // Increment Coupon Usage if applied
+        if (order.appliedCoupon) {
+            try {
+                await Coupon.findOneAndUpdate(
+                    { code: order.appliedCoupon },
+                    { $inc: { usedCount: 1 } }
+                );
+                console.log(`[PayTR Callback] Coupon ${order.appliedCoupon} usage incremented for new purchase.`);
+            } catch (couponErr) {
+                console.error('[PayTR Callback] Failed to increment coupon usage:', couponErr);
+            }
         }
 
         console.log(`[PayTR Callback] ✅ User created successfully: ${draftUser.email}`);

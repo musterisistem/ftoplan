@@ -26,6 +26,13 @@ function CheckoutContent() {
     const [success, setSuccess] = useState(false);
     const [paytrToken, setPaytrToken] = useState<string | null>(null);
 
+    // Coupon states
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
+    const [couponError, setCouponError] = useState('');
+    const [couponSuccess, setCouponSuccess] = useState('');
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
+
     useEffect(() => {
         if (!orderNo) {
             router.push('/packages');
@@ -56,6 +63,48 @@ function CheckoutContent() {
         fetchOrder();
     }, [orderNo, router]);
 
+    // Calculate discounted amount
+    const originalAmount = selectedPackage?.amount || 0;
+    const discountAmount = appliedDiscount > 0 ? (originalAmount * appliedDiscount) / 100 : 0;
+    const finalAmount = originalAmount - discountAmount;
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setApplyingCoupon(true);
+        setCouponError('');
+        setCouponSuccess('');
+
+        try {
+            const res = await fetch('/api/checkout/validate-coupon', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCode }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setAppliedDiscount(data.discountPercentage);
+                setCouponSuccess(`%${data.discountPercentage} indirim uygulandı!`);
+            } else {
+                setCouponError(data.error || 'Geçersiz kupon kodu.');
+                setAppliedDiscount(0);
+            }
+        } catch (err) {
+            setCouponError('Kupon doğrulanırken hata oluştu.');
+            setAppliedDiscount(0);
+        } finally {
+            setApplyingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setCouponCode('');
+        setAppliedDiscount(0);
+        setCouponError('');
+        setCouponSuccess('');
+    };
+
     const handlePayment = async () => {
         if (!selectedPackage) return;
         setLoading(true);
@@ -65,7 +114,10 @@ function CheckoutContent() {
             const res = await fetch('/api/payment/paytr/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderNo: selectedPackage.orderNo }),
+                body: JSON.stringify({
+                    orderNo: selectedPackage.orderNo,
+                    appliedCoupon: appliedDiscount > 0 ? couponCode : undefined
+                }),
             });
 
             const data = await res.json();
@@ -178,7 +230,7 @@ function CheckoutContent() {
                                             {loading ? (
                                                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                             ) : (
-                                                <><Lock className="w-5 h-5" /> PayTR ile Güvenli Öde: {selectedPackage?.price}</>
+                                                <><Lock className="w-5 h-5" /> PayTR ile Güvenli Öde: ₺{finalAmount.toLocaleString('tr-TR')}</>
                                             )}
                                         </button>
 
@@ -215,11 +267,60 @@ function CheckoutContent() {
                                 </div>
 
                                 <div className="py-6">
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-gray-400">Toplam Tutar</span>
-                                        <span className="text-3xl font-extrabold text-white">{selectedPackage?.price}</span>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="text-gray-400">Ara Toplam</span>
+                                        <span className={`text-xl font-bold ${appliedDiscount > 0 ? 'text-gray-500 line-through' : 'text-white'}`}>
+                                            {selectedPackage?.price}
+                                        </span>
+                                    </div>
+
+                                    {appliedDiscount > 0 && (
+                                        <div className="flex justify-between items-end mb-4 animate-in fade-in">
+                                            <span className="text-emerald-400">İndirim (%{appliedDiscount})</span>
+                                            <span className="text-lg font-bold text-emerald-400">-₺{discountAmount.toLocaleString('tr-TR')}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-end pt-4 border-t border-gray-800">
+                                        <span className="text-gray-400">Ödenecek Tutar</span>
+                                        <span className="text-4xl font-extrabold text-[#9b51e0]">₺{finalAmount.toLocaleString('tr-TR')}</span>
                                     </div>
                                     <p className="text-right text-xs text-gray-500 mt-1">KDV Dahildir</p>
+                                </div>
+
+                                {/* Coupon Code Section */}
+                                <div className="mt-2 space-y-3 pb-4">
+                                    <span className="text-sm font-medium text-gray-300 block mb-2">İndirim Kuponu</span>
+                                    {appliedDiscount > 0 ? (
+                                        <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                                            <span className="text-emerald-400 font-medium flex items-center gap-2 text-sm uppercase">
+                                                <CheckCircle className="w-4 h-4" /> {couponCode}
+                                            </span>
+                                            <button onClick={handleRemoveCoupon} className="text-gray-400 hover:text-red-400 text-xs font-bold transition-colors">
+                                                İPTAL
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2 relative">
+                                            <input
+                                                type="text"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                placeholder="Kupon Kodu"
+                                                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white uppercase placeholder:normal-case placeholder:text-gray-500 text-sm focus:ring-1 focus:ring-purple-500 focus:outline-none"
+                                            />
+                                            <button
+                                                onClick={handleApplyCoupon}
+                                                disabled={applyingCoupon || !couponCode.trim()}
+                                                className="absolute right-1 top-1 bottom-1 px-4 bg-gray-700 hover:bg-gray-600 text-white font-medium text-xs rounded-lg transition-colors disabled:opacity-50"
+                                            >
+                                                {applyingCoupon ? 'Deneniyor...' : 'Uygula'}
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {couponError && <p className="text-red-400 text-xs font-medium pl-1">{couponError}</p>}
+                                    {couponSuccess && <p className="text-emerald-400 text-xs font-medium pl-1">{couponSuccess}</p>}
                                 </div>
 
                                 <div className="mt-4 bg-gray-800/50 rounded-xl p-4 text-sm text-gray-400">

@@ -103,7 +103,7 @@ export default function CustomersPage() {
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-zinc-50/50 rounded-[2rem] border border-zinc-200/60 shadow-sm flex flex-col overflow-hidden">
+            <div className="bg-zinc-50/50 rounded-[2rem] border border-zinc-200/60 shadow-sm flex flex-col overflow-hidden pb-16 md:pb-0">
 
                 {/* Toolbar */}
                 <div className="p-5 border-b border-zinc-200/60 bg-white/50 flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -170,7 +170,7 @@ export default function CustomersPage() {
                         {filteredCustomers.map((customer) => (
                             <div
                                 key={customer._id}
-                                className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-md transition-all duration-300 items-center rounded-full group cursor-default"
+                                className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 md:px-6 md:py-4 bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-md transition-all duration-300 items-start md:items-center rounded-3xl md:rounded-full group cursor-default"
                             >
                                 {/* Customer Info */}
                                 <div className="col-span-1 md:col-span-4 flex items-center gap-4">
@@ -212,7 +212,7 @@ export default function CustomersPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="col-span-1 md:col-span-3 flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <div className="col-span-1 md:col-span-3 flex flex-wrap md:flex-nowrap items-center justify-start md:justify-end gap-2 mt-2 md:mt-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                     <Link
                                         href={`/admin/customers/${customer._id}/manage`}
                                         className="px-4 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-white rounded-full text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"

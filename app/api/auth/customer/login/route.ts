@@ -96,7 +96,8 @@ export async function POST(req: NextRequest) {
             maxAge: 60 * 60 * 24 * 7, // 7 days
         });
 
-        return NextResponse.json({
+        // Use response for setting cookie directly as fallback
+        const response = NextResponse.json({
             success: true,
             customer: {
                 id: customer._id.toString(),
@@ -105,6 +106,16 @@ export async function POST(req: NextRequest) {
                 username: customer.plainUsername,
             }
         });
+
+        response.cookies.set('customer-session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+        });
+
+        return response;
 
     } catch (error) {
         console.error('Customer login error:', error);

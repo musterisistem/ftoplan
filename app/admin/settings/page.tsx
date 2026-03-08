@@ -55,6 +55,9 @@ export default function SettingsPage() {
     const [uploadingImage, setUploadingImage] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Demo hesap kısıtlaması
+    const isDemo = session?.user?.email === 'demo@weey.net';
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -89,6 +92,12 @@ export default function SettingsPage() {
     };
 
     const handleSave = async () => {
+        // Demo hesabında kaydetme engeli
+        if (isDemo) {
+            setError('Demo hesapta ayar değişikliği yapılamaz.');
+            setTimeout(() => setError(''), 3000);
+            return;
+        }
         setSaving(true);
         setError('');
         setSuccess('');

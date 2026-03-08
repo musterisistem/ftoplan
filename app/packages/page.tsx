@@ -361,11 +361,8 @@ function PackagesContent() {
                         finalFeatures = [...stdFeatures, '---', ...filtered];
                     }
 
-                    // Fix for small decimal parsed prices (i.e. '11.999' from db text input)
+                    // Use exact price from database
                     let finalPrice = Number(pkg.price) || 0;
-                    if (finalPrice > 0 && finalPrice < 100) {
-                        finalPrice = Math.round(finalPrice * 1000);
-                    }
 
                     // Compute missing features by comparing against masterFeatures
                     const missingFeatures = masterFeatures.filter((f: string) => {

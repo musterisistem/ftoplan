@@ -110,7 +110,7 @@ export default function Header() {
             <header className="h-20 bg-[#F3F6FD] flex items-center justify-between px-8 sticky top-0 z-30 shadow-md">
                 {/* Left Side: Search Bar & Greeting */}
                 <div className="flex-1 flex items-center gap-6 max-w-3xl">
-                    <div className="relative group w-full max-w-md" ref={searchRef}>
+                    <div className="relative group w-full max-w-md hidden md:block" ref={searchRef}>
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <Search className="h-5 w-5 text-gray-400 group-focus-within:text-[#ff4081] transition-colors" />
                         </div>
@@ -221,14 +221,14 @@ export default function Header() {
                         href="https://wa.me/905517071494"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-gray-500 hover:text-green-500 transition-colors font-semibold text-sm flex items-center gap-1.5"
+                        className="hidden md:flex text-gray-500 hover:text-green-500 transition-colors font-semibold text-sm items-center gap-1.5"
                     >
                         <MessageCircle className="w-5 h-5 text-green-500" />
                         Destek
                     </a>
 
                     {/* Notifications */}
-                    <div className="relative">
+                    <div className="relative hidden md:block">
                         <button
                             onClick={() => setNotificationOpen(!notificationOpen)}
                             className="p-2 text-gray-500 hover:text-[#ff4081] transition-colors relative"
@@ -263,8 +263,14 @@ export default function Header() {
                                 <p className="text-sm font-semibold text-gray-800">Merhaba: {session?.user?.studioName || session?.user?.name || 'Studio'}</p>
                                 <p className="text-xs text-gray-500">{session?.user?.packageType === 'kurumsal' ? 'Kurumsal Paket' : session?.user?.packageType === 'standart' ? 'Standart Paket' : session?.user?.role === 'superadmin' ? 'Super Admin' : 'Deneme Paketi'}</p>
                             </div>
-                            <div className="h-10 w-10 rounded-full bg-indigo-50 border border-indigo-100 shadow-sm flex items-center justify-center text-[#7B3FF2] font-bold">
+                            <div className="relative h-10 w-10 rounded-full bg-indigo-50 border border-indigo-100 shadow-sm flex items-center justify-center text-[#7B3FF2] font-bold">
                                 {session?.user?.studioName?.charAt(0) || session?.user?.name?.charAt(0) || 'A'}
+                                {/* Mobile Notification Badge */}
+                                {unreadCount > 0 && (
+                                    <span className="md:hidden absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#ff4081] text-[10px] font-bold text-white shadow-sm border border-white">
+                                        !
+                                    </span>
+                                )}
                             </div>
                             <ChevronDown className="w-4 h-4 text-gray-400" />
                         </button>
@@ -325,7 +331,7 @@ export default function Header() {
 
                                     <div className="border-t border-gray-50 mt-2 pt-2 px-2">
                                         <button
-                                            onClick={() => signOut({ callbackUrl: '/login' })}
+                                            onClick={() => signOut({ callbackUrl: window.innerWidth < 768 ? '/panel' : '/login' })}
                                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-50 text-sm font-bold text-red-600 transition-colors"
                                         >
                                             <LogOut className="w-[18px] h-[18px]" /> Çıkış Yap

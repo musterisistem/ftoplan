@@ -199,19 +199,17 @@ export default function AppointmentsCalendarPage() {
                             </div>
                         </div>
 
-                        {/* Days Header */}
                         <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/30">
                             {dayNames.map(day => (
-                                <div key={day} className="py-3 text-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <div key={day} className="py-2 md:py-3 text-center text-[9px] md:text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">
                                     {day}
                                 </div>
                             ))}
                         </div>
 
-                        {/* Calendar Grid */}
                         <div className="grid grid-cols-7 flex-1 overflow-auto bg-slate-100/50 gap-px">
                             {calendarDays.map((date, index) => {
-                                if (!date) return <div key={index} className="bg-slate-50/50 min-h-[120px]" />;
+                                if (!date) return <div key={index} className="bg-slate-50/50 min-h-[60px] md:min-h-[120px]" />;
 
                                 const dayAppointments = getAppointmentsForDate(date);
                                 const isTodayDate = isToday(date);
@@ -219,12 +217,13 @@ export default function AppointmentsCalendarPage() {
                                 return (
                                     <div
                                         key={index}
-                                        className={`p-2 min-h-[120px] transition-colors relative group bg-white
+                                        onClick={() => setSelectedDay(date)}
+                                        className={`p-1 md:p-2 min-h-[60px] md:min-h-[120px] transition-colors relative group bg-white cursor-pointer
                                             ${isTodayDate ? 'ring-2 ring-inset ring-indigo-500 z-10' : 'hover:bg-slate-50/80'}
                                         `}
                                     >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full ${isTodayDate ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30' : 'text-slate-700'}`}>
+                                        <div className="flex justify-between items-start mb-1 md:mb-2">
+                                            <span className={`text-[10px] md:text-sm font-semibold w-5 h-5 md:w-7 md:h-7 flex items-center justify-center rounded-full ${isTodayDate ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30' : 'text-slate-700'}`}>
                                                 {date.getDate()}
                                             </span>
                                             <Link href={`/admin/appointments/new?date=${getSafeDateString(date)}`} className="opacity-0 group-hover:opacity-100 text-indigo-500 hover:text-indigo-700 p-1 bg-indigo-50 rounded-md transition-all">
@@ -232,19 +231,21 @@ export default function AppointmentsCalendarPage() {
                                             </Link>
                                         </div>
 
-                                        <div className="space-y-1.5 mt-1">
+                                        <div className="space-y-1 mt-1">
                                             {dayAppointments.slice(0, 3).map(appt => (
                                                 <div
                                                     key={appt._id}
-                                                    onClick={() => setSelectedAppointment(appt)}
-                                                    className={`px-2 py-1.5 rounded-md text-[10px] font-semibold text-white cursor-pointer hover:brightness-110 truncate shadow-sm transition-all ${SHOOT_TYPE_COLORS[appt.type] || 'bg-slate-500'}`}
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedAppointment(appt); }}
+                                                    className={`px-1 md:px-2 py-0.5 md:py-1.5 rounded-sm md:rounded-md text-[8px] md:text-[10px] font-semibold text-white cursor-pointer hover:brightness-110 truncate shadow-sm transition-all ${SHOOT_TYPE_COLORS[appt.type] || 'bg-slate-500'}`}
+                                                    title={`${format(parseISO(appt.date), 'HH:mm')} ${getCustomerName(appt)}`}
                                                 >
-                                                    {format(parseISO(appt.date), 'HH:mm')} {getCustomerName(appt)}
+                                                    <span className="hidden md:inline">{format(parseISO(appt.date), 'HH:mm')} {getCustomerName(appt)}</span>
+                                                    <span className="md:hidden tracking-tighter">{format(parseISO(appt.date), 'HH:mm')}</span>
                                                 </div>
                                             ))}
                                             {dayAppointments.length > 3 && (
-                                                <button onClick={() => setSelectedDay(date)} className="w-full text-xs font-semibold text-indigo-600 text-left px-1 mt-1 hover:text-indigo-700 hover:underline">
-                                                    +{dayAppointments.length - 3} kayıt...
+                                                <button onClick={(e) => { e.stopPropagation(); setSelectedDay(date); }} className="w-full text-[9px] md:text-xs font-semibold text-indigo-600 text-left px-1 mt-1 hover:text-indigo-700 hover:underline">
+                                                    +{dayAppointments.length - 3}
                                                 </button>
                                             )}
                                         </div>
@@ -274,11 +275,11 @@ export default function AppointmentsCalendarPage() {
                         ) : (
                             <div className="space-y-4">
                                 {filteredAppointments.map(appt => (
-                                    <div key={appt._id} onClick={() => setSelectedAppointment(appt)} className="flex items-center p-3 md:p-4 rounded-full border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md transition-all duration-300 cursor-pointer group">
-                                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full ${SHOOT_TYPE_COLORS[appt.type]} flex items-center justify-center text-white font-bold text-sm shadow-sm ring-4 ring-zinc-50 ml-1`}>
+                                    <div key={appt._id} onClick={() => setSelectedAppointment(appt)} className="flex items-center p-3 md:p-4 rounded-3xl md:rounded-full border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-md transition-all duration-300 cursor-pointer group">
+                                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex-shrink-0 ${SHOOT_TYPE_COLORS[appt.type]} flex items-center justify-center text-white font-bold text-sm shadow-sm ring-4 ring-zinc-50 ml-1`}>
                                             {format(parseISO(appt.date), 'HH:mm')}
                                         </div>
-                                        <div className="ml-4 flex-1 min-w-0">
+                                        <div className="ml-3 md:ml-4 flex-1 min-w-0">
                                             <h4 className="font-bold text-zinc-900 text-base md:text-lg truncate group-hover:text-zinc-950 transition-colors">{getCustomerName(appt)}</h4>
                                             <div className="flex items-center gap-3 text-sm text-zinc-500 mt-1 md:mt-1.5">
                                                 <span className="font-bold text-[10px] md:text-xs text-zinc-600 bg-zinc-100 px-2.5 py-1 rounded-full uppercase tracking-wider">{SHOOT_TYPE_LABELS[appt.type]}</span>

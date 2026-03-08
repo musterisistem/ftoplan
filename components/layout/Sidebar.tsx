@@ -35,7 +35,8 @@ import {
     ExternalLink,
     Crown,
     Globe,
-    ShieldAlert
+    ShieldAlert,
+    Ticket
 } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
@@ -44,6 +45,7 @@ interface MenuItem {
     href: string;
     icon: any;
     badge?: string;
+    reqRole?: string;
 }
 
 interface MenuSection {
@@ -85,6 +87,7 @@ const menuSections: MenuSection[] = [
             { name: 'Panel Ayarları', href: '/admin/settings/panel', icon: Settings },
             { name: 'Engellenenler', href: '/admin/settings/blocked', icon: UserX },
             { name: 'Mail Şablonları', href: '/admin/settings/mail-templates', icon: FileCode },
+            { name: 'Kupon Yönetimi', href: '/superadmin/coupons', icon: Ticket, reqRole: 'superadmin' },
         ]
     },
     {
@@ -155,7 +158,7 @@ export default function Sidebar() {
         setLogoutMessage('Güvenli çıkış yapıldı.');
 
         await new Promise(r => setTimeout(r, 1000));
-        signOut({ callbackUrl: '/' });
+        signOut({ callbackUrl: window.innerWidth < 768 ? '/panel' : '/' });
     };
 
     const SidebarContent = () => (
@@ -235,6 +238,8 @@ export default function Sidebar() {
                             {/* Section Items */}
                             <div className={`space-y-0.5 transition-all duration-300 overflow-hidden ${isWebsiteSettings && !websiteSettingsOpen ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 block'}`}>
                                 {section.items.map((item) => {
+                                    if (item.reqRole && session?.user?.role !== item.reqRole) return null;
+
                                     // Locking Logic
                                     let isLocked = false;
                                     if (isWebsiteSettings && !isCorporate) {

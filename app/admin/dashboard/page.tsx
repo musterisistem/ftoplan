@@ -67,11 +67,11 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-slate-50 font-sans">
 
             {/* Main Content */}
-            <div className="p-8 space-y-8">
+            <div className="p-0 sm:p-4 md:p-8 space-y-6 md:space-y-8">
                 {/* Main Grid: Left (Slider + Metrics) and Right (Calendar) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                     {/* Left Column - Slider + Metrics (2 columns) */}
-                    <div className="lg:col-span-2 space-y-8">
+                    <div className="lg:col-span-2 space-y-6 md:space-y-8">
                         {/* Slider */}
                         <DashboardSlider />
 
@@ -79,9 +79,9 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
                             {/* Monthly Shoots Chart (Spans 4 columns on lg) */}
-                            <div className="sm:col-span-2 lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
+                            <div className="sm:col-span-2 lg:col-span-4 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors pointer-events-none"></div>
-                                <div className="flex items-center justify-between mb-6 relative z-10">
+                                <div className="flex items-center justify-between mb-4 sm:mb-6 relative z-10">
                                     <div>
                                         <h3 className="text-lg font-bold text-slate-800">Aylık Çekim Performansı</h3>
                                         <p className="text-sm text-slate-500 font-medium">Son 6 ayın istatistiği</p>
@@ -91,9 +91,9 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
 
-                                <div className="h-48 w-full mt-4 relative z-10">
+                                <div className="h-48 w-full mt-4 relative z-10" style={{ minHeight: 192 }}>
                                     {stats?.monthlyShootsChart?.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={192}>
                                             <ComposedChart data={stats.monthlyShootsChart} margin={{ top: 20, right: 10, left: -25, bottom: 0 }}>
                                                 <defs>
                                                     <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">

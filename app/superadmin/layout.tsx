@@ -19,13 +19,15 @@ import {
     MessageSquare,
     Presentation,
     Globe,
-    Star
+    Star,
+    Ticket
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 const menuItems = [
     { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
     { name: 'Fotoğrafçılar', href: '/superadmin/photographers', icon: Users },
+    { name: 'Müşteri Havuzu', href: '/superadmin/customers', icon: Users },
     { name: 'Dashboard Slaytları', href: '/superadmin/dashboard-slides', icon: Presentation },
     { name: 'Referanslar', href: '/superadmin/references', icon: Star },
     { name: 'Toplu Email', href: '/superadmin/communications/email', icon: Mail },
@@ -33,6 +35,7 @@ const menuItems = [
     { name: 'Paketler', href: '/superadmin/packages', icon: Package },
     { name: 'İletişim Yönetimi', href: '/superadmin/settings/contact', icon: Globe },
     { name: 'Mail Editörü', href: '/superadmin/mail-editor', icon: Mail },
+    { name: 'Kupon Yönetimi', href: '/superadmin/coupons', icon: Ticket },
     { name: 'Ayarlar', href: '/superadmin/settings', icon: Settings },
 ];
 

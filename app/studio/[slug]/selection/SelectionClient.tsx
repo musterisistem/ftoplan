@@ -32,8 +32,8 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
 
     // Get the photos being currently viewed (all or selected)
     const displayedPhotos = useMemo(() => {
-        return activeTab === 'all' 
-            ? photos 
+        return activeTab === 'all'
+            ? photos
             : photos.filter(p => selectedPhotos.find(s => s.url === p.url && s.type === activeCategory));
     }, [activeTab, photos, selectedPhotos, activeCategory]);
     const [popup, setPopup] = useState<{
@@ -92,14 +92,7 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
         poster: limits.poster - counts.poster,
     };
 
-    useEffect(() => {
-        if (!isLoading && !loggedInCustomer) {
-            const slug = window.location.pathname.split('/')[2];
-            if (slug && slug !== 'undefined') {
-                router.push(`/studio/${slug}`);
-            }
-        }
-    }, [isLoading, loggedInCustomer, router]);
+    // Redundant client-side redirect removed since SelectionPage server component handles authentication
 
     if (isLoading) {
         return (
@@ -112,7 +105,7 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
         );
     }
 
-    if (!loggedInCustomer) return null; // Redirect handles it
+    if (!customer) return null;
 
     const closePopup = () => setPopup(prev => ({ ...prev, isOpen: false }));
 
@@ -169,7 +162,7 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
 
             const zipContent = await zip.generateAsync({ type: "blob" });
             saveAs(zipContent, `album_fotograflari.zip`);
-            
+
             setPopup({
                 isOpen: true,
                 type: 'success',
@@ -319,11 +312,10 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                                 <button
                                     onClick={handleDownloadZip}
                                     disabled={isDownloadingZip}
-                                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all border shadow-sm ${
-                                        isPink 
-                                        ? 'bg-white border-pink-200 text-[#831843] hover:bg-pink-50 hover:border-pink-300' 
-                                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all border shadow-sm ${isPink
+                                            ? 'bg-white border-pink-200 text-[#831843] hover:bg-pink-50 hover:border-pink-300'
+                                            : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
                                     {isDownloadingZip ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
                                     <span>
@@ -377,22 +369,20 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                                     ))}
                                 </div>
                             </div>
-                            
+
                             {/* Fast Selection Toggle Button under image */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     toggleSelection(photo, activeCategory);
                                 }}
-                                className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all ${
-                                    isSelectedInActiveCat
+                                className={`w-full py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition-all ${isSelectedInActiveCat
                                         ? `bg-gradient-to-r ${currentCatConfig.gradient} text-white shadow-lg shadow-${currentCatConfig.color}-500/25`
                                         : (isPink ? 'bg-white border border-pink-100 text-[#831843]/70 hover:bg-pink-50' : 'bg-[#111] text-gray-400 border border-white/5 hover:bg-white/5 hover:text-white')
-                                }`}
+                                    }`}
                             >
-                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                    isSelectedInActiveCat ? 'border-white/30 bg-white/20' : (isPink ? 'border-pink-200' : 'border-gray-600')
-                                }`}>
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelectedInActiveCat ? 'border-white/30 bg-white/20' : (isPink ? 'border-pink-200' : 'border-gray-600')
+                                    }`}>
                                     {isSelectedInActiveCat && <Check className="w-3 h-3 text-white" />}
                                 </div>
                                 {isSelectedInActiveCat ? 'Seçildi' : 'Seç'}
@@ -567,29 +557,27 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                                 {(() => {
                                     const currentPhoto = displayedPhotos[lightboxIndex];
                                     const isSelectedInActiveCat = selectedPhotos.some(s => s.url === currentPhoto.url && s.type === activeCategory);
-                                    
+
                                     return (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 toggleSelection(currentPhoto, activeCategory);
                                             }}
-                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-[11px] md:text-sm uppercase tracking-widest transition-all whitespace-nowrap ${
-                                                isSelectedInActiveCat
+                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-[11px] md:text-sm uppercase tracking-widest transition-all whitespace-nowrap ${isSelectedInActiveCat
                                                     ? `bg-gradient-to-r ${currentCatConfig.gradient} text-white shadow-lg shadow-${currentCatConfig.color}-500/30`
                                                     : 'bg-white text-black hover:bg-gray-200'
-                                            }`}
+                                                }`}
                                         >
-                                            <div className={`w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                                isSelectedInActiveCat ? 'border-white/50 bg-white/20' : 'border-black/20'
-                                            }`}>
+                                            <div className={`w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelectedInActiveCat ? 'border-white/50 bg-white/20' : 'border-black/20'
+                                                }`}>
                                                 <Check className={`w-2.5 h-2.5 md:w-3 md:h-3 ${isSelectedInActiveCat ? 'text-white' : 'text-transparent'}`} />
                                             </div>
                                             {isSelectedInActiveCat ? `${currentCatConfig.label} SEÇİLDİ` : `${currentCatConfig.label} SEÇ`}
                                         </button>
                                     );
                                 })()}
-                                
+
                                 {customer.canDownload && (
                                     <button
                                         onClick={async (e) => {
@@ -597,12 +585,12 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                                             try {
                                                 const url = displayedPhotos[lightboxIndex].url;
                                                 const filename = displayedPhotos[lightboxIndex].filename || "foto-plan.jpg";
-                                                
+
                                                 // Fetch the file directly as a Blob to enforce download without opening new tab
                                                 const response = await fetch(url);
                                                 const blob = await response.blob();
                                                 saveAs(blob, filename);
-                                                
+
                                             } catch (error) {
                                                 console.error("Single file download failed", error);
                                             }

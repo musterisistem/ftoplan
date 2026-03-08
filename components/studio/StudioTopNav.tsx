@@ -15,7 +15,7 @@ interface StudioTopNavProps {
 }
 
 export default function StudioTopNav({ studioName, logo, theme = 'warm', slug }: StudioTopNavProps) {
-    const { customer, isLoading, logout } = useCustomerAuth();
+    const { customer, isLoading, logout, verifySession } = useCustomerAuth();
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const pathname = usePathname();
@@ -36,6 +36,14 @@ export default function StudioTopNav({ studioName, logo, theme = 'warm', slug }:
             setScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
+
+        // Auto-verify session on mount if we are on a protected page or generally to sync UI
+        // We only do this once to avoid infinite loops, but it ensures the TopNav knows the state
+        // even after a full page hard-reload (window.location.href)
+        if (!customer) {
+            verifySession();
+        }
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 

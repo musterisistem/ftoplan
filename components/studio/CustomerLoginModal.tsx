@@ -26,10 +26,11 @@ export default function CustomerLoginModal({ isOpen, onClose, logo, studioName, 
 
     // Popup açılınca oturum kontrolü yap (sayfa açılışında değil!)
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !success) {
             verifySession();
         }
     }, [isOpen]);
+
 
     // Theme Logic
     const isPink = theme === 'light';
@@ -68,9 +69,10 @@ export default function CustomerLoginModal({ isOpen, onClose, logo, studioName, 
 
             if (result.success) {
                 setSuccess(true);
+                // Wait for the cookie to be fully set in the browser before redirect
                 setTimeout(() => {
                     window.location.href = `/studio/${slug}/selection`;
-                }, 1000);
+                }, 800);
             } else {
                 setError(result.error || 'Kullanıcı adı veya şifre hatalı.');
                 setLoading(false);

@@ -22,8 +22,8 @@ const Shoot = mongoose.models.Shoot || mongoose.model('Shoot', shootSchema);
 const gallerySchema = new mongoose.Schema({}, { strict: false });
 const Gallery = mongoose.models.Gallery || mongoose.model('Gallery', gallerySchema);
 
-const DEMO_EMAIL = 'demo@fotoplan.com';
-const DEMO_PASSWORD = 'password123';
+const DEMO_EMAIL = 'demo@weey.net';
+const DEMO_PASSWORD = 'demo1234';
 const DEMO_SLUG = 'demo-studyo';
 
 const names = [

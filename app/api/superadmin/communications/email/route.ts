@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
         }
 
-        const { subject, message, htmlContent, filter } = await req.json();
+        const { subject, message, htmlContent, filter, selectedIds } = await req.json();
 
         if (!subject || !message) {
             return NextResponse.json({ error: 'Konu ve mesaj gerekli' }, { status: 400 });
@@ -24,12 +24,16 @@ export async function POST(req: Request) {
         // Build query based on filter for Subscribers
         let query: any = {};
 
-        if (filter === 'active') {
-            query.isActive = true;
-        } else if (filter === 'inactive') {
-            query.isActive = false;
-        } else if (filter !== 'all') {
-            query.packageType = filter;
+        if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
+            query._id = { $in: selectedIds };
+        } else {
+            if (filter === 'active') {
+                query.isActive = true;
+            } else if (filter === 'inactive') {
+                query.isActive = false;
+            } else if (filter !== 'all') {
+                query.packageType = filter;
+            }
         }
 
         const photographers = await Subscriber.find(query).select('_id name email');

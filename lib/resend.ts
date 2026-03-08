@@ -27,7 +27,7 @@ export const sendEmail = async ({
 
         console.log(`[Resend] Sending email to: ${to} | Subject: ${subject}`);
         const { data, error } = await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'Weey.NET <onboarding@resend.dev>',
+            from: process.env.EMAIL_FROM || 'weey.net <info@weey.net>',
             to,
             subject,
             html,

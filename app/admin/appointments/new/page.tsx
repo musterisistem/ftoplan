@@ -315,26 +315,26 @@ function NewAppointmentContent() {
     return (
         <div className="p-4 lg:p-6 max-w-[1920px] mx-auto h-screen flex flex-col overflow-hidden">
             {/* Compact Header */}
-            <div className="bg-white/80 backdrop-blur-xl px-5 py-3.5 rounded-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between mb-6 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                    <button onClick={() => router.back()} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+            <div className="bg-white/80 backdrop-blur-xl px-4 md:px-5 py-3.5 rounded-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between mb-6 flex-shrink-0">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <button onClick={() => router.back()} className="p-1 md:p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
                         <ChevronLeft className="w-5 h-5 text-slate-400" />
                     </button>
-                    <h1 className="text-xl font-bold text-slate-900 tracking-tight">Yeni Randevu Oluştur</h1>
+                    <h1 className="text-base md:text-xl font-bold text-slate-900 tracking-tight">Yeni Randevu Oluştur</h1>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 text-sm bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm shadow-slate-200/50">Taslak</button>
-                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-5 py-2 text-sm bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
-                        {isSubmitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                <div className="flex items-center gap-1.5 md:gap-3">
+                    <button className="hidden md:block px-4 py-2 text-sm bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm shadow-slate-200/50">Taslak</button>
+                    <button onClick={handleSubmit} disabled={isSubmitting} className="px-3 md:px-5 py-2 text-xs md:text-sm bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 flex items-center gap-1.5 md:gap-2 disabled:opacity-50 disabled:hover:translate-y-0">
+                        {isSubmitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                         {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
                     </button>
                 </div>
             </div>
 
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-auto px-1 pb-6 custom-scrollbar">
+            <div className="flex-1 flex flex-col lg:grid lg:grid-cols-3 gap-6 overflow-y-auto px-1 pb-28 lg:pb-6 custom-scrollbar">
 
                 {/* Column 1: Customer Info */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit">
+                <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit shrink-0">
                     <div className="px-5 py-4 border-b border-white/40 bg-white/40 flex items-center justify-between">
                         <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                             <User className="w-4 h-4 text-indigo-500" />
@@ -350,7 +350,7 @@ function NewAppointmentContent() {
                             <div className="space-y-3">
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-indigo-500 outline-none" placeholder="Telefon veya isim ile ara..." />
+                                    <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-indigo-500 outline-none" placeholder="Telefon veya isim ile ara..." />
                                 </div>
                                 {searchResults.length > 0 && (
                                     <div className="bg-white border border-gray-200 rounded-lg max-h-40 overflow-y-auto">
@@ -379,7 +379,7 @@ function NewAppointmentContent() {
                             </div>
                         ) : (
                             <>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                                     <div>
                                         <label className="text-xs font-medium text-gray-500 mb-1 block">Gelin Adı *</label>
                                         <input
@@ -389,7 +389,7 @@ function NewAppointmentContent() {
                                                 setFormData({ ...formData, brideName: e.target.value });
                                                 if (errors.brideName) setErrors(prev => ({ ...prev, brideName: '' }));
                                             }}
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all ${errors.brideName ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                            className={`w-full px-3 py-3 text-sm border rounded-xl outline-none transition-all ${errors.brideName ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
                                             placeholder="Ad Soyad"
                                         />
                                         {errors.brideName && <p className="text-xs text-red-500 mt-1">{errors.brideName}</p>}
@@ -403,13 +403,13 @@ function NewAppointmentContent() {
                                                 setFormData({ ...formData, groomName: e.target.value });
                                                 if (errors.groomName) setErrors(prev => ({ ...prev, groomName: '' }));
                                             }}
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all ${errors.groomName ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                            className={`w-full px-3 py-3 text-sm border rounded-xl outline-none transition-all ${errors.groomName ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
                                             placeholder="Ad Soyad"
                                         />
                                         {errors.groomName && <p className="text-xs text-red-500 mt-1">{errors.groomName}</p>}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                                     <div>
                                         <label className="text-xs font-medium text-gray-500 mb-1 block">Telefon 1 *</label>
                                         <input
@@ -417,7 +417,7 @@ function NewAppointmentContent() {
                                             value={formData.phone1}
                                             onChange={(e) => handlePhoneChange(e, 'phone1')}
                                             maxLength={16}
-                                            className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all ${errors.phone1 ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                            className={`w-full px-3 py-3 text-sm border rounded-xl outline-none transition-all ${errors.phone1 ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
                                             placeholder="(05XX) XXX XX XX"
                                         />
                                         {errors.phone1 && <p className="text-xs text-red-500 mt-1">{errors.phone1}</p>}
@@ -429,32 +429,32 @@ function NewAppointmentContent() {
                                             value={formData.phone2}
                                             onChange={(e) => handlePhoneChange(e, 'phone2')}
                                             maxLength={16}
-                                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none"
+                                            className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none"
                                             placeholder="(05XX) XXX XX XX"
                                         />
                                     </div>
                                 </div>
-                                <div>
+                                <div className="mb-3">
                                     <label className="text-xs font-medium text-gray-500 mb-1 block">E-Posta</label>
                                     <input
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none"
+                                        className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none"
                                         placeholder="ornek@email.com"
                                     />
                                 </div>
-                                <div>
+                                <div className="mb-3">
                                     <label className="text-xs font-medium text-gray-500 mb-1 block">TC / Pasaport (11 Haneli)</label>
                                     <input
                                         type="text"
                                         value={formData.tcId}
                                         onChange={handleTcChange}
                                         maxLength={11}
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none"
+                                        className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none"
                                         placeholder="Kimlik No"
                                     />
-                                    <p className="text-[10px] text-gray-400 mt-0.5">Sadece rakam giriniz (Max 11 karakter)</p>
+                                    <p className="text-[10px] text-gray-400 mt-1">Sadece rakam giriniz (Max 11 karakter)</p>
                                 </div>
                             </>
                         )}
@@ -462,7 +462,7 @@ function NewAppointmentContent() {
                 </div>
 
                 {/* Column 2: Shoot Details */}
-                <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit">
+                <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-fit shrink-0">
                     <div className="px-5 py-4 border-b border-white/40 bg-white/40 flex items-center justify-between">
                         <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                             <Camera className="w-4 h-4 text-indigo-500" />
@@ -490,17 +490,17 @@ function NewAppointmentContent() {
                         </div>
                     </div>
                     <div className={`p-4 space-y-3 transition-opacity duration-300 ${noAppointment ? 'opacity-40 pointer-events-none grayscale-[0.5]' : 'opacity-100'}`}>
-                        <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Çekim Türü</label>
-                            <div className="grid grid-cols-2 gap-2">
+                        <div className="mb-4">
+                            <label className="text-xs font-medium text-gray-500 mb-2 block">Çekim Türü</label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 {[{ id: 'wedding', label: 'Düğün' }, { id: 'engagement', label: 'Nişan' }, { id: 'saveTheDate', label: 'Save The Date' }, { id: 'personal', label: 'Kişisel' }].map(type => (
-                                    <button key={type.id} onClick={() => setFormData({ ...formData, shootType: type.id })} className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all ${formData.shootType === type.id ? 'bg-indigo-50 border-indigo-400 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
+                                    <button key={type.id} onClick={() => setFormData({ ...formData, shootType: type.id })} className={`py-3 px-3 rounded-xl text-xs font-medium border transition-all ${formData.shootType === type.id ? 'bg-indigo-50 border-indigo-400 text-indigo-700 shadow-sm' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>
                                         {type.label}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                             <div>
                                 <label className="text-xs font-medium text-gray-500 mb-1 block">Tarih *</label>
                                 <input
@@ -511,7 +511,7 @@ function NewAppointmentContent() {
                                         setFormData({ ...formData, shootDate: e.target.value });
                                         if (errors.shootDate) setErrors(prev => ({ ...prev, shootDate: '' }));
                                     }}
-                                    className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all ${errors.shootDate ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                    className={`w-full px-3 py-3 text-sm border rounded-xl outline-none transition-all ${errors.shootDate ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
                                 />
                                 {errors.shootDate && <p className="text-xs text-red-500 mt-1">{errors.shootDate}</p>}
                             </div>
@@ -524,33 +524,33 @@ function NewAppointmentContent() {
                                         setFormData({ ...formData, shootTime: e.target.value });
                                         if (errors.shootTime) setErrors(prev => ({ ...prev, shootTime: '' }));
                                     }}
-                                    className={`w-full px-3 py-2 text-sm border rounded-lg outline-none transition-all ${errors.shootTime ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
+                                    className={`w-full px-3 py-3 text-sm border rounded-xl outline-none transition-all ${errors.shootTime ? 'border-red-500 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-indigo-500'}`}
                                 />
                                 {errors.shootTime && <p className="text-xs text-red-500 mt-1">{errors.shootTime}</p>}
                             </div>
                         </div>
-                        <div>
+                        <div className="mb-4">
                             <label className="text-xs font-medium text-gray-500 mb-1 block">Lokasyon</label>
-                            <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none" placeholder="Atatürk Arboretumu" />
+                            <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none" placeholder="Atatürk Arboretumu" />
                         </div>
-                        <div>
+                        <div className="mb-4">
                             <label className="text-xs font-medium text-gray-500 mb-1 block">Şehir</label>
-                            <select value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none">
+                            <select value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none bg-white">
                                 <option value="İstanbul">İstanbul</option>
                                 <option value="Ankara">Ankara</option>
                                 <option value="İzmir">İzmir</option>
                                 <option value="Antalya">Antalya</option>
                             </select>
                         </div>
-                        <div>
+                        <div className="mb-4">
                             <label className="text-xs font-medium text-gray-500 mb-1 block">Notlar</label>
-                            <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none resize-none" rows={2} placeholder="Ek notlar..." />
+                            <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none resize-none" rows={3} placeholder="Ek notlar..." />
                         </div>
                     </div>
                 </div>
 
                 {/* Column 3: Financial & Contract */}
-                <div className="space-y-6">
+                <div className="space-y-6 shrink-0 h-fit">
                     {/* Financial Card */}
                     <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                         <div className="px-5 py-4 border-b border-white/40 bg-white/40">
@@ -559,13 +559,13 @@ function NewAppointmentContent() {
                                 Ödeme
                             </h3>
                         </div>
-                        <div className="p-4 space-y-3">
-                            <div className="bg-gray-100 p-0.5 rounded-lg flex">
-                                <button onClick={() => { setPricingType('package'); setFormData(prev => ({ ...prev, packageId: '' })); }} className={`flex-1 py-1.5 text-xs font-medium rounded-md ${pricingType === 'package' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}>Paket</button>
-                                <button onClick={() => { setPricingType('custom'); setFormData(prev => ({ ...prev, packageId: '', agreedPrice: 0 })); }} className={`flex-1 py-1.5 text-xs font-medium rounded-md ${pricingType === 'custom' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}>Özel</button>
+                        <div className="p-4 space-y-4">
+                            <div className="bg-gray-100 p-1 rounded-xl flex">
+                                <button onClick={() => { setPricingType('package'); setFormData(prev => ({ ...prev, packageId: '' })); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${pricingType === 'package' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Paket</button>
+                                <button onClick={() => { setPricingType('custom'); setFormData(prev => ({ ...prev, packageId: '', agreedPrice: 0 })); }} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${pricingType === 'custom' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Özel</button>
                             </div>
                             {pricingType === 'package' && (
-                                <select value={formData.packageId} onChange={handlePackageChange} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none">
+                                <select value={formData.packageId} onChange={handlePackageChange} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none bg-white">
                                     <option value="">Paket Seçiniz</option>
                                     {PACKAGES.map(pkg => (<option key={pkg.id} value={pkg.id}>{pkg.name} - {pkg.price.toLocaleString()} TL</option>))}
                                 </select>
@@ -573,18 +573,18 @@ function NewAppointmentContent() {
                             <div>
                                 <label className="text-xs font-medium text-gray-500 mb-1 block">Anlaşma Ücreti</label>
                                 <div className="relative">
-                                    <input type="number" value={formData.agreedPrice || ''} onChange={(e) => handlePriceChange('agreedPrice', e.target.value)} className="w-full px-3 py-2 text-sm font-bold border border-gray-200 rounded-lg focus:border-indigo-500 outline-none" />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">TL</span>
+                                    <input type="number" value={formData.agreedPrice || ''} onChange={(e) => handlePriceChange('agreedPrice', e.target.value)} className="w-full px-3 py-3 text-sm font-bold border border-gray-200 rounded-xl focus:border-indigo-500 outline-none" placeholder="0" />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">TL</span>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-xs font-medium text-gray-500 mb-1 block">Kapora</label>
-                                    <input type="number" value={formData.deposit || ''} onChange={(e) => handlePriceChange('deposit', e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none" placeholder="0" />
+                                    <input type="number" value={formData.deposit || ''} onChange={(e) => handlePriceChange('deposit', e.target.value)} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none" placeholder="0" />
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-gray-500 mb-1 block">Kalan</label>
-                                    <div className="px-3 py-2 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-lg">
+                                    <div className="px-3 py-3 text-sm font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded-xl">
                                         {remainingPayment.toLocaleString()} TL
                                     </div>
                                 </div>
@@ -600,12 +600,12 @@ function NewAppointmentContent() {
                                 Sözleşme
                             </h3>
                         </div>
-                        <div className="p-4 space-y-3">
-                            <select value={formData.contractId} onChange={(e) => setFormData({ ...formData, contractId: e.target.value })} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-500 outline-none">
+                        <div className="p-4">
+                            <select value={formData.contractId} onChange={(e) => setFormData({ ...formData, contractId: e.target.value })} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none bg-white">
                                 <option value="">Sözleşme Seçiniz</option>
                                 {contracts.map((c: any) => (<option key={c._id} value={c._id}>{c.name}</option>))}
                             </select>
-                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg mt-3">
                                 <input type="checkbox" className="w-3.5 h-3.5 text-indigo-600 rounded border-gray-300" />
                                 <span className="text-xs text-gray-600">Müşteri sözleşmeyi onayladı</span>
                             </div>

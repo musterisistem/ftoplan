@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import { PayTRCheckout } from '@/lib/payment/paytr';
+import Coupon from '@/models/Coupon';
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { orderNo } = body;
+        const { orderNo, appliedCoupon } = body;
 
         if (!orderNo) {
             return NextResponse.json({ success: false, error: 'Sipariş numarası eksik.' }, { status: 400 });
@@ -51,6 +52,25 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: 'Paket bilgisi siparişte bulunamadı.' }, { status: 400 });
         }
 
+        let finalAmount = order.amount;
+        let basketName = `FotoPlan Paketi - ${selectedPackage.name || selectedPackage.title || 'Uyelik'}`;
+
+        // Verify and Apply Coupon dynamically
+        if (appliedCoupon) {
+            const coupon = await Coupon.findOne({ code: appliedCoupon.toUpperCase() });
+            if (coupon && coupon.isActive && (!coupon.validUntil || new Date(coupon.validUntil) > new Date()) && (coupon.maxUses === 0 || coupon.usedCount < coupon.maxUses)) {
+                const discountAmount = (order.amount * coupon.discountPercentage) / 100;
+                finalAmount = order.amount - discountAmount;
+                basketName += ` (%${coupon.discountPercentage} İndirimli: ${coupon.code})`;
+
+                // Update order to strictly reflect the discounted amount waiting for gateway
+                order.amount = finalAmount;
+                order.appliedCoupon = coupon.code; // Track which coupon was used
+            } else {
+                return NextResponse.json({ success: false, error: 'Kupon kodu geçersiz veya süresi dolmuş. Lütfen kontrol edin.' }, { status: 400 });
+            }
+        }
+
         // Build PayTR payment request
         const paytr = new PayTRCheckout({
             merchantId,
@@ -75,7 +95,7 @@ export async function POST(req: Request) {
 
         const orderData = {
             orderNo: order.orderNo,
-            amount: order.amount,
+            amount: finalAmount,
             currency: 'TL' as const,
             userEmail: draftUser.email || 'destek@weey.net',
             userName: `${draftUser.name || 'Musteri'} ${draftUser.surname || draftUser.studioName || ''}`.trim(),
@@ -83,11 +103,13 @@ export async function POST(req: Request) {
             userPhone: (draftUser.phone || '05555555555').replace(/\s/g, ''),
             userIp: userIp,
             basket: [
-                [`FotoPlan Paketi - ${selectedPackage.name || selectedPackage.title || 'Uyelik'}`, order.amount.toString(), 1]
+                [basketName, finalAmount.toString(), 1]
             ] as Array<[string, string, number]>,
             okUrl: `${baseUrl}/checkout/success?token=${autoLoginToken}`, // Pass token for auto-login
             failUrl: `${baseUrl}/checkout/fail`   // The page user sees if payment fails
         };
+
+
 
         try {
             const token = await paytr.getToken(orderData);

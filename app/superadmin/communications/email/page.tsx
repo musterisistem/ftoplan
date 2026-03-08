@@ -34,6 +34,30 @@ export default function BulkEmailPage() {
     const [history, setHistory] = useState<CommunicationLog[]>([]);
     const [showHistory, setShowHistory] = useState(false);
     const [result, setResult] = useState<any>(null);
+    const [photographers, setPhotographers] = useState<any[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [loadingPhotographers, setLoadingPhotographers] = useState(true);
+
+    useEffect(() => {
+        if (!showHistory) {
+            fetchPhotographers();
+        }
+    }, [showHistory]);
+
+    const fetchPhotographers = async () => {
+        setLoadingPhotographers(true);
+        try {
+            const res = await fetch('/api/superadmin/photographers');
+            if (res.ok) {
+                const data = await res.json();
+                setPhotographers(data);
+            }
+        } catch (error) {
+            console.error('Error fetching photographers:', error);
+        } finally {
+            setLoadingPhotographers(false);
+        }
+    };
 
     useEffect(() => {
         if (showHistory) {
@@ -59,7 +83,7 @@ export default function BulkEmailPage() {
             return;
         }
 
-        if (!confirm(`${getFilterText(filter)} adresine email göndermek istediğinize emin misiniz?`)) {
+        if (!confirm(`${selectedIds.length > 0 ? selectedIds.length + ' seçili fotoğrafçıya' : getFilterText(filter) + ' adreslerine'} email göndermek istediğinize emin misiniz?`)) {
             return;
         }
 
@@ -74,7 +98,8 @@ export default function BulkEmailPage() {
                     subject,
                     message,
                     htmlContent: htmlMode ? message : undefined,
-                    filter
+                    filter: selectedIds.length > 0 ? 'custom' : filter,
+                    selectedIds: selectedIds.length > 0 ? selectedIds : undefined
                 })
             });
 
@@ -97,16 +122,31 @@ export default function BulkEmailPage() {
     };
 
     const getFilterText = (f: string) => {
-        const filters: any = {
+        const filters: Record<string, string> = {
             'all': 'Tüm fotoğrafçılara',
             'trial': 'Deneme paketindeki fotoğrafçılara',
             'starter': 'Başlangıç paketindeki fotoğrafçılara',
             'pro': 'Pro paketindeki fotoğrafçılara',
             'premium': 'Premium paketindeki fotoğrafçılara',
             'active': 'Aktif fotoğrafçılara',
-            'inactive': 'Pasif fotoğrafçılara'
+            'inactive': 'Pasif fotoğrafçılara',
+            'custom': 'Seçili fotoğrafçılara'
         };
         return filters[f] || f;
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(photographers.map(p => p._id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
     };
 
     const getStatusIcon = (status: string) => {
@@ -186,13 +226,68 @@ export default function BulkEmailPage() {
                                     key={f}
                                     onClick={() => setFilter(f)}
                                     className={`px-4 py-3 rounded-xl border transition-all ${filter === f
-                                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-transparent text-white'
-                                            : 'bg-gray-700/50 border-white/10 text-gray-300 hover:bg-gray-700'
+                                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-transparent text-white'
+                                        : 'bg-gray-700/50 border-white/10 text-gray-300 hover:bg-gray-700'
                                         }`}
                                 >
                                     {getFilterText(f).replace('fotoğrafçılara', '').replace('fotoğrafçılara', '')}
                                 </button>
                             ))}
+                        </div>
+
+                        {/* Photographers List */}
+                        <div className="mt-6 border border-white/10 rounded-xl overflow-hidden bg-gray-900/50">
+                            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gray-800/80">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.length === photographers.length && photographers.length > 0}
+                                        onChange={handleSelectAll}
+                                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm font-medium text-white">Tümünü Seç</span>
+                                </div>
+                                <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">{selectedIds.length} Seçili</span>
+                            </div>
+                            <div className="max-h-60 overflow-y-auto w-full custom-scrollbar">
+                                {loadingPhotographers ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">Yükleniyor...</div>
+                                ) : photographers.length === 0 ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">Fotoğrafçı bulunamadı.</div>
+                                ) : (
+                                    <div className="flex flex-col">
+                                        {photographers.map(p => {
+                                            // Apply current filter logic locally to grey out non-matching rows, or just show them all
+                                            let isVisible = true;
+                                            if (filter === 'active' && !p.isActive) isVisible = false;
+                                            if (filter === 'inactive' && p.isActive) isVisible = false;
+                                            if (filter !== 'all' && filter !== 'active' && filter !== 'inactive' && p.packageType !== filter) isVisible = false;
+
+                                            if (!isVisible) return null;
+
+                                            return (
+                                                <label key={p._id} className="cursor-pointer flex items-center justify-between p-3 border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(p._id)}
+                                                            onChange={() => handleSelectOne(p._id)}
+                                                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium text-white">{p.name} {p.studioName ? `(${p.studioName})` : ''}</span>
+                                                            <span className="text-xs text-gray-400">{p.email}</span>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full ${p.isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                        {p.packageType}
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -211,8 +306,8 @@ export default function BulkEmailPage() {
                                 <button
                                     onClick={() => setHtmlMode(!htmlMode)}
                                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${htmlMode
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-gray-700 text-white hover:bg-gray-600'
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-gray-700 text-white hover:bg-gray-600'
                                         }`}
                                 >
                                     <Code className="w-4 h-4" />

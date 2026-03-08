@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Image as ImageIcon, User, Phone, Package, Grid } from 'lucide-react';
+import { Home, Image as ImageIcon, User, Phone, Package, Grid, LogOut } from 'lucide-react';
 import { useCustomerAuth } from '@/contexts/CustomerAuthContext';
 
 interface StudioBottomNavProps {
@@ -13,17 +13,26 @@ interface StudioBottomNavProps {
 
 export default function StudioBottomNav({ slug, primaryColor = '#8b4d62', theme = 'warm' }: StudioBottomNavProps) {
     const pathname = usePathname();
-    const { customer } = useCustomerAuth();
+    const { customer, logout } = useCustomerAuth();
+
+    const handleLogout = async () => {
+        await logout();
+        window.location.reload();
+    };
 
     const navItems = [
         { label: 'Ana Sayfa', href: `/studio/${slug}`, icon: Home },
         ...(customer
-            ? [{ label: 'Panelim', href: `/studio/${slug}/selection`, icon: Grid }]
+            ? [{ label: 'Panel', href: `/studio/${slug}/selection`, icon: Grid }]
             : [{ label: 'Hakkımızda', href: `/studio/${slug}/about`, icon: User }]
         ),
         { label: 'Galeri', href: `/studio/${slug}/gallery`, icon: ImageIcon },
         { label: 'Paketler', href: `/studio/${slug}/packages`, icon: Package },
         { label: 'İletişim', href: `/studio/${slug}/contact`, icon: Phone },
+        ...(customer
+            ? [{ label: 'Çıkış Yap', action: 'logout', icon: LogOut }]
+            : []
+        )
     ];
 
     // Theme Logic
@@ -56,12 +65,29 @@ export default function StudioBottomNav({ slug, primaryColor = '#8b4d62', theme 
                 <div className="flex justify-between items-center">
                     {navItems.map((item) => {
                         const Icon = item.icon;
+                        if (item.action === 'logout') {
+                            return (
+                                <button
+                                    key="logout"
+                                    onClick={handleLogout}
+                                    className="relative flex flex-col items-center justify-center group"
+                                >
+                                    <div className={`p-2 rounded-full transition-all duration-300 ${itemInactiveBase} text-red-500 hover:text-red-400`}>
+                                        <Icon className="w-5 h-5" strokeWidth={2} />
+                                    </div>
+                                    <span className={`text-[10px] font-medium mt-1 transition-colors duration-300 text-red-500/80`}>
+                                        {item.label}
+                                    </span>
+                                </button>
+                            );
+                        }
+
                         const isActive = pathname === item.href;
 
                         return (
                             <Link
-                                key={item.href}
-                                href={item.href}
+                                key={item.href || Math.random()}
+                                href={item.href || '#'}
                                 className="relative flex flex-col items-center justify-center group"
                             >
                                 <div

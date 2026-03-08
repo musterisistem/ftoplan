@@ -11,6 +11,17 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
     const router = useRouter();
     const pathname = usePathname();
     const [isChecking, setIsChecking] = useState(true);
+    const [showLoader, setShowLoader] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const hasSeen = sessionStorage.getItem('hasSeenAdminLoader');
+            if (!hasSeen) {
+                setShowLoader(true);
+                sessionStorage.setItem('hasSeenAdminLoader', 'true');
+            }
+        }
+    }, []);
 
     useEffect(() => {
         if (status === 'loading') return;
@@ -53,12 +64,15 @@ export default function SubscriptionGuard({ children }: { children: React.ReactN
     }, [session, status, router, pathname]);
 
     if (isChecking) {
-        return (
-            <CreativeLoader
-                message="Hesabınız Doğrulanıyor"
-                subMessage="Üyelik durumu ve yetkiler kontrol ediliyor..."
-            />
-        );
+        if (showLoader) {
+            return (
+                <CreativeLoader
+                    message="Hesabınız Doğrulanıyor"
+                    subMessage="Üyelik durumu ve yetkiler kontrol ediliyor..."
+                />
+            );
+        }
+        return <div className="min-h-screen bg-[#F5F6F9]" />;
     }
 
     return <>{children}</>;

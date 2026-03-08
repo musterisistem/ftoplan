@@ -10,6 +10,7 @@ export interface IOrder extends Document {
     status: 'pending' | 'completed' | 'failed' | 'refunded';
     paytrPaymentId?: string; // ID returned by PayTR upon success
     autoLoginToken?: string; // Token to allow passwordless login upon successful callback
+    appliedCoupon?: string;  // The coupon code applied to this order
     createdAt: Date;
     completedAt?: Date;
 }
@@ -29,6 +30,7 @@ const orderSchema = new Schema<IOrder>(
         },
         paytrPaymentId: { type: String },
         autoLoginToken: { type: String },
+        appliedCoupon: { type: String, required: false },
         completedAt: { type: Date },
     },
     { timestamps: true }
