@@ -112,6 +112,17 @@ export async function POST(req: Request) {
                 order.completedAt = new Date();
                 await order.save();
 
+                try {
+                    const { notifySuperadminPackageUpgrade } = await import('@/lib/superadmin-emails');
+                    await notifySuperadminPackageUpgrade(user, {
+                        packageType: purchasedPackage.id,
+                        amount: order.amount,
+                        orderNo: order.orderNo
+                    });
+                } catch (notifyErr) {
+                    console.error('[System] Superadmin upgrade notification failed:', notifyErr);
+                }
+
                 // Increment Coupon Usage if applied
                 if (order.appliedCoupon) {
                     try {
@@ -193,6 +204,17 @@ export async function POST(req: Request) {
         order.status = 'completed'; // Now mark as completed
         order.completedAt = new Date();
         await order.save();
+
+        try {
+            const { notifySuperadminPaymentSuccess } = await import('@/lib/superadmin-emails');
+            await notifySuperadminPaymentSuccess(newUser, {
+                packageType: purchasedPackage.id,
+                amount: order.amount,
+                orderNo: order.orderNo
+            });
+        } catch (notifyErr) {
+            console.error('[System] Superadmin payment notification failed:', notifyErr);
+        }
 
         // Send welcome & verification emails
         try {

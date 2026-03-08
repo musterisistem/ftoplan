@@ -179,6 +179,13 @@ export async function POST(req: Request) {
                 },
             });
 
+            try {
+                const { notifySuperadminNewUser } = await import('@/lib/superadmin-emails');
+                await notifySuperadminNewUser(newUser);
+            } catch (notifyErr) {
+                console.error('[System] Superadmin notification failed:', notifyErr);
+            }
+
             return NextResponse.json({
                 success: true,
                 isPaid: false,

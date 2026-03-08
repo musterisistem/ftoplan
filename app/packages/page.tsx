@@ -490,7 +490,7 @@ function PackagesContent() {
                                                                 <span className="text-[10px] font-black text-emerald-600/80 uppercase tracking-widest mb-1.5">Aylık Sadece</span>
                                                                 <div className="flex items-baseline gap-1.5 w-full">
                                                                     <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600">
-                                                                        ₺{Math.floor(pkg.price / 12).toLocaleString('tr-TR')}
+                                                                        ₺{(pkg.price / 12).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
                                                                     </span>
                                                                     <span className="text-[11px] font-bold text-emerald-600/60 tracking-wider">'ye denk gelir</span>
                                                                 </div>
