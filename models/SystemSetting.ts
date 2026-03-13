@@ -8,6 +8,14 @@ const ContactInfoSchema = new mongoose.Schema({
     order: { type: Number, default: 0 }
 });
 
+const BankAccountSchema = new mongoose.Schema({
+    bankName: { type: String, required: true },
+    accountHolder: { type: String, required: true },
+    iban: { type: String, required: true },
+    logoUrl: { type: String, default: '' },
+    order: { type: Number, default: 0 }
+});
+
 const SystemSettingSchema = new mongoose.Schema({
     siteName: { type: String, default: 'Weey.NET' },
     siteUrl: { type: String, default: 'https://weey.net' },
@@ -19,7 +27,8 @@ const SystemSettingSchema = new mongoose.Schema({
     paytrMerchantId: { type: String, default: '' },
     paytrMerchantKey: { type: String, default: '' },
     paytrMerchantSalt: { type: String, default: '' },
-    contactInfo: [ContactInfoSchema]
+    contactInfo: [ContactInfoSchema],
+    bankAccounts: [BankAccountSchema]
 }, { timestamps: true });
 
 // Ensure we only have one settings document

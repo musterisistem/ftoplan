@@ -145,6 +145,9 @@ export async function POST(req: Request) {
                 }
             });
 
+            const { createDefaultPackages } = await import('@/lib/packageUtils');
+            await createDefaultPackages(newUser._id);
+
             await Subscriber.create({
                 // ... (Subscriber part already updated, I'll ensure it stays consistent)
 
@@ -168,6 +171,8 @@ export async function POST(req: Request) {
             const { EmailTemplateType } = await import('@/models/EmailTemplate');
 
             const verifyUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+
+            console.log(`[DEBUG] Verification URL for ${email}: ${verifyUrl}`);
 
             await sendEmailWithTemplate({
                 to: email,

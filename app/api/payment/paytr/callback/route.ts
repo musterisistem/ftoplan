@@ -189,6 +189,9 @@ export async function POST(req: Request) {
             legalConsents: legalConsents, // ✅ Persist Legal Consents
         });
 
+        const { createDefaultPackages } = await import('@/lib/packageUtils');
+        await createDefaultPackages(newUser._id);
+
         // Save subscriber record
         await Subscriber.create({
             email: draftUser.email.toLowerCase(),

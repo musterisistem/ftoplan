@@ -129,6 +129,23 @@
     background: #cbd5e1;
   }
 
+  .superadmin-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .superadmin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .superadmin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+
+  .superadmin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
   /* Driver.js Z-Index Fix */
   .driver-active-element {
     position: relative !important;

@@ -20,23 +20,64 @@ import {
     Presentation,
     Globe,
     Star,
-    Ticket
+    Ticket,
+    Banknote,
+    Building2
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
-const menuItems = [
-    { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
-    { name: 'Fotoğrafçılar', href: '/superadmin/photographers', icon: Users },
-    { name: 'Müşteri Havuzu', href: '/superadmin/customers', icon: Users },
-    { name: 'Dashboard Slaytları', href: '/superadmin/dashboard-slides', icon: Presentation },
-    { name: 'Referanslar', href: '/superadmin/references', icon: Star },
-    { name: 'Toplu Email', href: '/superadmin/communications/email', icon: Mail },
-    { name: 'Toplu SMS', href: '/superadmin/communications/sms', icon: MessageSquare },
-    { name: 'Paketler', href: '/superadmin/packages', icon: Package },
-    { name: 'İletişim Yönetimi', href: '/superadmin/settings/contact', icon: Globe },
-    { name: 'Mail Editörü', href: '/superadmin/mail-editor', icon: Mail },
-    { name: 'Kupon Yönetimi', href: '/superadmin/coupons', icon: Ticket },
-    { name: 'Ayarlar', href: '/superadmin/settings', icon: Settings },
+const menuGroups = [
+    {
+        title: 'Genel Bakış',
+        icon: LayoutDashboard,
+        items: [
+            { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
+        ]
+    },
+    {
+        title: 'Üye Yönetimi',
+        icon: Users,
+        items: [
+            { name: 'Fotoğrafçılar', href: '/superadmin/photographers', icon: Users },
+            { name: 'Müşteri Havuzu', href: '/superadmin/customers', icon: Users },
+        ]
+    },
+    {
+        title: 'Satış & Finans',
+        icon: Banknote,
+        items: [
+            { name: 'Ödemeler', href: '/superadmin/payments', icon: Banknote },
+            { name: 'Paket Yönetimi', href: '/superadmin/packages', icon: Package },
+            { name: 'Banka Hesapları', href: '/superadmin/settings/bank-accounts', icon: Building2 },
+            { name: 'Kupon Yönetimi', href: '/superadmin/coupons', icon: Ticket },
+        ]
+    },
+    {
+        title: 'İçerik Editörü',
+        icon: Presentation,
+        items: [
+            { name: 'Dashboard Slaytları', href: '/superadmin/dashboard-slides', icon: Presentation },
+            { name: 'Referanslar', href: '/superadmin/references', icon: Star },
+        ]
+    },
+    {
+        title: 'Pazarlama & İletişim',
+        icon: Mail,
+        items: [
+            { name: 'Mail Editörü', href: '/superadmin/mail-editor', icon: Mail },
+            { name: 'Toplu Email', href: '/superadmin/communications/email', icon: Mail },
+            { name: 'Toplu SMS', href: '/superadmin/communications/sms', icon: MessageSquare },
+        ]
+    },
+    {
+        title: 'Sistem Ayarları',
+        icon: Settings,
+        items: [
+            { name: 'Site Ayarları', href: '/superadmin/settings', icon: Settings },
+            { name: 'İletişim Yönetimi', href: '/superadmin/settings/contact', icon: Globe },
+        ]
+    }
 ];
 
 export default function SuperAdminLayout({
@@ -48,8 +89,19 @@ export default function SuperAdminLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
     const isLoginPage = pathname === '/superadmin/login';
+
+    // Auto-expand group containing active link
+    useEffect(() => {
+        const activeGroup = menuGroups.find(group => 
+            group.items.some(item => pathname.startsWith(item.href))
+        );
+        if (activeGroup && !expandedGroups.includes(activeGroup.title)) {
+            setExpandedGroups(prev => [...prev, activeGroup.title]);
+        }
+    }, [pathname]);
 
     useEffect(() => {
         if (status === 'loading' || isLoginPage) return;
@@ -65,87 +117,116 @@ export default function SuperAdminLayout({
         }
     }, [session, status, router, isLoginPage]);
 
+    const toggleGroup = (title: string) => {
+        setExpandedGroups(prev => 
+            prev.includes(title) 
+                ? prev.filter(t => t !== title) 
+                : [...prev, title]
+        );
+    };
+
     if (status === 'loading') {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
-                <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full"></div>
+                <div className="animate-spin w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full" />
             </div>
         );
     }
 
-    if (isLoginPage) {
-        return <>{children}</>;
-    }
+    if (isLoginPage) return <>{children}</>;
 
-    if (!session || session.user.role !== 'superadmin') {
-        return null; // Return null if not superadmin, since useEffect will handle the redirect
-    }
+    if (!session || session.user.role !== 'superadmin') return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/10 to-gray-900">
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-purple-600 rounded-lg text-white"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-purple-600 rounded-lg text-white shadow-lg"
             >
                 <Menu className="w-6 h-6" />
             </button>
 
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-gray-900/95 backdrop-blur-xl border-r border-purple-500/20 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                {/* Logo */}
-                <div className="flex items-center justify-between p-6 border-b border-purple-500/20">
+            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-gray-950/90 backdrop-blur-2xl border-r border-white/5 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                {/* Logo Area */}
+                <div className="flex items-center justify-between p-6 border-b border-white/5">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                            <Crown className="w-7 h-7 text-white" />
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+                            <Crown className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">Weey.NET</h1>
-                            <p className="text-xs text-purple-300">Süper Admin</p>
+                            <h1 className="text-lg font-bold text-white tracking-tight">Weey.NET</h1>
+                            <p className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Süper Panel</p>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden text-gray-400 hover:text-white"
-                    >
+                    <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-white">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
 
-                {/* Navigation */}
-                <nav className="p-4 space-y-2">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-purple-500/20 hover:text-white transition-all group"
-                        >
-                            <item.icon className="w-5 h-5 group-hover:text-purple-400" />
-                            <span>{item.name}</span>
-                        </Link>
-                    ))}
+                {/* Navigation - Scrollable Area */}
+                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto max-h-[calc(100vh-180px)] superadmin-scrollbar">
+                    {menuGroups.map((group) => {
+                        const isExpanded = expandedGroups.includes(group.title);
+                        const hasActiveItem = group.items.some(item => pathname === item.href);
+
+                        return (
+                            <div key={group.title} className="space-y-1">
+                                <button
+                                    onClick={() => toggleGroup(group.title)}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all ${isExpanded ? 'bg-white/5 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <group.icon className={`w-4 h-4 ${hasActiveItem || isExpanded ? 'text-purple-400' : ''}`} />
+                                        <span className="text-sm font-medium">{group.title}</span>
+                                    </div>
+                                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                </button>
+
+                                {isExpanded && (
+                                    <div className="pl-9 space-y-1 mt-1">
+                                        {group.items.map((item) => {
+                                            const isActive = pathname === item.href;
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    onClick={() => setSidebarOpen(false)}
+                                                    className={`block px-3 py-2 rounded-lg text-sm transition-all ${isActive ? 'bg-purple-600 text-white font-medium' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                                >
+                                                    {item.name}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </nav>
 
-                {/* User Info */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-purple-500/20">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold">SY</span>
+                {/* User Info & Sign Out - Fixed Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-950/50 backdrop-blur-md border-t border-white/5">
+                    <div className="flex items-center gap-3 mb-4 p-2 rounded-xl bg-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-tr from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {session.user.name?.charAt(0) || 'S'}
                         </div>
-                        <div className="flex-1">
-                            <p className="text-sm font-medium text-white">{session.user.name || 'Sistem Yöneticisi'}</p>
-                            <p className="text-xs text-gray-400">{session.user.email}</p>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate">{session.user.name || 'Sistem Admini'}</p>
+                            <p className="text-[10px] text-gray-500 truncate">{session.user.email}</p>
                         </div>
                     </div>
                     <button
                         onClick={() => signOut({ callbackUrl: '/login' })}
-                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="flex items-center gap-2 w-full px-4 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                     >
                         <LogOut className="w-4 h-4" />
-                        <span>Çıkış Yap</span>
+                        <span>GÜVENLİ ÇIKIŞ</span>
                     </button>
                 </div>
             </aside>
+
 
             {/* Overlay */}
             {sidebarOpen && (

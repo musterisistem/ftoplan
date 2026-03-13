@@ -7,10 +7,13 @@ export interface IOrder extends Document {
     packageId: Types.ObjectId; // The purchased plan ID
     amount: number; // The exact amount paid
     currency: string;
-    status: 'pending' | 'completed' | 'failed' | 'refunded';
+    status: 'pending' | 'completed' | 'failed' | 'refunded' | 'awaiting_transfer';
+    paymentMethod?: 'credit_card' | 'bank_transfer';
     paytrPaymentId?: string; // ID returned by PayTR upon success
     autoLoginToken?: string; // Token to allow passwordless login upon successful callback
     appliedCoupon?: string;  // The coupon code applied to this order
+    bankName?: string;       // For bank transfers
+    bankIban?: string;       // For bank transfers
     createdAt: Date;
     completedAt?: Date;
 }
@@ -25,12 +28,15 @@ const orderSchema = new Schema<IOrder>(
         currency: { type: String, default: 'TRY' },
         status: {
             type: String,
-            enum: ['pending', 'completed', 'failed', 'refunded'],
+            enum: ['pending', 'completed', 'failed', 'refunded', 'awaiting_transfer'],
             default: 'pending',
         },
+        paymentMethod: { type: String, enum: ['credit_card', 'bank_transfer'], default: 'credit_card' },
         paytrPaymentId: { type: String },
         autoLoginToken: { type: String },
         appliedCoupon: { type: String, required: false },
+        bankName: { type: String, required: false },
+        bankIban: { type: String, required: false },
         completedAt: { type: Date },
     },
     { timestamps: true }

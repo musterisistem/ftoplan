@@ -34,11 +34,11 @@ export const sendEmail = async ({
         });
 
         if (error) {
-            console.error('[Resend] API Error:', error);
+            console.error('[Resend] API Error details:', JSON.stringify(error, null, 2));
             return { success: false, error };
         }
 
-        console.log('[Resend] Email sent successfully. ID:', data?.id);
+        console.log(`[Resend] Email sent successfully to ${to}. ID:`, data?.id);
         return { success: true, data };
     } catch (error) {
         console.error('[Resend] Unexpected Error:', error);
@@ -106,13 +106,19 @@ export const sendEmailWithTemplate = async ({
         const finalHtml = replaceVariables(templateHtml, data);
 
         // Send email
-        return await sendEmail({
+        const result = await sendEmail({
             to,
             subject: finalSubject,
             html: finalHtml
         });
+
+        if (!result.success) {
+            console.error(`[EmailTemplate] Failed to send ${templateType} to ${to}:`, result.error);
+        }
+
+        return result;
     } catch (error) {
-        console.error('[EmailTemplate] Error:', error);
+        console.error('[EmailTemplate] Unexpected error in sendEmailWithTemplate:', error);
         return { success: false, error };
     }
 };

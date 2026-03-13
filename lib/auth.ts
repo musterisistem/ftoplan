@@ -54,7 +54,10 @@ export const authOptions: NextAuthOptions = {
                 if (credentials?.autoLoginToken) {
                     try {
                         const { Order } = await import('@/models/Order');
-                        const order = await Order.findOne({ autoLoginToken: credentials.autoLoginToken, status: 'completed' });
+                        const order = await Order.findOne({ 
+                            autoLoginToken: credentials.autoLoginToken, 
+                            status: { $in: ['completed', 'awaiting_transfer'] } 
+                        });
                         if (!order || !order.userId) {
                             throw new Error('Geçersiz veya süresi dolmuş otomatik giriş bağlantısı. Lütfen manuel giriş yapın.');
                         }
@@ -83,6 +86,7 @@ export const authOptions: NextAuthOptions = {
                             hasCompletedOnboarding: user.hasCompletedOnboarding || false,
                             isActive: user.isActive !== false,
                             isEmailVerified: user.isEmailVerified === true,
+                            paymentStatus: user.paymentStatus || 'active',
                         };
                     } catch (error) {
                         console.error('Auto login error:', error);
@@ -173,6 +177,7 @@ export const authOptions: NextAuthOptions = {
                     hasCompletedOnboarding: user.hasCompletedOnboarding || false,
                     isActive: user.isActive !== false,
                     isEmailVerified: user.isEmailVerified === true,
+                    paymentStatus: user.paymentStatus || 'active',
                 };
             }
         })
@@ -211,12 +216,12 @@ export const authOptions: NextAuthOptions = {
                         token.subscriptionExpiry = adminUser.subscriptionExpiry?.toISOString() || null;
                         token.packageType = adminUser.packageType || 'trial';
                         token.name = adminUser.name || '';
-                        // Logic: Use panelLogo if available, otherwise fallback to logo
                         token.picture = adminUser.panelLogo || adminUser.logo || '';
                         token.panelSettings = adminUser.panelSettings || undefined;
                         token.hasCompletedOnboarding = adminUser.hasCompletedOnboarding || false;
                         token.isActive = adminUser.isActive !== false;
                         token.isEmailVerified = adminUser.isEmailVerified === true;
+                        token.paymentStatus = (adminUser as any).paymentStatus || 'active';
                     }
                 }
             } catch (error) {
@@ -241,6 +246,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.hasCompletedOnboarding = token.hasCompletedOnboarding;
                 session.user.isActive = token.isActive;
                 session.user.isEmailVerified = token.isEmailVerified;
+                (session.user as any).paymentStatus = token.paymentStatus || 'active';
             }
             return session;
         }

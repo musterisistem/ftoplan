@@ -93,6 +93,7 @@ interface Customer {
     photographerSubscriptionExpiry?: string;
     photographerName?: string;
     photographerStudioName?: string;
+    albumProviderId?: string | { _id: string; name: string };
 }
 
 type TabType = 'summary' | 'package' | 'appointments' | 'payments' | 'contract' | 'album-settings' | 'send-album' | 'approved-album' | 'account';
@@ -103,7 +104,7 @@ const TABS = [
     { id: 'appointments', label: 'Randevular', icon: Calendar },
     { id: 'payments', label: 'Ödeme Bilgileri', icon: CreditCard },
     { id: 'contract', label: 'Sözleşme', icon: FileText },
-    { id: 'album-settings', label: 'Albüm Onay Ayarları', icon: Settings },
+    { id: 'album-settings', label: 'Albüm & Kapak Atama', icon: Settings },
     { id: 'send-album', label: 'Albüm Gönder', icon: Upload },
     { id: 'approved-album', label: 'Onaylanan Albüm', icon: CheckCircle2 },
     { id: 'account', label: 'Üye Hesap Ayarları', icon: User },
@@ -562,19 +563,47 @@ export default function CustomerManageClient({ customerId }: { customerId: strin
 function AlbumSettingsTab({ customer, onUpdate }: { customer: Customer; onUpdate: () => void }) {
     const { showAlert } = useAlert();
     const [limits, setLimits] = useState(customer.selectionLimits || { album: 22, cover: 1, poster: 1 });
+    const [albumProviderId, setAlbumProviderId] = useState<string>(
+        customer.albumProviderId 
+            ? (typeof customer.albumProviderId === 'object' ? customer.albumProviderId._id : customer.albumProviderId) 
+            : ''
+    );
+    const [providers, setProviders] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        const fetchProviders = async () => {
+            try {
+                const res = await fetch('/api/admin/album-providers');
+                if (res.ok) {
+                    const data = await res.json();
+                    setProviders(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch album providers', err);
+            }
+        };
+        fetchProviders();
+    }, []);
 
     const handleSave = async () => {
         setSaving(true);
         try {
+            const payload: any = { selectionLimits: limits };
+            if (albumProviderId) {
+                payload.albumProviderId = albumProviderId;
+            } else {
+                payload.albumProviderId = null;
+            }
+
             const res = await fetch(`/api/customers/${customer._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ selectionLimits: limits })
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
-                showAlert('Limitler güncellendi!', 'success');
+                showAlert('Ayarlar güncellendi!', 'success');
                 onUpdate();
             } else {
                 showAlert('Güncelleme başarısız.', 'error');
@@ -593,6 +622,29 @@ function AlbumSettingsTab({ customer, onUpdate }: { customer: Customer; onUpdate
                 <Settings className="w-5 h-5 text-indigo-500" />
                 Albüm Onay Ayarları
             </h3>
+
+            {/* Kapak Tedarikçisi Seçimi */}
+            <div className="mb-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 flex flex-col md:flex-row items-start md:items-center gap-6">
+                <div className="flex-1">
+                    <h4 className="text-base font-bold text-indigo-900 mb-1">Albüm Kapak Tedarikçisi</h4>
+                    <p className="text-sm text-indigo-700 font-medium">
+                        Müşteri fotoğraflarını seçtikten sonra, bu tedarikçinin kapak modellerini görecektir. Özelliği kullanmak istemiyorsanız boş bırakın.
+                    </p>
+                </div>
+                <div className="w-full md:w-72 flex-shrink-0">
+                    <select
+                        value={albumProviderId}
+                        onChange={(e) => setAlbumProviderId(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-800"
+                    >
+                        <option value="">-- Kapak Seçimi İstenmiyor --</option>
+                        {providers.map(p => (
+                            <option key={p._id} value={p._id}>{p.name}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Albüm Fotoğraf Sayısı</label>
@@ -819,6 +871,57 @@ function ApprovedAlbumTab({ customer }: { customer: Customer }) {
                     {renderGroup('Kapak Fotoğrafları', grouped.cover, 'text-violet-600', Layout)}
                     {renderGroup('Poster Fotoğrafları', grouped.poster, 'text-amber-600', ImageIcon)}
                 </div>
+
+                {/* Album Cover Selection Info Box */}
+                {((customer as any).selectedAlbumCover || (customer as any).isCoverSelectionCompleted) && (() => {
+                    let parsedCover: any = null;
+                    if ((customer as any).selectedAlbumCover) {
+                        try {
+                            parsedCover = typeof (customer as any).selectedAlbumCover === 'string' 
+                                ? JSON.parse((customer as any).selectedAlbumCover) 
+                                : (customer as any).selectedAlbumCover;
+                        } catch {
+                            parsedCover = { name: (customer as any).selectedAlbumCover };
+                        }
+                    }
+
+                    return (
+                        <div className="mt-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 flex items-start gap-4">
+                            {parsedCover?.imageUrl && (
+                                <img
+                                    src={parsedCover.imageUrl}
+                                    alt={parsedCover.name}
+                                    className="w-20 h-20 object-cover rounded-lg border border-purple-200 shadow-sm flex-shrink-0"
+                                />
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-6 h-6 bg-purple-100 rounded-md flex items-center justify-center">
+                                        <Album className="w-3.5 h-3.5 text-purple-600" />
+                                    </div>
+                                    <span className="text-xs font-bold text-purple-700 uppercase tracking-widest">Seçilen Albüm Kapağı</span>
+                                </div>
+                                <h4 className="text-base font-bold text-purple-900 mb-0.5">
+                                    {parsedCover?.name || 'Seçildi'}
+                                </h4>
+                                {customer.albumProviderId && (
+                                    <p className="text-sm text-purple-600">
+                                        Tedarikçi: <span className="font-semibold">
+                                            {typeof customer.albumProviderId === 'object'
+                                                ? customer.albumProviderId.name
+                                                : 'Atandı'}
+                                        </span>
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex-shrink-0">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 border border-green-200 px-2.5 py-1 rounded-full">
+                                    <Check className="w-3 h-3" /> Tamamlandı
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     );

@@ -10,8 +10,12 @@ import {
     Calendar,
     Activity,
     ArrowUpRight,
-    ArrowDownRight
+    ArrowDownRight,
+    Banknote,
+    Building2,
+    Package
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface Stats {
     users?: { total: number; active: number };
@@ -271,6 +275,53 @@ export default function SuperAdminDashboard() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Link href="/superadmin/payments" className="group p-6 bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-xl rounded-2xl border border-purple-500/20 hover:border-purple-500/40 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Banknote className="w-6 h-6 text-white" />
+                        </div>
+                        <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">Havale Ödemeleri</h3>
+                    <p className="text-sm text-gray-400">Bekleyen havale bildirimlerini onayla veya reddet.</p>
+                </Link>
+
+                <Link href="/superadmin/settings/bank-accounts" className="group p-6 bg-gradient-to-br from-pink-600/20 to-purple-600/20 backdrop-blur-xl rounded-2xl border border-pink-500/20 hover:border-pink-500/40 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Building2 className="w-6 h-6 text-white" />
+                        </div>
+                        <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">Banka Bilgileri</h3>
+                    <p className="text-sm text-gray-400">IBAN ve banka hesap bilgilerini buradan yönet.</p>
+                </Link>
+
+                <Link href="/superadmin/photographers" className="group p-6 bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-white/20 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Users className="w-6 h-6 text-white" />
+                        </div>
+                        <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">Fotoğrafçılar</h3>
+                    <p className="text-sm text-gray-400">Tüm üye fotoğrafçıları görüntüle ve yönet.</p>
+                </Link>
+
+                <Link href="/superadmin/packages" className="group p-6 bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-white/20 transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Package className="w-6 h-6 text-white" />
+                        </div>
+                        <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">Paket Yönetimi</h3>
+                    <p className="text-sm text-gray-400">Satış paketlerini ve fiyatları düzenle.</p>
+                </Link>
             </div>
 
             {/* Quick Actions / Bottom Grid */}

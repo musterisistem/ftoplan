@@ -13,14 +13,38 @@ export default async function SelectionPage({ params }: { params: Promise<{ slug
     }
 
     await dbConnect();
-    const customer = await Customer.findById(customerSession.customerId);
+    await import('@/models/AlbumProvider'); // Ensure AlbumProvider is registered BEFORE populate
+
+    let customer: any = null;
+    try {
+        customer = await Customer.findById(customerSession.customerId).populate({
+            path: 'albumProviderId',
+            strictPopulate: false,
+        });
+    } catch {
+        // Fallback: load without populate if model registration fails
+        customer = await Customer.findById(customerSession.customerId);
+    }
 
     if (!customer) {
         return <div className="text-center text-white p-20">Müşteri kaydı bulunamadı.</div>;
     }
 
     // Serialize generic object to pass to client
-    const serializedCustomer = JSON.parse(JSON.stringify(customer));
+    let serializedCustomer = JSON.parse(JSON.stringify(customer));
+
+    // If albumProviderId is still just a string (populate failed), load it manually
+    if (serializedCustomer.albumProviderId && typeof serializedCustomer.albumProviderId === 'string') {
+        try {
+            const AlbumProvider = (await import('@/models/AlbumProvider')).default;
+            const provider = await AlbumProvider.findById(serializedCustomer.albumProviderId);
+            if (provider) {
+                serializedCustomer.albumProviderId = JSON.parse(JSON.stringify(provider));
+            }
+        } catch {
+            // provider stays as string; Phase 2 will handle gracefully
+        }
+    }
 
     // Fetch the provider (photographer) to get settings like success text and theme
     const providerId = customer.photographerId || customer.userId;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, Globe, Mail, Bell, Shield, Database } from 'lucide-react';
+import { Settings, Globe, Mail, Bell, Shield, Database, Banknote, Building2, CreditCard } from 'lucide-react';
 import { useAlert } from '@/context/AlertContext';
 
 export default function SuperAdminSettingsPage() {
@@ -153,6 +153,46 @@ export default function SuperAdminSettingsPage() {
                             </div>
                         </div>
                         <Globe className="w-5 h-5 text-gray-600 group-hover:text-indigo-400 transition-colors" />
+                    </a>
+                </div>
+            </div>
+
+            {/* Payment & Finance Settings */}
+            <div className="bg-gray-800/50 rounded-2xl border border-white/10 p-6 space-y-6">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Banknote className="w-5 h-5 text-emerald-400" />
+                    Ödeme & Finans Ayarları
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a
+                        href="/superadmin/settings/bank-accounts"
+                        className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg cursor-pointer hover:bg-gray-900/70 border border-white/5 transition-all group"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
+                                <Building2 className="w-6 h-6 text-pink-400" />
+                            </div>
+                            <div>
+                                <p className="text-white font-medium">Banka Hesapları (IBAN)</p>
+                                <p className="text-sm text-gray-400">Havale için banka bilgilerini yönetin</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a
+                        href="/superadmin/payments"
+                        className="flex items-center justify-between p-4 bg-gray-900/50 rounded-lg cursor-pointer hover:bg-gray-900/70 border border-white/5 transition-all group"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                                <Banknote className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <div>
+                                <p className="text-white font-medium">Ödemeleri Takip Et</p>
+                                <p className="text-sm text-gray-400">Tüm havale ve kart ödemelerini listeleyin</p>
+                            </div>
+                        </div>
                     </a>
                 </div>
             </div>

@@ -26,9 +26,14 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
     const [submitting, setSubmitting] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'selected'>('all');
     const [activeCategory, setActiveCategory] = useState<CategoryType>('album');
+    const [zoomedCover, setZoomedCover] = useState<string | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [isDownloadingZip, setIsDownloadingZip] = useState(false);
     const [downloadProgress, setDownloadProgress] = useState(0);
+
+    // New states for Cover Selection Phase
+    const [phase, setPhase] = useState<'photos' | 'cover'>('photos');
+    const [selectedAlbumCover, setSelectedAlbumCover] = useState<{name: string, imageUrl: string} | null>(customer.selectedAlbumCover || null);
 
     // Get the photos being currently viewed (all or selected)
     const displayedPhotos = useMemo(() => {
@@ -185,26 +190,44 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
 
     const handleConfirmSubmit = async () => {
         closePopup();
+        
+        const hasCoverProvider = !!(customer.albumProviderId) && !customer.isCoverSelectionCompleted;
+        
+        // If finishing the photo phase and we have a cover step, go to cover step
+        if (phase === 'photos' && hasCoverProvider) {
+            setPhase('cover');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        // Final submit (either from direct submit without provider, or from cover phase)
         setSubmitting(true);
         try {
+            const payload: any = {
+                selectedPhotos,
+                selectionCompleted: true,
+                appointmentStatus: 'fotograflar_secildi',
+                albumStatus: 'tasarim_asamasinda',
+                source: 'customer'   // Bildirim sadece müşteri aksiyonuyla tetiklenir
+            };
+
+            if (selectedAlbumCover) {
+                payload.selectedAlbumCover = selectedAlbumCover;
+                payload.isCoverSelectionCompleted = true;
+            }
+
             const res = await fetch(`/api/customers/${customer._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    selectedPhotos,
-                    selectionCompleted: true,
-                    appointmentStatus: 'fotograflar_secildi',
-                    albumStatus: 'tasarim_asamasinda',
-                    source: 'customer'   // Bildirim sadece müşteri aksiyonuyla tetiklenir
-                })
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
                 setPopup({
                     isOpen: true,
                     type: 'success',
-                    title: 'Başarılı!',
-                    message: selectionSuccessMessage || 'Seçimleriniz başarıyla iletildi! Teşekkür ederiz.',
+                    title: 'Seçiminiz Tamamlandı!',
+                    message: selectionSuccessMessage || 'Seçiminiz tamamlandı, teşekkürler. Ürününüz en kısa sürede hazırlanacaktır.',
                     onConfirm: () => window.location.reload()
                 });
             } else {
@@ -223,14 +246,49 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
     };
 
     const handleSubmit = async () => {
-        if (!isValid) return;
-        setPopup({
-            isOpen: true,
-            type: 'confirm',
-            title: 'Onaylıyor musunuz?',
-            message: 'Seçimlerinizi onaylayıp göndermek istiyor musunuz? Bu işlem geri alınamaz.',
-            onConfirm: handleConfirmSubmit
-        });
+        if (phase === 'photos') {
+            if (!isValid) return;
+            // Go to cover phase if albumProviderId is assigned and cover selection not yet done
+            const hasCoverProvider = !!(customer.albumProviderId) && !customer.isCoverSelectionCompleted;
+            
+            if (hasCoverProvider) {
+                // Go directly to cover selection phase — no popup needed
+                setPhase('cover');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // No cover step: show a confirm popup before submitting
+            setPopup({
+                isOpen: true,
+                type: 'confirm',
+                title: 'Onaylıyor musunuz?',
+                message: 'Seçimlerinizi onaylayıp göndermek istiyor musunuz? Bu işlem geri alınamaz.',
+                onConfirm: handleConfirmSubmit
+            });
+        } else {
+            // Cover phase submit
+            const provider = typeof customer.albumProviderId === 'object' ? customer.albumProviderId : null;
+            const covers = provider?.covers || [];
+
+            // Only require selection if covers actually exist
+            if (covers.length > 0 && !selectedAlbumCover) {
+                setPopup({
+                    isOpen: true,
+                    type: 'warning',
+                    title: 'Seçim Yapmadınız',
+                    message: 'Lütfen tasarımına karar verdiğiniz kapak modelini seçin.',
+                });
+                return;
+            }
+            setPopup({
+                isOpen: true,
+                type: 'confirm',
+                title: 'Siparişi Tamamla',
+                message: 'Albüm kapağı dahil tüm seçimlerinizi onaylayıp göndermek istiyor musunuz?',
+                onConfirm: handleConfirmSubmit
+            });
+        }
     };
 
     if (customer.selectionCompleted) {
@@ -247,8 +305,14 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
                     <h3 className={`${isPink ? 'text-[#831843]/60' : 'text-gray-500'} text-xs font-bold uppercase tracking-widest mb-4`}>Özet</h3>
                     <div className="space-y-3">
                         <div className={`flex justify-between ${isPink ? 'text-[#831843]' : 'text-gray-300'}`}><span>Albüm</span><span className={`font-bold ${isPink ? 'text-[#831843]' : 'text-white'}`}>{counts.album} Adet</span></div>
-                        <div className={`flex justify-between ${isPink ? 'text-[#831843]' : 'text-gray-300'}`}><span>Kapak</span><span className={`font-bold ${isPink ? 'text-[#831843]' : 'text-white'}`}>{counts.cover} Adet</span></div>
+                        <div className={`flex justify-between ${isPink ? 'text-[#831843]' : 'text-gray-300'}`}><span>İç Kapak Fotoğrafı</span><span className={`font-bold ${isPink ? 'text-[#831843]' : 'text-white'}`}>{counts.cover} Adet</span></div>
                         <div className={`flex justify-between ${isPink ? 'text-[#831843]' : 'text-gray-300'}`}><span>Poster</span><span className={`font-bold ${isPink ? 'text-[#831843]' : 'text-white'}`}>{counts.poster} Adet</span></div>
+                        {(customer.selectedAlbumCover || customer.isCoverSelectionCompleted) && (
+                            <div className={`flex justify-between border-t ${isPink ? 'border-pink-100 pt-3' : 'border-gray-800 pt-3'} ${isPink ? 'text-[#831843]' : 'text-gray-300'}`}>
+                                <span>Albüm Kapak Modeli</span>
+                                <span className={`font-bold ${isPink ? 'text-[#831843]' : 'text-white'}`}>{customer.selectedAlbumCover?.name || 'Seçildi'}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -264,6 +328,178 @@ export default function SelectionClient({ customer, photos, selectionSuccessMess
     };
 
     const currentCatConfig = getCategoryConfig(activeCategory);
+
+    // --- Cover Selection UI Phase ---
+    if (phase === 'cover' && customer.albumProviderId) {
+        const provider = typeof customer.albumProviderId === 'object' ? customer.albumProviderId : null;
+        const covers = provider?.covers || [];
+        const providerName = provider?.name || 'Albüm Kapak Seçimi';
+
+        return (
+            <div className="max-w-7xl mx-auto px-4 pb-24">
+                <div className="text-center mb-8">
+                    <h2 className={`text-2xl md:text-3xl font-bold font-syne mb-2 ${isPink ? 'text-[#831843]' : 'text-white'}`}>Albüm Kapak Modeli Seçimi</h2>
+                    <p className={`text-base ${isPink ? 'text-[#9D174D]/70' : 'text-gray-400'}`}>
+                        Fotoğraf seçimlerinizi tamamladınız. Şimdi lütfen albüm kapağı modelini seçin.
+                    </p>
+                </div>
+
+                <div className={`sticky top-20 z-30 backdrop-blur-xl border rounded-2xl p-4 mb-6 shadow-2xl ring-1 flex justify-end items-center ${stickyHeaderBg}`}>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className={`px-6 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 transition-all ${(selectedAlbumCover || covers.length === 0)
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-500/30'
+                            : (isPink ? 'bg-pink-50 text-pink-300 cursor-not-allowed border border-pink-100' : 'bg-white/5 text-gray-500 cursor-not-allowed border border-white/5')
+                            }`}
+                    >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        SİPARİŞİ TAMAMLA
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    {covers.map((cover: any, i: number) => {
+                        const isCoverSelected = selectedAlbumCover?.imageUrl === cover.imageUrl;
+                        
+                        return (
+                            <div 
+                                key={i} 
+                                onClick={() => setSelectedAlbumCover({ name: cover.name, imageUrl: cover.imageUrl })}
+                                className={`group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${gridItemBg} ${isCoverSelected
+                                    ? `ring-4 ring-offset-2 ${isPink ? 'ring-green-500 ring-offset-[#FFFBF0]' : 'ring-green-500 ring-offset-black'} scale-[1.02]`
+                                    : `hover:opacity-90 hover:ring-2 ${gridItemRingHover}`}`}
+                            >
+                                <div className="aspect-[4/3] flex items-center justify-center p-2">
+                                    <img 
+                                        src={cover.imageUrl} 
+                                        alt={cover.name} 
+                                        className="w-full h-full object-cover rounded-xl shadow-inner transition-transform duration-500 group-hover:scale-110" 
+                                    />
+                                </div>
+                                
+                                {/* Zoom Button Overlay */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setZoomedCover(cover.imageUrl);
+                                    }}
+                                    className="absolute top-2 right-2 w-8 h-8 md:w-10 md:h-10 bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                >
+                                    <ZoomIn className="w-4 h-4 md:w-5 md:h-5" />
+                                </button>
+
+                                <div className={`p-4 border-t text-center relative ${isPink ? 'border-pink-100 bg-white/50' : 'border-white/5 bg-black/50'}`}>
+                                    <h4 className={`text-sm font-bold ${isPink ? 'text-[#831843]' : 'text-white'}`}>{cover.name}</h4>
+                                    
+                                    {isCoverSelected && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1">
+                                            <Check className="w-3 h-3" /> Seçildi
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+                
+                <AnimatePresence>
+                    {popup.isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[2100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                exit={{ scale: 0.9, y: 20 }}
+                                className={`${popupBg} border p-8 rounded-3xl max-w-sm w-full shadow-2xl relative overflow-hidden`}
+                            >
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+
+                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto ${popup.type === 'error' ? 'bg-red-500/10 text-red-500' :
+                                    popup.type === 'success' ? 'bg-green-500/10 text-green-500' :
+                                        popup.type === 'confirm' ? 'bg-blue-500/10 text-blue-500' : 'bg-yellow-500/10 text-yellow-500'
+                                    }`}>
+                                    {popup.type === 'error' && <AlertCircle className="w-8 h-8" />}
+                                    {popup.type === 'success' && <Check className="w-8 h-8" />}
+                                    {popup.type === 'confirm' && <Info className="w-8 h-8" />}
+                                    {popup.type === 'warning' && <AlertCircle className="w-8 h-8" />}
+                                </div>
+
+                                <h3 className={`text-xl font-bold text-center mb-2 font-syne ${popupText}`}>{popup.title}</h3>
+                                <p className={`${popupSubText} text-center text-sm mb-8`}>{popup.message}</p>
+
+                                <div className="flex gap-3">
+                                    {popup.type === 'confirm' ? (
+                                        <>
+                                            <button
+                                                onClick={closePopup}
+                                                className={`flex-1 py-3.5 rounded-xl font-bold transition-colors ${isPink ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                                            >
+                                                Vazgeç
+                                            </button>
+                                            <button
+                                                onClick={popup.onConfirm}
+                                                className={`flex-1 py-3.5 rounded-xl font-bold transition-colors shadow-lg ${isPink ? 'bg-[#831843] text-white hover:bg-[#9D174D]' : 'bg-white text-black hover:bg-gray-200'}`}
+                                            >
+                                                Onayla
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                closePopup();
+                                                if (popup.onConfirm) popup.onConfirm();
+                                            }}
+                                            className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-white to-gray-200 text-black hover:scale-[1.02] transition-transform shadow-lg shadow-white/10"
+                                        >
+                                            Tamam
+                                        </button>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Cover Zoom Modal */}
+                <AnimatePresence>
+                    {zoomedCover && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[3000] bg-black/95 backdrop-blur-xl flex items-center justify-center"
+                        >
+                            <button
+                                onClick={() => setZoomedCover(null)}
+                                className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors z-50"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                            
+                            <div className="w-full h-full p-4 flex items-center justify-center">
+                                <TransformWrapper initialScale={1} minScale={0.5} maxScale={4} centerOnInit>
+                                    <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
+                                        <img
+                                            src={zoomedCover}
+                                            alt="Zoomed Cover"
+                                            className="max-w-full max-h-[90vh] object-contain cursor-grab active:cursor-grabbing rounded-xl shadow-2xl"
+                                            draggable={false}
+                                        />
+                                    </TransformComponent>
+                                </TransformWrapper>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    }
+    // --- End of Cover Selection UI Phase ---
 
     return (
         <div className="max-w-7xl mx-auto px-4 pb-24">

@@ -11,8 +11,7 @@ export async function GET(req: NextRequest) {
 
         if (!token) {
             return NextResponse.json(
-                { error: 'Oturum bulunamadı' },
-                { status: 401 }
+                { authenticated: false, customer: null }
             );
         }
 
@@ -20,6 +19,7 @@ export async function GET(req: NextRequest) {
         const { payload } = await jwtVerify(token, JWT_SECRET);
 
         return NextResponse.json({
+            authenticated: true,
             customer: {
                 id: payload.customerId,
                 name: payload.name,
@@ -30,10 +30,9 @@ export async function GET(req: NextRequest) {
         });
 
     } catch (error) {
-        console.error('Customer verify error:', error);
+        // Token is invalid or expired
         return NextResponse.json(
-            { error: 'Geçersiz oturum' },
-            { status: 401 }
+            { authenticated: false, customer: null }
         );
     }
 }

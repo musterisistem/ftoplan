@@ -2,6 +2,7 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import Customer from '@/models/Customer';
 import Gallery from '@/models/Gallery';
+import ShootPackage from '@/models/ShootPackage';
 import { cache } from 'react';
 
 // CDN demo images for photographers that have no portfolio photos uploaded yet
@@ -14,17 +15,29 @@ const DEMO_PHOTOS = Array.from({ length: 8 }, (_, i) => ({
 // — only ONE DB call per page load instead of two
 export const getPhotographer = cache(async (slug: string) => {
     await dbConnect();
-    const photographer = await User.findOne({
+    const photographer = (await User.findOne({
         slug: slug.toLowerCase(),
         role: 'admin',
         isActive: true
-    }).select('-password').lean();
+    }).select('-password').lean()) as any;
 
     if (photographer) {
         if (!photographer.portfolioPhotos || photographer.portfolioPhotos.length === 0) {
             photographer.portfolioPhotos = DEMO_PHOTOS;
         }
-        return JSON.parse(JSON.stringify(photographer));
+
+        // Fetch Photographer Packages
+        const packages = await ShootPackage.find({ 
+            photographerId: photographer._id,
+            isActive: true 
+        }).lean();
+
+        const photographerWithPackages = {
+            ...photographer,
+            packages: packages || []
+        };
+
+        return JSON.parse(JSON.stringify(photographerWithPackages));
     }
 
     return null;
@@ -63,7 +76,7 @@ export const getAllStudioPhotos = async (photographerId: string) => {
     });
 
     // 4. Get Portfolio Photos
-    const photographer = await User.findById(photographerId).select('portfolioPhotos').lean();
+    const photographer = (await User.findById(photographerId).select('portfolioPhotos').lean()) as any;
     const portfolioPhotos = photographer?.portfolioPhotos?.map((p: any) => ({
         url: p.url,
         title: p.title || 'Portfolyo'

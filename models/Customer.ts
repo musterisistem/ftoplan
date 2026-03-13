@@ -116,6 +116,20 @@ const CustomerSchema = new mongoose.Schema({
         ref: 'Contract',
         default: null,
     },
+    // Feature: Album Cover Selection
+    albumProviderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'AlbumProvider',
+        default: null,
+    },
+    selectedAlbumCover: {
+        type: String,
+        default: null,
+    },
+    isCoverSelectionCompleted: {
+        type: Boolean,
+        default: false,
+    },
 }, { timestamps: true });
 
 const Customer = mongoose.models.Customer || mongoose.model('Customer', CustomerSchema);

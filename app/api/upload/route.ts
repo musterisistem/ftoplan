@@ -30,12 +30,16 @@ export async function POST(req: Request) {
         const filename = `${timestamp}-${cleanName}`;
 
         // Centralized folder structure:
-        // If subfolder starts with 'app/', make it `app/{slug}/images`
-        // Otherwise default to `images/{subfolder}`
+        // - If subfolder starts with 'app/', place at `{subfolder}/images`
+        // - If subfolder starts with 'album-covers/', place at the root `album-covers/...` path (NOT under images/)
+        // - Otherwise default to `images/{subfolder}`
         let folder = `images/${subfolder}`;
         if (subfolder.startsWith('app/')) {
             // e.g. "app/gullugil" -> "app/gullugil/images"
             folder = `${subfolder}/images`;
+        } else if (subfolder.startsWith('album-covers/')) {
+            // e.g. "album-covers/mir-album/weey-net-fotografcilik" -> kept as-is at root
+            folder = subfolder;
         }
 
         const url = await uploadToBunny(file, filename, folder);

@@ -92,6 +92,12 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    // Payment Status: 'active' = KK / onaylanmış havale, 'pending_transfer' = havale onayı bekleniyor
+    paymentStatus: {
+        type: String,
+        enum: ['active', 'pending_transfer'],
+        default: 'active',
+    },
     // Studio Info (for photographers)
     studioName: {
         type: String,

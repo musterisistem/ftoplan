@@ -6,6 +6,7 @@ import AutoCleanupScheduler from '@/components/admin/AutoCleanupScheduler';
 import SubscriptionGuard from '@/components/admin/SubscriptionGuard';
 import OnboardingTour from '@/components/admin/OnboardingTour';
 import EmailVerificationGate from '@/components/admin/EmailVerificationGate';
+import PendingTransferGate from '@/components/admin/PendingTransferGate';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useState } from 'react';
 
@@ -31,7 +32,9 @@ export default function AdminLayout({
                     <Header />
                     <main className="flex-1 overflow-y-auto overflow-x-hidden h-[calc(100vh-80px)] md:h-full p-4 pb-28 md:p-8 md:pb-8">
                         <EmailVerificationGate>
-                            {children}
+                            <PendingTransferGate>
+                                {children}
+                            </PendingTransferGate>
                         </EmailVerificationGate>
                     </main>
                     <MobileBottomNav onMenuClick={handleMobileMenuClick} />

@@ -36,7 +36,8 @@ import {
     Crown,
     Globe,
     ShieldAlert,
-    Ticket
+    Ticket,
+    BookImage
 } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 
@@ -67,6 +68,7 @@ const menuSections: MenuSection[] = [
             { name: 'Randevu Ekle', href: '/admin/appointments/new', icon: Calendar, badge: 'Yeni İş' },
             { name: 'Randevular', href: '/admin/appointments', icon: Edit },
             { name: 'Müşteriler', href: '/admin/customers', icon: Users },
+            { name: 'Albüm Kapakları', href: '/admin/album-providers', icon: BookImage },
             { name: 'Çekim Sözleşmeleri', href: '/admin/contracts', icon: FileText },
             { name: 'Çekim Paketleri', href: '/admin/packages', icon: Package },
         ]

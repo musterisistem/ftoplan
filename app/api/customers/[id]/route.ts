@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Customer from '@/models/Customer';
 import User from '@/models/User';
+import AlbumProvider from '@/models/AlbumProvider';
 import bcrypt from 'bcryptjs';
 
 export async function GET(
@@ -15,7 +16,7 @@ export async function GET(
 
     try {
         const session = await getServerSession(authOptions);
-        const customer = await Customer.findById(id);
+        const customer = await Customer.findById(id).populate('albumProviderId');
         if (!customer) {
             return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
         }
@@ -95,8 +96,8 @@ export async function PUT(
             return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
         }
 
-        // Ownership check for admin users
-        if (session?.user?.role === 'admin') {
+        // Ownership check for admin users - only if not from customer interface
+        if (body.source !== 'customer' && session?.user?.role === 'admin') {
             const adminUser = await User.findOne({ email: session.user.email, role: 'admin' });
             if (!adminUser || customer.photographerId?.toString() !== adminUser._id.toString()) {
                 return NextResponse.json({ error: 'Bu müşteriye erişim yetkiniz yok' }, { status: 403 });
@@ -151,6 +152,13 @@ export async function PUT(
         if (body.selectedPhotos !== undefined) updateData.selectedPhotos = body.selectedPhotos;
         if (body.selectionCompleted !== undefined) updateData.selectionCompleted = body.selectionCompleted;
         if (body.canDownload !== undefined) updateData.canDownload = body.canDownload;
+        if (body.albumProviderId !== undefined) updateData.albumProviderId = body.albumProviderId;
+        if (body.selectedAlbumCover !== undefined) {
+            updateData.selectedAlbumCover = typeof body.selectedAlbumCover === 'object' 
+                ? JSON.stringify(body.selectedAlbumCover) 
+                : body.selectedAlbumCover;
+        }
+        if (body.isCoverSelectionCompleted !== undefined) updateData.isCoverSelectionCompleted = body.isCoverSelectionCompleted;
 
         // Check if photo selection was just completed FOR THE FIRST TIME by the CUSTOMER
         // (not triggered by admin panel saves - requires source: 'customer')
