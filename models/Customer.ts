@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import './AlbumProvider';
 
 const CustomerSchema = new mongoose.Schema({
     brideName: {

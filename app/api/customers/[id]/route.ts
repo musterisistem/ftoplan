@@ -16,7 +16,13 @@ export async function GET(
 
     try {
         const session = await getServerSession(authOptions);
-        const customer = await Customer.findById(id).populate('albumProviderId');
+        
+        // Use explicit model to prevent "Schema hasn't been registered" error
+        const customer = await Customer.findById(id).populate({
+            path: 'albumProviderId',
+            model: AlbumProvider
+        });
+        
         if (!customer) {
             return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
         }
