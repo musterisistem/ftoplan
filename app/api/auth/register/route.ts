@@ -66,8 +66,8 @@ export async function POST(req: Request) {
             if (!dbPackage) {
                 return NextResponse.json({ error: 'Geçersiz paket seçimi.' }, { status: 400 });
             }
-            // Use price directly as stored
-            dbPackage.price = Math.round(dbPackage.price);
+            // Use price exactly as stored in DB - no rounding (preserves 109.99 etc.)
+            // dbPackage.price is already the correct value
         }
 
         // Generate Verification Token
