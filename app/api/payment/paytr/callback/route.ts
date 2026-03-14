@@ -241,25 +241,10 @@ export async function POST(req: Request) {
                 },
             });
 
-            // 2. Welcome SMS
-            const welcomeMsg = `Sayın ${draftUser.studioName}, Weey.net ailesine hoş geldiniz! Fotoğrafçı hesabınız aktif edilmiştir. Panelinize giriş yaparak profilinizi düzenleyebilirsiniz.`;
-            await sendSMS(draftUser.phone, welcomeMsg);
-
-            // 3. Payment Success SMS (Only for paid packages)
+            // 2. Payment Success SMS (Only for paid packages)
             if (purchasedPackage.id !== 'trial') {
                 const successMsg = `Sayın ${draftUser.studioName}, Weey.net üyelik ödemeniz başarıyla alınmıştır. Hesabınız aktif edilme sürecine alınmıştır. Bizi tercih ettiğiniz için teşekkür ederiz.`;
                 await sendSMS(draftUser.phone, successMsg);
-            }
-
-            // 4. OTP Verification SMS - Always send after successful payment
-            // (SMS was NOT sent during registration for paid packages)
-            const { sendSMS: sendOtpSMS } = await import('@/lib/netgsm');
-            const otpMsg = `Weey.net doğrulama kodunuz: ${phoneOTP} Hesabınızı aktifleştirmek için bu kodu doğrulama ekranına giriniz. Kodu kimseyle paylaşmayınız.`;
-            const smsSent = await sendOtpSMS(draftUser.phone, otpMsg);
-            if (smsSent.success) {
-                console.log(`[PayTR Callback] ✅ OTP SMS sent to ${draftUser.phone}`);
-            } else {
-                console.error(`[PayTR Callback] ❌ OTP SMS failed: ${smsSent.error}`);
             }
 
             // 5. Payment Success Invoice Email

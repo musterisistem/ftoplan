@@ -51,7 +51,7 @@ export async function POST(req: Request) {
             const { EmailTemplateType } = await import('@/models/EmailTemplate');
             const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001';
 
-            const welcomeMsg = `${user.studioName} WeeyNet aboneliginiz ile aramiza hos geldiniz. Professional fotografcilik paneliniz aktif edildi. Destek: 05517071494 - WeeyNet`;
+            const welcomeMsg = `Sayın ${user.studioName}, Weey.net ailesine hoş geldiniz! 🎉 Fotoğrafçı hesabınız aktif edilmiştir. Panelinize giriş yaparak profilinizi düzenleyebilirsiniz.`;
             await sendSMS(user.phone, welcomeMsg);
 
             // Send Account Credentials Email

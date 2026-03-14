@@ -20,10 +20,15 @@ export default function VerifyPhonePage() {
     const [error, setError] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(0);
 
-    // Redirect if already verified
+    // Redirect if already verified, otherwise send initial SMS
     useEffect(() => {
-        if (status === 'authenticated' && (session?.user as any)?.isPhoneVerified === true) {
-            router.push('/admin/dashboard');
+        if (status === 'authenticated') {
+            if ((session?.user as any)?.isPhoneVerified === true) {
+                router.push('/admin/dashboard');
+            } else if (!sent && countdown === 0) {
+                // Auto-send first SMS when page loads
+                resendSMS();
+            }
         }
     }, [status, session, router]);
 
