@@ -166,6 +166,10 @@ export async function POST(req: Request) {
             ipAddress: '0.0.0.0'
         };
 
+        const phoneOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        const phoneOTPExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
+
         const newUser = await User.create({
             name: draftUser.name,
             studioName: draftUser.studioName,
@@ -183,9 +187,9 @@ export async function POST(req: Request) {
             subscriptionExpiry,
             billingInfo: draftUser.billingInfo,
             isActive: true, // Mark as active (paid) immediately
-            isEmailVerified: false,
-            verificationToken: verificationToken,
-            verificationTokenExpiry: verificationTokenExpiry,
+            isPhoneVerified: false,
+            phoneVerificationCode: phoneOTP,
+            phoneVerificationExpiry: phoneOTPExpiry,
             legalConsents: legalConsents, // ✅ Persist Legal Consents
         });
 
@@ -219,10 +223,11 @@ export async function POST(req: Request) {
             console.error('[System] Superadmin payment notification failed:', notifyErr);
         }
 
-        // Send welcome & verification emails
+        // Send welcome & verification messages
         try {
             const { sendEmailWithTemplate } = await import('@/lib/resend');
             const { EmailTemplateType } = await import('@/models/EmailTemplate');
+            const { sendSMS } = await import('@/lib/netgsm');
 
             // 1. Welcome Email
             await sendEmailWithTemplate({
@@ -236,19 +241,46 @@ export async function POST(req: Request) {
                 },
             });
 
-            // 2. Email Verification Email
-            const verifyUrl = `${baseUrl}/api/auth/verify?token=${verificationToken}&email=${encodeURIComponent(draftUser.email)}`;
+            // 2. Welcome SMS
+            const welcomeMsg = `${draftUser.studioName} WeeyNet aboneliginiz ile aramiza hos geldiniz. Professional fotografcilik paneliniz aktif edildi. Destek: 05517071494 - WeeyNet`;
+            await sendSMS(draftUser.phone, welcomeMsg);
+
+            // 3. Payment Success SMS (Only for paid packages)
+            if (purchasedPackage.id !== 'trial') {
+                const amount = order.amount || 0;
+                const successMsg = `${amount} TL odemeniz basarili. Faturaniz mail adresinize iletilecektir. WeeyNet`;
+                await sendSMS(draftUser.phone, successMsg);
+            }
+
+            // 4. OTP Verification SMS
+            const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
+            await sendSMS(draftUser.phone, otpMsg);
+
+            // 5. Payment Success Invoice Email
             await sendEmailWithTemplate({
                 to: draftUser.email,
-                templateType: EmailTemplateType.VERIFY_EMAIL,
+                templateType: EmailTemplateType.PAYMENT_SUCCESS_INVOICE,
                 photographerId: newUser._id.toString(),
                 data: {
-                    photographerName: draftUser.name,
-                    verifyUrl,
-                },
+                    packageName: purchasedPackage.name,
+                    amount: order.amount,
+                    paymentMethod: 'Kredi Kartı (PayTR)',
+                }
             });
-        } catch (emailErr) {
-            console.error('[PayTR Callback] Failed to send welcome/verification email:', emailErr);
+
+            // 6. Account Credentials Email (With Password)
+            await sendEmailWithTemplate({
+                to: draftUser.email,
+                templateType: EmailTemplateType.ACCOUNT_CREDENTIALS,
+                photographerId: newUser._id.toString(),
+                data: {
+                    photographerEmail: draftUser.email,
+                    photographerPassword: draftUser.password, // Plain password available here
+                    loginUrl: `${baseUrl}/login`
+                }
+            });
+        } catch (msgErr) {
+            console.error('[PayTR Callback] Failed to send welcome/verification messages:', msgErr);
         }
 
         // Increment Coupon Usage if applied

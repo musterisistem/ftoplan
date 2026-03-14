@@ -5,6 +5,8 @@ export const EmailTemplateType = {
     WELCOME_PHOTOGRAPHER: 'WELCOME_PHOTOGRAPHER',
     CUSTOMER_STATUS_UPDATE: 'CUSTOMER_STATUS_UPDATE',
     PLAN_UPDATED: 'PLAN_UPDATED',
+    ACCOUNT_CREDENTIALS: 'ACCOUNT_CREDENTIALS',
+    PAYMENT_SUCCESS_INVOICE: 'PAYMENT_SUCCESS_INVOICE',
 } as const;
 
 export type EmailTemplateTypeValue = typeof EmailTemplateType[keyof typeof EmailTemplateType];

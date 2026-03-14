@@ -1,4 +1,4 @@
-﻿import { EmailTemplateType, EmailTemplateTypeValue } from '@/models/EmailTemplate';
+import { EmailTemplateType, EmailTemplateTypeValue } from '@/models/EmailTemplate';
 
 // Template customizable fields for each template type
 export interface TemplateCustomization {
@@ -54,6 +54,26 @@ export const DEFAULT_CUSTOMIZATIONS: Record<EmailTemplateTypeValue, TemplateCust
         buttonText: 'Panelime Giriş Yap',
         footerText: 'Bu bir bilgilendirme mesajıdır. Sorularınız için bize ulaşabilirsiniz.',
         companyName: 'Weey.NET'
+    },
+    [EmailTemplateType.ACCOUNT_CREDENTIALS]: {
+        logoUrl: 'https://Weey.NET.b-cdn.net/logo-dark.png',
+        primaryColor: '#6366f1',
+        subject: 'WeeyNet Giriş Bilgileriniz',
+        headerText: 'Hesabınız Hazır!',
+        bodyText: 'WeeyNet ailesine hoş geldiniz. Panel üzerinde kullanacağınız giriş bilgileriniz aşağıdadır. Güvenliğiniz için panel girişi yaptıktan sonra şifrenizi değiştirebilirsiniz.',
+        buttonText: 'Hemen Giriş Yap',
+        footerText: 'Bu mail otomatik olarak gönderilmiştir. Lütfen şifrenizi kimseyle paylaşmayın.',
+        companyName: 'Weey.NET'
+    },
+    [EmailTemplateType.PAYMENT_SUCCESS_INVOICE]: {
+        logoUrl: 'https://Weey.NET.b-cdn.net/logo-dark.png',
+        primaryColor: '#10b981',
+        subject: 'Ödemeniz Başarıyla Alındı',
+        headerText: 'Ödeme Onayı',
+        bodyText: 'Paket ödemeniz başarıyla tamamlanmıştır. İşlem detayları aşağıdadır:',
+        buttonText: 'Panelime Git',
+        footerText: 'Faturanız kayıtlı mali adresinize 24 saat içerisinde iletilecektir.',
+        companyName: 'Weey.NET'
     }
 };
 
@@ -101,6 +121,14 @@ export function buildEmailFromCustomization(
         case EmailTemplateType.PLAN_UPDATED:
             subject = merged.subject || `${merged.companyName} - Üyeliğiniz Güncellendi`;
             htmlContent = buildPlanUpdatedHtml(merged, variables);
+            break;
+        case EmailTemplateType.ACCOUNT_CREDENTIALS:
+            subject = merged.subject || `${merged.companyName} - Giriş Bilgileriniz`;
+            htmlContent = buildAccountCredentialsHtml(merged, variables);
+            break;
+        case EmailTemplateType.PAYMENT_SUCCESS_INVOICE:
+            subject = merged.subject || `${merged.companyName} - Ödeme Onayı`;
+            htmlContent = buildPaymentSuccessInvoiceHtml(merged, variables);
             break;
     }
 
@@ -283,6 +311,113 @@ function buildPlanUpdatedHtml(custom: TemplateCustomization, vars: Record<string
 </html>`.trim();
 }
 
+function buildAccountCredentialsHtml(custom: TemplateCustomization, vars: Record<string, any>): string {
+    const logoWidth = custom.logoWidth || 140;
+    const logoHtml = custom.logoUrl
+        ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${custom.logoUrl}" width="${logoWidth}" alt="${custom.companyName}" style="margin: 0 auto;"></div>`
+        : '';
+
+    return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f5;">
+    <div style="max-width: 580px; margin: 0 auto; padding: 40px 16px;">
+        ${logoHtml}
+        <div style="background-color: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <h1 style="font-size: 22px; font-weight: bold; color: #111827; text-align: center; margin: 0 0 20px 0;">${custom.headerText}</h1>
+            <p style="color: #4b5563; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">${custom.bodyText}</p>
+            
+            <div style="background-color: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="color: #6b7280; font-size: 13px; font-weight: bold; padding-bottom: 8px;">E-POSTA</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #111827; font-size: 16px; font-weight: bold; padding-bottom: 16px;">{{photographerEmail}}</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #6b7280; font-size: 13px; font-weight: bold; padding-bottom: 8px;">ŞİFRE</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #111827; font-size: 16px; font-weight: bold;">{{photographerPassword}}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 24px;">
+                <a href="{{loginUrl}}" style="display: inline-block; background-color: ${custom.primaryColor}; color: #ffffff; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 14px; text-decoration: none;">
+                    ${custom.buttonText}
+                </a>
+            </div>
+            
+            <p style="color: #ef4444; font-size: 12px; font-style: italic; text-align: center; margin: 0;">Güvenliğiniz için şifrenizi kimseden paylaşmayın.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">${custom.footerText}</p>
+        </div>
+    </div>
+</body>
+</html>`.trim();
+}
+
+function buildPaymentSuccessInvoiceHtml(custom: TemplateCustomization, vars: Record<string, any>): string {
+    const logoWidth = custom.logoWidth || 140;
+    const logoHtml = custom.logoUrl
+        ? `<div style="text-align: center; margin-bottom: 24px;"><img src="${custom.logoUrl}" width="${logoWidth}" alt="${custom.companyName}" style="margin: 0 auto;"></div>`
+        : '';
+
+    return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f5;">
+    <div style="max-width: 580px; margin: 0 auto; padding: 40px 16px;">
+        ${logoHtml}
+        <div style="background-color: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="width: 48px; height: 48px; background-color: #d1fae5; color: #059669; border-radius: 50%; font-size: 24px; line-height: 48px; margin: 0 auto 16px;">✓</div>
+                <h1 style="font-size: 22px; font-weight: bold; color: #111827; margin: 0;">${custom.headerText}</h1>
+            </div>
+            <p style="color: #4b5563; font-size: 14px; text-align: center; margin-bottom: 24px;">${custom.bodyText}</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <th style="text-align: left; padding: 12px 0; color: #6b7280; font-size: 12px;">ÜRÜN / HİZMET</th>
+                        <th style="text-align: right; padding: 12px 0; color: #6b7280; font-size: 12px;">TUTAR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 16px 0;">
+                            <p style="color: #111827; font-weight: bold; font-size: 14px; margin: 0;">{{packageName}}</p>
+                            <p style="color: #9ca3af; font-size: 12px; margin: 4px 0 0;">Yıllık Abonelik Planı</p>
+                        </td>
+                        <td style="text-align: right; color: #111827; font-weight: bold; font-size: 14px;">{{amount}} TL</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 0 0; color: #6b7280; font-size: 14px;">Ödeme Yöntemi</td>
+                        <td style="padding: 20px 0 0; text-align: right; color: #111827; font-size: 14px;">{{paymentMethod}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px 0; color: #111827; font-weight: bold; font-size: 16px;">Toplam</td>
+                        <td style="padding: 12px 0; text-align: right; color: ${custom.primaryColor}; font-weight: bold; font-size: 18px;">{{amount}} TL</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align: center;">
+                <a href="http://localhost:3001/admin" style="display: inline-block; border: 1px solid #d1d5db; color: #374151; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px; text-decoration: none;">
+                    ${custom.buttonText}
+                </a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">${custom.footerText}</p>
+        </div>
+    </div>
+</body>
+</html>`.trim();
+}
+
 /**
  * Helper to convert hex to rgb for rgba
  */
@@ -290,3 +425,4 @@ function hexToRgb(hex: string): string {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '99, 102, 241';
 }
+

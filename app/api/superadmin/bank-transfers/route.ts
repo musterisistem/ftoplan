@@ -56,9 +56,21 @@ export async function POST(req: Request) {
 
             // Activate the user's panel
             if (order.userId) {
-                await User.findByIdAndUpdate(order.userId, {
-                    paymentStatus: 'active',
-                });
+                const user = await User.findById(order.userId);
+                if (user) {
+                    user.paymentStatus = 'active';
+                    await user.save();
+
+                    // Send Success SMS
+                    try {
+                        const { sendSMS } = await import('@/lib/netgsm');
+                        const amount = order.amount || 0;
+                        const successMsg = `${amount} TL lik isleminiz basari ile sonuclanmistir. Fatura bilgileriniz ile faturaniz tarafiniza mail adresinize iletilecektir. Iyi gunlerde kullaniniz. Weey.Net`;
+                        await sendSMS(user.phone || '', successMsg);
+                    } catch (smsErr) {
+                        console.error('[BankTransfer Approval] SMS failed:', smsErr);
+                    }
+                }
             }
 
             return NextResponse.json({ success: true, message: 'Havale onaylandı, kullanıcı paneli aktif edildi.' });

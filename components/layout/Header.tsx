@@ -184,7 +184,7 @@ export default function Header() {
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-xs font-bold shadow-sm hover:bg-rose-100 transition-colors animate-pulse"
                             >
                                 <AlertCircle className="w-3.5 h-3.5" />
-                                <span>Doğrulanmadı</span>
+                                <span>Mail Adresini Doğrula</span>
                             </button>
                         )}
                     </div>

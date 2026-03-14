@@ -88,6 +88,18 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: null,
     },
+    isPhoneVerified: {
+        type: Boolean,
+        default: false,
+    },
+    phoneVerificationCode: {
+        type: String,
+        default: null,
+    },
+    phoneVerificationExpiry: {
+        type: Date,
+        default: null,
+    },
     isBlocked: {
         type: Boolean,
         default: false,

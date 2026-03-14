@@ -18,13 +18,13 @@ export default withAuth(
                 return NextResponse.next();
             }
 
-            // For admin (photographer) role: enforce email verification and payment
+            // For admin (photographer) role: enforce phone verification
             if (token.role === 'admin') {
-                // 1. Enforce Email Verification for ALL admin users
-                if (!token.isEmailVerified) {
-                    if (pathname === '/verify-required') return NextResponse.next();
+                // 1. Enforce Phone Verification for ALL admin users
+                if (!token.isPhoneVerified) {
+                    if (pathname === '/verify-phone') return NextResponse.next();
                     // Don't redirect verify-success or signout related flows if any
-                    return NextResponse.redirect(new URL('/verify-required', req.url));
+                    return NextResponse.redirect(new URL('/verify-phone', req.url));
                 }
             }
         }
@@ -42,6 +42,6 @@ export default withAuth(
 export const config = {
     matcher: [
         '/admin/:path*',
-        '/verify-required',
+        '/verify-phone',
     ],
 };

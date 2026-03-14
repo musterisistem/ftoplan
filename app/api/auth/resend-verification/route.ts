@@ -18,7 +18,7 @@ export async function POST() {
             return NextResponse.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
         }
 
-        if (user.isActive) {
+        if (user.isEmailVerified) {
             return NextResponse.json({ message: 'E-posta zaten doğrulanmış.' });
         }
 

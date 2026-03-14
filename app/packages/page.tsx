@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -69,7 +69,6 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
     const [modal, setModal] = useState<{ id: string; title: string; content: React.ReactNode } | null>(null);
 
     const slugPreview = form.slug || generateSlug(form.studioName);
-
     const allAgreed = legal.privacy && legal.terms && legal.mss && legal.kvkk;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,12 +118,11 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
             const data = await res.json();
             if (res.ok) {
                 if (data.isPaid && data.orderNo) {
-                    // Zero-account checkout flow: redirect straight to checkout with orderNo
+                    // Paid package: redirect to /checkout, OTP will be sent after payment success
                     router.push(`/checkout?order=${data.orderNo}`);
                 } else {
-                    // Trial package flow: Log the user in
+                    // Trial: log the user in directly
                     const result = await signIn('credentials', { email: form.email, password: form.password, redirect: false });
-
                     if (result?.ok) {
                         router.push('/admin/dashboard');
                     } else {
@@ -291,9 +289,9 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
 
                 {/* Uyarı */}
                 <div className="flex gap-3 p-3.5 bg-amber-50 border border-amber-100 rounded-xl">
-                    <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <Smartphone className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                     <p className="text-[12px] text-amber-700 leading-relaxed">
-                        Kayıt sonrası e-postanıza <strong>doğrulama linki</strong> gönderilecektir. Tüm bilgiler panelinize otomatik aktarılır.
+                        Kayıt sonrası cep telefonunuza <strong>doğrulama kodu</strong> gönderilecektir. Kodu girdikten sonra paneliniz kurulumu başlar.
                     </p>
                 </div>
 
@@ -308,7 +306,6 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                     <a href="/login" className="text-[#5d2b72] font-semibold hover:underline">Giriş yapın</a>
                 </p>
             </form>
-
             <LegalModal
                 isOpen={!!modal}
                 onClose={() => setModal(null)}

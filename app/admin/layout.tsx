@@ -31,11 +31,9 @@ export default function AdminLayout({
                 <div className="flex-1 flex flex-col md:ml-[260px] transition-all duration-300 relative w-full overflow-x-hidden">
                     <Header />
                     <main className="flex-1 overflow-y-auto overflow-x-hidden h-[calc(100vh-80px)] md:h-full p-4 pb-28 md:p-8 md:pb-8">
-                        <EmailVerificationGate>
-                            <PendingTransferGate>
-                                {children}
-                            </PendingTransferGate>
-                        </EmailVerificationGate>
+                        <PendingTransferGate>
+                            {children}
+                        </PendingTransferGate>
                     </main>
                     <MobileBottomNav onMenuClick={handleMobileMenuClick} />
                 </div>

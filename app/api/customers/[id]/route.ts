@@ -216,14 +216,13 @@ export async function PUT(
             { new: true, runValidators: false } // Skip validators for backward compatibility
         );
 
-        // Send Email Notification if Status Changed and Email exists
-        if (isStatusChanged && updatedCustomer?.email && updatedCustomer?.photographerId) {
+        // Send Notifications (SMS & Email) if Status Changed
+        if (isStatusChanged && updatedCustomer?.photographerId) {
             try {
-                const { sendEmailWithTemplate } = await import('@/lib/resend');
-                const { EmailTemplateType } = await import('@/models/EmailTemplate');
-
-                // Get Photographer Studio Name
-                const photographer = await User.findById(updatedCustomer.photographerId).select('studioName');
+                // Get Photographer Details
+                const photographer = await User.findById(updatedCustomer.photographerId).select('studioName name');
+                const studioName = photographer?.studioName || 'Fotoğraf Stüdyonuz';
+                const photographerName = photographer?.name || 'Fotoğrafçınız';
 
                 // Map Enum to User Friendly Turkish Titles
                 const statusMap: any = {
@@ -246,19 +245,41 @@ export async function PUT(
                     ? { title: 'Randevu Durumu', value: statusMap[appointmentStatus] || appointmentStatus }
                     : { title: 'Albüm Durumu', value: statusMap[albumStatus] || albumStatus };
 
-                await sendEmailWithTemplate({
-                    to: updatedCustomer.email,
-                    templateType: EmailTemplateType.CUSTOMER_STATUS_UPDATE,
-                    photographerId: updatedCustomer.photographerId.toString(),
-                    data: {
-                        customerName: `${updatedCustomer.brideName} & ${updatedCustomer.groomName}`,
-                        statusTitle: changedStatus.title,
-                        statusValue: changedStatus.value,
-                        studioName: photographer?.studioName || 'Fotoğraf Stüdyonuz'
+                // 1. Send SMS Notification
+                if (updatedCustomer.phone) {
+                    try {
+                        const { sendSMS } = await import('@/lib/netgsm');
+                        // Example: "Sayın Ayşe, Fatih Fotoğrafçılık - Albüm Durumunuz 'Baskıda' olarak güncellenmiştir."
+                        const smsMessage = `Sayın ${updatedCustomer.brideName}, ${photographerName} - ${changedStatus.title}nuz '${changedStatus.value}' olarak güncellenmiştir.`;
+                        await sendSMS(updatedCustomer.phone, smsMessage);
+                    } catch (smsErr) {
+                        console.error('Failed to send status update SMS:', smsErr);
                     }
-                });
+                }
+
+                // 2. Send Email Notification
+                if (updatedCustomer.email) {
+                    try {
+                        const { sendEmailWithTemplate } = await import('@/lib/resend');
+                        const { EmailTemplateType } = await import('@/models/EmailTemplate');
+
+                        await sendEmailWithTemplate({
+                            to: updatedCustomer.email,
+                            templateType: EmailTemplateType.CUSTOMER_STATUS_UPDATE,
+                            photographerId: updatedCustomer.photographerId.toString(),
+                            data: {
+                                customerName: `${updatedCustomer.brideName} & ${updatedCustomer.groomName}`,
+                                statusTitle: changedStatus.title,
+                                statusValue: changedStatus.value,
+                                studioName: studioName
+                            }
+                        });
+                    } catch (emailErr) {
+                        console.error('Failed to send status update email:', emailErr);
+                    }
+                }
             } catch (err) {
-                console.error('Failed to send status update email:', err);
+                console.error('Failed to process status notifications:', err);
             }
         }
 

@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { CheckCircle, Loader2, Sparkles, Mail, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Loader2, Sparkles, Smartphone, AlertTriangle } from 'lucide-react';
 import UpgradeSuccessFlow from '@/components/admin/UpgradeSuccessFlow';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -103,10 +103,14 @@ function SuccessContent() {
     }, [token, isVerified]);
 
     const handleAutoLogin = async () => {
-        await signIn('credentials', {
+        const result = await signIn('credentials', {
             autoLoginToken: token,
             redirect: false,
         });
+        // Redirect to /verify-phone — middleware will also enforce this for unverified users
+        if (result?.ok) {
+            window.location.href = '/verify-phone';
+        }
     };
 
     const handleFlowComplete = () => {
@@ -155,7 +159,7 @@ function SuccessContent() {
                                 {view === 'awaitingVerification' && (
                                     <div className="flex flex-col items-center">
                                         <div className="w-20 h-20 bg-purple-100 text-[#5d2b72] rounded-full flex items-center justify-center mx-auto mb-6">
-                                            <Mail className="w-10 h-10" />
+                                            <Smartphone className="w-10 h-10" />
                                         </div>
                                         <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Ödeme Onaylandı!</h2>
                                         <p className="text-gray-600 mb-4 font-medium">
@@ -163,11 +167,11 @@ function SuccessContent() {
                                         </p>
                                         <div className="bg-purple-50 p-6 rounded-2xl border border-purple-100 mb-8">
                                             <p className="text-sm text-[#5d2b72] font-semibold leading-relaxed">
-                                                Hesabınızı kurmaya başlamak için lütfen e-postanıza gönderdiğimiz doğrulama linkine tıklayın.
+                                                Hesabınızı aktif etmek için cep telefonunuza gönderilen SMS doğrulama kodunu girin.
                                             </p>
                                         </div>
                                         <p className="text-xs text-slate-400">
-                                            Doğrulama yaptıktan sonra bu sayfa otomatik olarak güncellenecektir.
+                                            Doğrulama yaptıktan sonra paneliniz otomatik olarak kurulacaktır.
                                         </p>
                                     </div>
                                 )}

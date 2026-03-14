@@ -107,6 +107,10 @@ export async function POST(req: Request) {
 
         const limits = packageLimits[pkgType] || packageLimits['trial'];
 
+        // Generate Phone OTP
+        const phoneOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        const phoneOTPExpiry = new Date(Date.now() + 15 * 60 * 1000);
+
         // If trial, proceed with creating User directly
         if (pkgType === 'trial') {
             subscriptionExpiry.setDate(subscriptionExpiry.getDate() + 3);
@@ -135,6 +139,9 @@ export async function POST(req: Request) {
                 isActive: false,
                 verificationToken,
                 verificationTokenExpiry,
+                isPhoneVerified: false,
+                phoneVerificationCode: phoneOTP,
+                phoneVerificationExpiry: phoneOTPExpiry,
                 legalConsents: {
                     privacyPolicyConfirmed: body.legalConsents?.privacyPolicyConfirmed || false,
                     termsOfUseConfirmed: body.legalConsents?.termsOfUseConfirmed || false,
@@ -144,6 +151,15 @@ export async function POST(req: Request) {
                     ipAddress: ip
                 }
             });
+
+            // Send Phone OTP SMS immediately
+            try {
+                const { sendSMS } = await import('@/lib/netgsm');
+                const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
+                await sendSMS(phone, otpMsg);
+            } catch (smsErr) {
+                console.error('[Register] Initial SMS failed:', smsErr);
+            }
 
             const { createDefaultPackages } = await import('@/lib/packageUtils');
             await createDefaultPackages(newUser._id);
