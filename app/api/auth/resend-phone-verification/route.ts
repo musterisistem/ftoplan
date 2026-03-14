@@ -37,7 +37,7 @@ export async function POST() {
         await user.save();
 
         // Send OTP SMS
-        const otpMsg = `WeeyNet hesap dogrulama kodunuz (Yeniden): ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
+        const otpMsg = `Weey.net doğrulama kodunuz: ${phoneOTP} Hesabınızı aktifleştirmek için bu kodu doğrulama ekranına giriniz. Kodu kimseyle paylaşmayınız.`;
         const result = await sendSMS(user.phone, otpMsg);
 
         if (!result.success) {

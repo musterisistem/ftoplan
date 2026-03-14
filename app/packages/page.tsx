@@ -53,6 +53,8 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [companyType, setCompanyType] = useState<'individual' | 'corporate'>('individual');
     const [form, setForm] = useState({
         name: '', studioName: '', slug: '', isSlugEdited: false,
@@ -71,11 +73,19 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
     const slugPreview = form.slug || generateSlug(form.studioName);
     const allAgreed = legal.privacy && legal.terms && legal.mss && legal.kvkk;
 
+    const passwordsMatch = confirmPassword === '' || form.password === confirmPassword;
+    const passwordComplete = form.password.length >= 8 && form.password === confirmPassword;
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm(prev => {
             const u: any = { ...prev, [name]: value };
-            if (name === 'phone') u.phone = formatPhone(value);
+            if (name === 'phone') {
+                // Auto-add leading 0 if user didn't type it
+                const digits = value.replace(/\D/g, '');
+                const withLeadingZero = digits.length > 0 && !digits.startsWith('0') ? '0' + digits : digits;
+                u.phone = formatPhone(withLeadingZero);
+            }
             if (name === 'studioName' && !prev.isSlugEdited) u.slug = generateSlug(value);
             if (name === 'slug') { u.slug = generateSlug(value); u.isSlugEdited = true; }
             return u;
@@ -182,7 +192,17 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                     </div>
                     <div>
                         <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Telefon <span className="text-[#5d2b72]">*</span></label>
-                        <input name="phone" required value={form.phone} onChange={handleChange} className={inp} placeholder="(555) 555 55 55" />
+                        <input
+                            name="phone"
+                            required
+                            value={form.phone}
+                            onChange={handleChange}
+                            className={inp}
+                            placeholder="0(535) 535 55 55"
+                        />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                            0 ile başlamıyorsa otomatik eklenir
+                        </p>
                     </div>
                 </div>
 
@@ -234,14 +254,46 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                     </AnimatePresence>
                 </div>
 
-                {/* Şifre */}
-                <div>
-                    <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Şifre <span className="text-[#5d2b72]">*</span></label>
-                    <div className="relative">
-                        <input name="password" type={showPassword ? 'text' : 'password'} required value={form.password} onChange={handleChange} className={`${inp} pr-11`} placeholder="En az 8 karakter" />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                {/* Şifre - Çift Alan */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Şifre <span className="text-[#5d2b72]">*</span></label>
+                        <div className="relative">
+                            <input
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                value={form.password}
+                                onChange={handleChange}
+                                className={`${inp} pr-11`}
+                                placeholder="En az 8 karakter"
+                            />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-[13px] font-semibold text-slate-600 mb-1.5">Şifre Onayı <span className="text-[#5d2b72]">*</span></label>
+                        <div className="relative">
+                            <input
+                                name="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className={`${inp} pr-11 ${!passwordsMatch ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : ''}`}
+                                placeholder="Şifreyi tekrar girin"
+                            />
+                            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                        {!passwordsMatch && confirmPassword !== '' && (
+                            <p className="text-[11px] text-red-500 font-semibold mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> Şifreler uyuşmuyor!
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -296,7 +348,7 @@ function RegistrationForm({ pkgId, onSuccess }: { pkgId: string; onSuccess: () =
                 </div>
 
                 {/* Submit */}
-                <button type="submit" disabled={loading || !allAgreed}
+                <button type="submit" disabled={loading || !allAgreed || !passwordComplete}
                     className="w-full py-3.5 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold text-[15px] rounded-xl shadow-md shadow-purple-200 hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:shadow-none disabled:translate-y-0">
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Kayıt Ol ve Paneli Aç <ChevronRight className="w-5 h-5" /></>}
                 </button>

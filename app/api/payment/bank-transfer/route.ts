@@ -121,7 +121,7 @@ export async function POST(req: Request) {
             await sendSMS(newUser.phone, welcomeMsg);
 
             // 3. OTP Verification SMS
-            const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
+            const otpMsg = `Weey.net doğrulama kodunuz: ${phoneOTP} Hesabınızı aktifleştirmek için bu kodu doğrulama ekranına giriniz. Kodu kimseyle paylaşmayınız.`;
             await sendSMS(newUser.phone, otpMsg);
 
             // 4. Payment/Application Invoice Email

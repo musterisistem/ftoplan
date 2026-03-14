@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         await PhoneOTP.create({ phone: normalized, code });
 
         // Send OTP SMS
-        const message = `WeeyNet hesap dogrulama kodunuz: ${code} Lutfen dogrulama ekranina giriniz.`;
+        const message = `Weey.net doğrulama kodunuz: ${code} Hesabınızı aktifleştirmek için bu kodu doğrulama ekranına giriniz. Kodu kimseyle paylaşmayınız.`;
         const result = await sendOTP(`0${normalized}`, message);
 
         if (!result.success) {
