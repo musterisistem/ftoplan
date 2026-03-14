@@ -166,9 +166,17 @@ export async function POST(req: Request) {
             ipAddress: '0.0.0.0'
         };
 
-        const phoneOTP = Math.floor(100000 + Math.random() * 900000).toString();
-        const phoneOTPExpiry = new Date(Date.now() + 15 * 60 * 1000);
+        // Check if an OTP was already sent during initial registration
+        const existingOTP = draftUser.phoneVerificationCode;
+        const existingOTPExpiry = draftUser.phoneVerificationExpiry;
 
+        const phoneOTP = (existingOTP && new Date(existingOTPExpiry) > new Date()) 
+            ? existingOTP 
+            : Math.floor(100000 + Math.random() * 900000).toString();
+        
+        const phoneOTPExpiry = (existingOTP && new Date(existingOTPExpiry) > new Date())
+            ? existingOTPExpiry
+            : new Date(Date.now() + 15 * 60 * 1000);
 
         const newUser = await User.create({
             name: draftUser.name,
@@ -252,9 +260,11 @@ export async function POST(req: Request) {
                 await sendSMS(draftUser.phone, successMsg);
             }
 
-            // 4. OTP Verification SMS
-            const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-            await sendSMS(draftUser.phone, otpMsg);
+            // 4. OTP Verification SMS (ONLY if not sent before or expired)
+            if (!existingOTP || new Date(existingOTPExpiry) <= new Date()) {
+                const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
+                await sendSMS(draftUser.phone, otpMsg);
+            }
 
             // 5. Payment Success Invoice Email
             await sendEmailWithTemplate({

@@ -42,7 +42,8 @@ export class PayTRCheckout {
      */
     public async getToken(data: PayTROrderData): Promise<string> {
         // Tutar kuruş cinsine dönüştürülmeli (100 ile çarpılarak tam sayı yapılır)
-        const paymentAmount = Math.round(data.amount * 100).toString();
+        // Ensure precision issues are avoided (e.g., 11.999 * 100 becomes 1199.9 without round)
+        const paymentAmount = Math.round(Number(data.amount.toFixed(2)) * 100).toString();
         const userBasketStr = Buffer.from(JSON.stringify(data.basket)).toString('base64');
         const testModeVal = this.testMode ? '1' : '0';
         const debugOn = '0'; // Canlı ortamda 0, log görmek isterseniz 1

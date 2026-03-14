@@ -103,7 +103,7 @@ export async function POST(req: Request) {
             userPhone: (draftUser.phone || '05555555555').replace(/\s/g, ''),
             userIp: userIp,
             basket: [
-                [basketName, finalAmount.toString(), 1]
+                [basketName, finalAmount.toFixed(2), 1] // Sepet tutarı string ve 2 ondalıklı
             ] as Array<[string, string, number]>,
             okUrl: `${baseUrl}/checkout/success?token=${autoLoginToken}`, // Pass token for auto-login
             failUrl: `${baseUrl}/checkout/fail`   // The page user sees if payment fails

@@ -87,6 +87,7 @@ export const authOptions: NextAuthOptions = {
                             isActive: user.isActive !== false,
                             isEmailVerified: user.isEmailVerified === true,
                             isPhoneVerified: user.isPhoneVerified === true,
+                            phone: user.phone || '',
                             paymentStatus: user.paymentStatus || 'active',
                         };
                     } catch (error) {
@@ -179,6 +180,7 @@ export const authOptions: NextAuthOptions = {
                     isActive: user.isActive !== false,
                     isEmailVerified: user.isEmailVerified === true,
                     isPhoneVerified: user.isPhoneVerified === true,
+                    phone: user.phone || '',
                     paymentStatus: user.paymentStatus || 'active',
                 };
             }
@@ -201,6 +203,7 @@ export const authOptions: NextAuthOptions = {
                 token.isActive = user.isActive;
                 token.isEmailVerified = user.isEmailVerified;
                 token.isPhoneVerified = user.isPhoneVerified;
+                token.phone = user.phone;
             }
 
             // REFRESH DATA ON NAVIGATION/UPDATE
@@ -209,8 +212,8 @@ export const authOptions: NextAuthOptions = {
                 await dbConnect();
 
                 if (token.email && token.role === 'admin') {
-                    // Update: Select panelLogo and panelSettings AND name
-                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings isActive isEmailVerified isPhoneVerified name');
+                    // Update: Select panelLogo and panelSettings AND name AND phone
+                    const adminUser = await User.findOne({ email: token.email }).select('storageUsage storageLimit studioName subscriptionExpiry packageType logo panelLogo panelSettings isActive isEmailVerified isPhoneVerified name phone');
 
                     if (adminUser) {
                         token.storageUsage = adminUser.storageUsage || 0;
@@ -225,6 +228,7 @@ export const authOptions: NextAuthOptions = {
                         token.isActive = adminUser.isActive !== false;
                         token.isEmailVerified = adminUser.isEmailVerified === true;
                         token.isPhoneVerified = adminUser.isPhoneVerified === true;
+                        token.phone = adminUser.phone || '';
                         token.paymentStatus = (adminUser as any).paymentStatus || 'active';
                     }
                 }
@@ -251,6 +255,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.isActive = token.isActive;
                 session.user.isEmailVerified = token.isEmailVerified;
                 session.user.isPhoneVerified = token.isPhoneVerified;
+                session.user.phone = token.phone;
                 (session.user as any).paymentStatus = token.paymentStatus || 'active';
             }
             return session;
