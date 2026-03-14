@@ -109,6 +109,8 @@ export async function POST(req: Request) {
             failUrl: `${baseUrl}/checkout/fail`   // The page user sees if payment fails
         };
 
+        console.log(`[PayTR Checkout] Order: ${order.orderNo} | DB Amount: ${order.amount} | Final Amount (TL): ${finalAmount} | PayTR (kuruş): ${Math.round(finalAmount * 100)}`);
+
 
 
         try {

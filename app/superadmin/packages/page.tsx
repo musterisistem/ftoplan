@@ -8,6 +8,7 @@ export default function PackagesPage() {
     const [loading, setLoading] = useState(true);
     const [editingPackage, setEditingPackage] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [priceText, setPriceText] = useState('');
 
     useEffect(() => {
         fetchPackages();
@@ -27,8 +28,49 @@ export default function PackagesPage() {
         }
     };
 
+    /**
+     * Türkçe fiyat girdisini doğru sayıya çevirir:
+     * "11.999" → 11999 (binlik ayraç)
+     * "103.99" → 103.99 (ondalık)
+     * "11.999,50" → 11999.50
+     * "103,99" → 103.99
+     */
+    const parseSmartPrice = (raw: string): number => {
+        // Trim boşluklar, TL işareti vb. temizle
+        let s = raw.trim().replace(/[₺TL\s]/gi, '');
+        // Virgülü ayır: virgül her zaman kuruş ayracı
+        const hasTRComma = s.includes(',');
+        if (hasTRComma) {
+            // 11.999,50 -> 11999.50
+            const parts = s.split(',');
+            const intPart = parts[0].replace(/\./g, ''); // binlik noktaları kaldır
+            const decPart = parts[1] || '00';
+            return parseFloat(`${intPart}.${decPart}`);
+        }
+        // Virgül yok, nokta var 
+        if (s.includes('.')) {
+            const dotParts = s.split('.');
+            const lastPart = dotParts[dotParts.length - 1];
+            if (lastPart.length === 3) {
+                // 3 haneli son kısım = binlik ayraç  (11.999 → 11999)
+                return parseFloat(s.replace(/\./g, ''));
+            } else {
+                // 1-2 haneli son kısım = ondalık (103.99 → 103.99)
+                return parseFloat(s);
+            }
+        }
+        return parseFloat(s) || 0;
+    };
+
     const handleSave = async () => {
-        if (!editingPackage.name || editingPackage.price === undefined) {
+        // Parse fiyatı doğru sayısal değere çevir
+        const parsedPrice = parseSmartPrice(priceText);
+        if (isNaN(parsedPrice) || parsedPrice < 0) {
+            alert('Geçerli bir fiyat girin. Örnek: 11.999 veya 103.99');
+            return;
+        }
+        const packageToSave = { ...editingPackage, price: parsedPrice };
+        if (!packageToSave.name || packageToSave.price === undefined) {
             alert('İsim ve fiyat zorunludur.');
             return;
         }
@@ -38,7 +80,7 @@ export default function PackagesPage() {
             const res = await fetch('/api/superadmin/packages', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editingPackage)
+                body: JSON.stringify(packageToSave)
             });
 
             if (res.ok) {
@@ -127,13 +169,14 @@ export default function PackagesPage() {
                                         <div className="flex items-center gap-2">
                                             <span className="text-xl font-bold text-white">₺</span>
                                             <input
-                                                type="number"
-                                                value={currentPkg.price}
-                                                onChange={(e) => setEditingPackage({ ...editingPackage, price: Number(e.target.value) })}
+                                                type="text"
+                                                value={priceText}
+                                                onChange={(e) => setPriceText(e.target.value)}
                                                 className="w-full bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-white font-bold"
-                                                placeholder="Fiyat"
+                                                placeholder="Örn: 11.999 veya 103.99"
                                             />
                                         </div>
+                                        <p className="text-xs text-white/50">11.999 = 11 bin 999 TL, 103.99 = 103 TL 99 Kuruş</p>
                                         <textarea
                                             value={currentPkg.description || ''}
                                             onChange={(e) => setEditingPackage({ ...editingPackage, description: e.target.value })}
@@ -334,7 +377,10 @@ export default function PackagesPage() {
                                     </div>
                                 ) : (
                                     <button
-                                        onClick={() => setEditingPackage({ ...pkg })}
+                                        onClick={() => {
+                                            setEditingPackage({ ...pkg });
+                                            setPriceText(pkg.price.toString());
+                                        }}
                                         className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all"
                                     >
                                         <Edit2 className="w-4 h-4" />

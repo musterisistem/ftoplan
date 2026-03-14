@@ -60,9 +60,9 @@ function CheckoutContent() {
                 const res = await fetch(`/api/orders/${encodeURIComponent(orderNo)}`);
                 const data = await res.json();
                 if (data.success && data.order) {
-                    // Round the amount: DB may store 11.999 (decimal) instead of 11999 (integer)
+                    // Use amount directly - superadmin now saves prices correctly via parseSmartPrice
                     const rawAmount = data.order.amount ?? 0;
-                    const cleanAmount = rawAmount < 1000 ? Math.round(rawAmount * 1000) : Math.round(rawAmount);
+                    const cleanAmount = Math.round(rawAmount);
                     setSelectedPackage({
                         name: data.order.packageName || 'Paket',
                         price: `₺${cleanAmount.toLocaleString('tr-TR')}`,
