@@ -107,14 +107,17 @@ function SuccessContent() {
             autoLoginToken: token,
             redirect: false,
         });
-        // Redirect to /verify-phone — middleware will also enforce this for unverified users
         if (result?.ok) {
-            window.location.href = '/verify-phone';
+            // Show setup loader first, then redirect to verify-phone when complete
+            setView('setupAnimation');
+        } else {
+            setView('error');
         }
     };
 
     const handleFlowComplete = () => {
-        setView('welcome');
+        // After setup animation completes, go to SMS verification
+        window.location.href = '/verify-phone';
     };
 
     const handleWelcomeScreenLoad = () => {

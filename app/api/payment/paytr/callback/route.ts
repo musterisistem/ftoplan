@@ -166,17 +166,9 @@ export async function POST(req: Request) {
             ipAddress: '0.0.0.0'
         };
 
-        // Check if an OTP was already sent during initial registration
-        const existingOTP = draftUser.phoneVerificationCode;
-        const existingOTPExpiry = draftUser.phoneVerificationExpiry;
-
-        const phoneOTP = (existingOTP && new Date(existingOTPExpiry) > new Date()) 
-            ? existingOTP 
-            : Math.floor(100000 + Math.random() * 900000).toString();
-        
-        const phoneOTPExpiry = (existingOTP && new Date(existingOTPExpiry) > new Date())
-            ? existingOTPExpiry
-            : new Date(Date.now() + 15 * 60 * 1000);
+        // Always generate a fresh OTP after payment success to ensure it's valid
+        const phoneOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        const phoneOTPExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes validity
 
         const newUser = await User.create({
             name: draftUser.name,
@@ -260,11 +252,15 @@ export async function POST(req: Request) {
                 await sendSMS(draftUser.phone, successMsg);
             }
 
-            // 4. OTP Verification SMS (ONLY if not sent before or expired)
-            if (!existingOTP || new Date(existingOTPExpiry) <= new Date()) {
-                const { sendSMS } = await import('@/lib/netgsm');
-                const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                await sendSMS(draftUser.phone, otpMsg);
+            // 4. OTP Verification SMS - Always send after successful payment
+            // (SMS was NOT sent during registration for paid packages)
+            const { sendSMS: sendOtpSMS } = await import('@/lib/netgsm');
+            const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
+            const smsSent = await sendOtpSMS(draftUser.phone, otpMsg);
+            if (smsSent.success) {
+                console.log(`[PayTR Callback] ✅ OTP SMS sent to ${draftUser.phone}`);
+            } else {
+                console.error(`[PayTR Callback] ❌ OTP SMS failed: ${smsSent.error}`);
             }
 
             // 5. Payment Success Invoice Email

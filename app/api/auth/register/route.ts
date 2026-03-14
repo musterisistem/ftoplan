@@ -223,16 +223,9 @@ export async function POST(req: Request) {
             // PayTR requires merchant_oid to be alphanumeric
             const orderId = `FP${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-            // Send Phone OTP SMS immediately even for paid flow
-            try {
-                const { sendSMS } = await import('@/lib/netgsm');
-                const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                const smsResult = await sendSMS(phone, otpMsg);
-                if (!smsResult.success) console.error('[Register Paid] SMS failed:', smsResult.error);
-                else console.log('[Register Paid] OTP SMS sent successfully to', phone);
-            } catch (smsErr) {
-                console.error('[Register] Paid flow Initial SMS failed:', smsErr);
-            }
+            // NOTE: SMS is NOT sent here for paid packages.
+            // It will be sent ONLY after successful PayTR payment (in callback/route.ts).
+            console.log(`[Register Paid] OTP generated and saved to order. Will send SMS after payment success. OrderNo: ${orderId}`);
 
             await Order.create({
                 orderNo: orderId,
