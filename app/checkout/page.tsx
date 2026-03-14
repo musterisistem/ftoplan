@@ -60,12 +60,12 @@ function CheckoutContent() {
                 const res = await fetch(`/api/orders/${encodeURIComponent(orderNo)}`);
                 const data = await res.json();
                 if (data.success && data.order) {
-                    // Use amount directly - superadmin now saves prices correctly via parseSmartPrice
+                    // Use amount directly - preserve decimal precision (e.g. 109.99, not 110)
                     const rawAmount = data.order.amount ?? 0;
-                    const cleanAmount = Math.round(rawAmount);
+                    const cleanAmount = rawAmount; // No rounding!
                     setSelectedPackage({
                         name: data.order.packageName || 'Paket',
-                        price: `₺${cleanAmount.toLocaleString('tr-TR')}`,
+                        price: `₺${cleanAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                         amount: cleanAmount,
                         code: data.order.packageId || '',
                         orderNo: data.order.orderNo,
@@ -101,13 +101,13 @@ function CheckoutContent() {
         }
     };
 
-    // Calculate amounts
+    // Calculate amounts - preserve decimal precision
     const originalAmount = selectedPackage?.amount || 0;
-    const couponDiscountAmount = appliedDiscount > 0 ? Math.round(originalAmount * appliedDiscount / 100) : 0;
+    const couponDiscountAmount = appliedDiscount > 0 ? Math.round((originalAmount * appliedDiscount / 100) * 100) / 100 : 0;
     const bankTransferDiscountAmount = paymentMethod === 'bank_transfer'
-        ? Math.round((originalAmount - couponDiscountAmount) * BANK_TRANSFER_DISCOUNT / 100)
+        ? Math.round(((originalAmount - couponDiscountAmount) * BANK_TRANSFER_DISCOUNT / 100) * 100) / 100
         : 0;
-    const finalAmount = originalAmount - couponDiscountAmount - bankTransferDiscountAmount;
+    const finalAmount = Math.round((originalAmount - couponDiscountAmount - bankTransferDiscountAmount) * 100) / 100;
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -347,7 +347,7 @@ function CheckoutContent() {
                                             <button onClick={handleCreditCardPayment} disabled={loading || !selectedPackage}
                                                 className="w-full max-w-sm mx-auto py-4 bg-gradient-to-r from-[#5d2b72] to-purple-600 text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 text-base disabled:opacity-60"
                                             >
-                                                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Lock className="w-4 h-4" /> PayTR ile Güvenli Öde: ₺{finalAmount.toLocaleString('tr-TR')}</>}
+                                                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Lock className="w-4 h-4" /> PayTR ile Güvenli Öde: ₺{finalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</>}
                                             </button>
                                             <div className="mt-6 flex items-center justify-center gap-6 opacity-50 text-xs text-gray-500">
                                                 <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> 256-bit SSL</span>
@@ -472,21 +472,21 @@ function CheckoutContent() {
                                     {appliedDiscount > 0 && (
                                         <div className="flex justify-between items-end">
                                             <span className="text-emerald-400">Kupon (%{appliedDiscount})</span>
-                                            <span className="font-bold text-emerald-400">-₺{couponDiscountAmount.toLocaleString('tr-TR')}</span>
+                                            <span className="font-bold text-emerald-400">-₺{couponDiscountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                     )}
 
                                     {paymentMethod === 'bank_transfer' && (
                                         <div className="flex justify-between items-end">
                                             <span className="text-emerald-400">Havale İndirimi (%{BANK_TRANSFER_DISCOUNT})</span>
-                                            <span className="font-bold text-emerald-400">-₺{bankTransferDiscountAmount.toLocaleString('tr-TR')}</span>
+                                            <span className="font-bold text-emerald-400">-₺{bankTransferDiscountAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                     )}
 
                                     <div className="flex justify-between items-end pt-3 border-t border-gray-800">
                                         <span className="text-gray-400">Ödenecek</span>
                                         <span className={`text-4xl font-extrabold ${paymentMethod === 'bank_transfer' ? 'text-emerald-400' : 'text-[#9b51e0]'}`}>
-                                            ₺{finalAmount.toLocaleString('tr-TR')}
+                                            ₺{finalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
                                     </div>
                                     <p className="text-right text-xs text-gray-500">KDV Dahildir</p>
