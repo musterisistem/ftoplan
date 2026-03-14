@@ -10,10 +10,10 @@ export async function GET() {
         // If there are no packages, they should be created from the superadmin panel.
         const packages = await Package.find().sort({ price: 1 }).lean();
         
-        // Use prices directly as stored in DB
+        // Use prices directly as stored in DB - no rounding (preserves 59.99 etc.)
         const normalizedPackages = packages.map((pkg: any) => ({
             ...pkg,
-            price: Math.round(pkg.price)
+            price: pkg.price
         }));
 
         return NextResponse.json(normalizedPackages);
