@@ -66,8 +66,8 @@ export async function POST(req: Request) {
             if (!dbPackage) {
                 return NextResponse.json({ error: 'Geçersiz paket seçimi.' }, { status: 400 });
             }
-            // Normalize price: handles 11.999 vs 11999 cases from DB
-            dbPackage.price = dbPackage.price < 1000 ? Math.round(dbPackage.price * 1000) : Math.round(dbPackage.price);
+            // Use price directly as stored
+            dbPackage.price = Math.round(dbPackage.price);
         }
 
         // Generate Verification Token
@@ -156,9 +156,9 @@ export async function POST(req: Request) {
 
             // Send Phone OTP SMS immediately
             try {
-                const { sendSMS } = await import('@/lib/netgsm');
+                const { sendOTP } = await import('@/lib/netgsm');
                 const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                await sendSMS(phone, otpMsg);
+                await sendOTP(phone, otpMsg);
             } catch (smsErr) {
                 console.error('[Register] Initial SMS failed:', smsErr);
             }
@@ -223,9 +223,9 @@ export async function POST(req: Request) {
 
             // Send Phone OTP SMS immediately even for paid flow
             try {
-                const { sendSMS } = await import('@/lib/netgsm');
+                const { sendOTP } = await import('@/lib/netgsm');
                 const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                await sendSMS(phone, otpMsg);
+                await sendOTP(phone, otpMsg);
             } catch (smsErr) {
                 console.error('[Register] Paid flow Initial SMS failed:', smsErr);
             }

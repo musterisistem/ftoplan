@@ -63,13 +63,14 @@ export async function sendSMS(phone: string, message: string): Promise<SendSMSRe
         });
 
         const data = await response.text();
+        console.log(`[Netgsm SMS] API Response for ${formattedPhone}:`, data);
         const code = data.split(' ')[0];
 
         // 00 success prefix for 1:N get method (e.g. 00 123456789)
-        if (code === '00') {
+        if (code === '00' || data.includes('00')) {
             return { success: true, code };
         } else {
-            return { success: false, error: `Netgsm API Error: ${code}`, code };
+            return { success: false, error: `Netgsm API Error: ${data}`, code };
         }
 
     } catch (error: any) {
@@ -111,13 +112,14 @@ export async function sendOTP(phone: string, message: string): Promise<SendSMSRe
         });
 
         const data = await response.text();
+        console.log(`[Netgsm OTP] API Response for ${formattedPhone}:`, data);
         const code = data.split(' ')[0];
 
         // 00 success prefix for OTP
-        if (code === '00') {
+        if (code === '00' || data.includes('00')) {
             return { success: true, code };
         } else {
-            return { success: false, error: `Netgsm OTP API Error: ${code}`, code };
+            return { success: false, error: `Netgsm OTP API Error: ${data}`, code };
         }
 
     } catch (error: any) {

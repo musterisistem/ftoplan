@@ -72,10 +72,10 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             const res = await fetch('/api/packages');
             const data = await res.json();
             if (Array.isArray(data)) {
-                // Ensure price is treated as a clean number (handling potential string/dot issues)
+                // Use prices directly
                 const formatted = data.map(pkg => ({
                     ...pkg,
-                    price: pkg.price < 1000 ? Math.round(pkg.price * 1000) : Math.round(pkg.price)
+                    price: Math.round(pkg.price)
                 }));
                 // Filter out trial package
                 setPackages(formatted.filter(p => p.id !== 'trial'));
