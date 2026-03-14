@@ -25,59 +25,43 @@ export default function LegalModal({ isOpen, onClose, onConfirm, title, content 
                     className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
                 />
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                    initial={{ opacity: 0, scale: 0.98, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 30 }}
-                    transition={{ type: "spring", duration: 0.6, bounce: 0.3 }}
-                    className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-[0_32px_64px_-16px_rgba(93,43,114,0.15)] flex flex-col h-[80vh] md:h-[85vh] border border-white/20 overflow-hidden"
+                    exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                    transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                    className="relative w-full max-w-2xl bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] flex flex-col h-[80vh] overflow-hidden border border-slate-100"
                 >
-                    {/* Header - Fixed Height */}
-                    <div className="flex-none p-6 md:p-8 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md z-20">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-[#5d2b72]">
-                                <ShieldAlert className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-tight">{title}</h2>
-                                <p className="text-[11px] text-purple-400 font-bold uppercase tracking-widest mt-0.5">Yürürlükte olan güncel metin</p>
-                            </div>
-                        </div>
+                    {/* Header */}
+                    <div className="flex-none px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white relative z-20">
+                        <h2 className="text-xl font-bold text-slate-900 tracking-tight">{title}</h2>
                         <button
                             onClick={onClose}
-                            className="p-2.5 hover:bg-slate-50 rounded-xl transition-all text-slate-300 hover:text-slate-600 active:scale-95"
+                            className="p-2 hover:bg-slate-50 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
                         >
-                            <X className="w-6 h-6" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
-                    {/* Scrollable Content - Robust Flex Scroll */}
-                    <div className="flex-1 min-h-0 relative bg-white overflow-hidden flex flex-col">
-                        <div className="flex-1 overflow-y-auto p-8 md:p-12 overscroll-contain scroll-smooth custom-scrollbar">
-                            <div className="max-w-none text-slate-600 text-sm md:text-base leading-relaxed">
-                                {content}
-
-                                {/* Bottom Spacer */}
-                                <div className="h-10 w-full" />
-                            </div>
+                    {/* Scrollable Content */}
+                    <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-10 custom-scrollbar">
+                        <div className="text-slate-600 text-[15px] leading-relaxed space-y-4">
+                            {content}
                         </div>
                     </div>
 
-                    {/* Footer - Fixed Height */}
-                    <div className="flex-none p-6 md:p-8 bg-slate-50/50 backdrop-blur-sm border-t border-slate-50 flex flex-col md:flex-row items-center justify-between gap-6 z-20">
-                        <div className="flex items-center gap-3 text-slate-400">
-                            <CheckCircle2 className="w-4 h-4 text-purple-300" />
-                            <p className="text-[12px] font-medium leading-tight">
-                                Devam etmek için metnin<br className="hidden md:block" /> tamamını okuduğunuzu onaylayın.
-                            </p>
-                        </div>
+                    {/* Footer */}
+                    <div className="flex-none p-5 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 z-20">
+                        <p className="text-[13px] text-slate-500 font-medium">
+                            Devam etmek için metni onaylamanız gerekmektedir.
+                        </p>
                         <button
                             onClick={() => {
                                 onConfirm();
                                 onClose();
                             }}
-                            className="w-full md:w-auto px-10 py-4 bg-[#5d2b72] text-white rounded-[1.25rem] font-black text-sm flex items-center justify-center gap-2 hover:bg-[#4a225b] hover:shadow-xl hover:shadow-purple-900/20 active:scale-95 transition-all"
+                            className="w-full md:w-auto px-8 py-3 bg-[#5d2b72] text-white rounded-xl font-bold text-sm hover:bg-[#4a225b] transition-all active:scale-[0.98] shadow-sm"
                         >
-                            Okudum, Anladım
+                            Okudum, Onaylıyorum
                         </button>
                     </div>
                 </motion.div>
