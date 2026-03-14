@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
-import { sendOTP } from '@/lib/netgsm';
+import { sendSMS } from '@/lib/netgsm';
 
 export async function POST() {
     try {
@@ -38,7 +38,7 @@ export async function POST() {
 
         // Send OTP SMS
         const otpMsg = `WeeyNet hesap dogrulama kodunuz (Yeniden): ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-        const result = await sendOTP(user.phone, otpMsg);
+        const result = await sendSMS(user.phone, otpMsg);
 
         if (!result.success) {
             console.error('Netgsm resend failed:', result.error);

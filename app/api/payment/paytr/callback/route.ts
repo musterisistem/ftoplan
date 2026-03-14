@@ -262,9 +262,9 @@ export async function POST(req: Request) {
 
             // 4. OTP Verification SMS (ONLY if not sent before or expired)
             if (!existingOTP || new Date(existingOTPExpiry) <= new Date()) {
-                const { sendOTP } = await import('@/lib/netgsm');
+                const { sendSMS } = await import('@/lib/netgsm');
                 const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                await sendOTP(draftUser.phone, otpMsg);
+                await sendSMS(draftUser.phone, otpMsg);
             }
 
             // 5. Payment Success Invoice Email

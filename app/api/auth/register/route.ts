@@ -154,11 +154,13 @@ export async function POST(req: Request) {
                 }
             });
 
-            // Send Phone OTP SMS immediately
+            // Send Phone OTP SMS immediately via standard SMS (OTP paketi aktif degil)
             try {
-                const { sendOTP } = await import('@/lib/netgsm');
+                const { sendSMS } = await import('@/lib/netgsm');
                 const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                await sendOTP(phone, otpMsg);
+                const smsResult = await sendSMS(phone, otpMsg);
+                if (!smsResult.success) console.error('[Register] SMS failed:', smsResult.error);
+                else console.log('[Register] OTP SMS sent successfully to', phone);
             } catch (smsErr) {
                 console.error('[Register] Initial SMS failed:', smsErr);
             }
@@ -223,9 +225,11 @@ export async function POST(req: Request) {
 
             // Send Phone OTP SMS immediately even for paid flow
             try {
-                const { sendOTP } = await import('@/lib/netgsm');
+                const { sendSMS } = await import('@/lib/netgsm');
                 const otpMsg = `WeeyNet hesap dogrulama kodunuz: ${phoneOTP} Lutfen dogrulama ekranina giriniz.`;
-                await sendOTP(phone, otpMsg);
+                const smsResult = await sendSMS(phone, otpMsg);
+                if (!smsResult.success) console.error('[Register Paid] SMS failed:', smsResult.error);
+                else console.log('[Register Paid] OTP SMS sent successfully to', phone);
             } catch (smsErr) {
                 console.error('[Register] Paid flow Initial SMS failed:', smsErr);
             }
