@@ -13,6 +13,7 @@ import {
     Eye,
     Code
 } from 'lucide-react';
+import PinVerification from '@/components/PinVerification';
 
 interface CommunicationLog {
     _id: string;
@@ -37,6 +38,8 @@ export default function BulkEmailPage() {
     const [photographers, setPhotographers] = useState<any[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [loadingPhotographers, setLoadingPhotographers] = useState(true);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pendingSendData, setPendingSendData] = useState<any>(null);
 
     useEffect(() => {
         if (!showHistory) {
@@ -83,24 +86,29 @@ export default function BulkEmailPage() {
             return;
         }
 
-        if (!confirm(`${selectedIds.length > 0 ? selectedIds.length + ' seçili fotoğrafçıya' : getFilterText(filter) + ' adreslerine'} email göndermek istediğinize emin misiniz?`)) {
-            return;
-        }
+        // Store data and show PIN modal
+        setPendingSendData({
+            subject,
+            message,
+            htmlContent: htmlMode ? message : undefined,
+            filter: selectedIds.length > 0 ? 'custom' : filter,
+            selectedIds: selectedIds.length > 0 ? selectedIds : undefined
+        });
+        setShowPinModal(true);
+    };
+
+    const executeSend = async () => {
+        if (!pendingSendData) return;
 
         setSending(true);
         setResult(null);
+        setShowPinModal(false);
 
         try {
             const res = await fetch('/api/superadmin/communications/email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    subject,
-                    message,
-                    htmlContent: htmlMode ? message : undefined,
-                    filter: selectedIds.length > 0 ? 'custom' : filter,
-                    selectedIds: selectedIds.length > 0 ? selectedIds : undefined
-                })
+                body: JSON.stringify(pendingSendData)
             });
 
             const data = await res.json();
@@ -109,6 +117,7 @@ export default function BulkEmailPage() {
                 setResult(data);
                 setSubject('');
                 setMessage('');
+                setSelectedIds([]);
                 alert(`Email başarıyla gönderildi!\n\nGönderilen: ${data.sent}\nBaşarısız: ${data.failed}\nToplam: ${data.total}`);
             } else {
                 alert('Hata: ' + data.error);
@@ -383,6 +392,19 @@ export default function BulkEmailPage() {
                         </button>
                     </div>
                 </>
+            )}
+
+            {/* PIN Verification Modal */}
+            {showPinModal && (
+                <PinVerification
+                    onVerify={executeSend}
+                    onCancel={() => {
+                        setShowPinModal(false);
+                        setPendingSendData(null);
+                    }}
+                    title="Email Gönderimi Onayı"
+                    description="Toplu email göndermek için 4 haneli PIN kodunu girin."
+                />
             )}
         </div>
     );

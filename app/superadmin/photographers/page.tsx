@@ -19,6 +19,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { EmailTemplateType } from '@/models/EmailTemplate';
+import PinVerification from '@/components/PinVerification';
 
 interface Photographer {
     _id: string;
@@ -44,6 +45,9 @@ export default function PhotographersPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [deleting, setDeleting] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
 
     useEffect(() => {
         fetchPhotographers();
@@ -75,11 +79,18 @@ export default function PhotographersPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Bu üyeyi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+        setPendingDeleteId(id);
+        setShowPinModal(true);
+    };
+
+    const executeDelete = async () => {
+        if (!pendingDeleteId) return;
 
         try {
             setDeleting(true);
-            const res = await fetch(`/api/superadmin/photographers/${id}`, {
+            setShowPinModal(false);
+            
+            const res = await fetch(`/api/superadmin/photographers/${pendingDeleteId}`, {
                 method: 'DELETE'
             });
 
@@ -93,11 +104,18 @@ export default function PhotographersPage() {
             toast.error('Bağlantı hatası');
         } finally {
             setDeleting(false);
+            setPendingDeleteId(null);
         }
     };
 
     const handleBulkDelete = async () => {
-        if (!confirm(`${selectedIds.length} üyeyi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+        setPendingBulkDelete(true);
+        setShowPinModal(true);
+    };
+
+    const executeBulkDelete = async () => {
+        setShowPinModal(false);
+        setPendingBulkDelete(false);
 
         try {
             setDeleting(true);
@@ -351,6 +369,29 @@ export default function PhotographersPage() {
                     />
                 )
             }
+
+            {/* PIN Verification Modal */}
+            {showPinModal && (
+                <PinVerification
+                    title="Güvenlik Doğrulaması"
+                    description={pendingBulkDelete 
+                        ? `${selectedIds.length} üyeyi silmek için PIN kodunu girin.`
+                        : "Üyeyi silmek için PIN kodunu girin."
+                    }
+                    onVerify={() => {
+                        if (pendingBulkDelete) {
+                            executeBulkDelete();
+                        } else {
+                            executeDelete();
+                        }
+                    }}
+                    onCancel={() => {
+                        setShowPinModal(false);
+                        setPendingDeleteId(null);
+                        setPendingBulkDelete(false);
+                    }}
+                />
+            )}
         </div >
     );
 }

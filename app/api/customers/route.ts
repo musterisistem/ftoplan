@@ -103,11 +103,22 @@ export async function POST(req: Request) {
 
         // Create user account
         const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const username = `${slugify(brideName)}${slugify(groomName || '')}`;
+        const baseUsername = `${slugify(brideName)}${slugify(groomName || '')}`;
+        
+        // Check if username already exists and add random suffix if needed
+        let username = baseUsername;
+        let userEmail = `${username}@weey.net`;
+        let emailExists = await User.findOne({ email: userEmail });
+        
+        // If email exists, add random 4-digit suffix
+        if (emailExists) {
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+            username = `${baseUsername}${randomSuffix}`;
+            userEmail = `${username}@weey.net`;
+        }
+        
         const tempPassword = Math.floor(100000 + Math.random() * 900000).toString();
         const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-        const userEmail = `${username}@weey.net`;
 
         console.log('Creating user with email:', userEmail);
 

@@ -17,30 +17,77 @@ export async function GET() {
 
         // Fetch all orders with details
         const allOrders = await Order.find({})
-            .populate('userId', 'name email studioName phone billingInfo.identityNumber billingInfo.companyType')
+            .populate('userId', 'name email studioName phone billingInfo.identityNumber billingInfo.companyType createdAt')
             .populate('packageId', 'name price')
             .sort({ createdAt: -1 })
             .lean();
 
-        // Calculate Stats
+        // Calculate Stats - Only count completed CREDIT CARD orders (successful PayTR payments)
         const now = new Date();
-        const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-        const firstDayThisYear = new Date(now.getFullYear(), 0, 1);
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth(); // 0-11
+        
+        // Filter only completed CREDIT CARD orders
+        const completedCreditCardOrders = allOrders.filter(o => 
+            o.status === 'completed' && o.paymentMethod === 'credit_card'
+        );
 
-        // Success condition: completed orders
-        const getSalesSum = (startDate: Date, endDate: Date = new Date()) => {
-            return allOrders
-                .filter(o => o.status === 'completed' && new Date(o.createdAt) >= startDate && new Date(o.createdAt) <= endDate)
-                .reduce((sum, o) => sum + (o.amount || 0), 0);
-        };
+        // Calculate sales by checking the completion date
+        let thisMonthSales = 0;
+        let lastMonthSales = 0;
+        let thisYearSales = 0;
+
+        completedCreditCardOrders.forEach(order => {
+            // Use completedAt if available, otherwise use createdAt
+            const orderDate = order.completedAt ? new Date(order.completedAt) : new Date(order.createdAt);
+            const orderYear = orderDate.getFullYear();
+            const orderMonth = orderDate.getMonth();
+            const amount = order.amount || 0;
+
+            // This year sales
+            if (orderYear === currentYear) {
+                thisYearSales += amount;
+                
+                // This month sales
+                if (orderMonth === currentMonth) {
+                    thisMonthSales += amount;
+                }
+                
+                // Last month sales
+                if (orderMonth === currentMonth - 1) {
+                    lastMonthSales += amount;
+                }
+            }
+            // Handle last month being in previous year (e.g., current month is January)
+            else if (orderYear === currentYear - 1 && currentMonth === 0 && orderMonth === 11) {
+                lastMonthSales += amount;
+            }
+        });
 
         const stats = {
-            thisMonthSales: getSalesSum(firstDayThisMonth),
-            lastMonthSales: getSalesSum(firstDayLastMonth, lastDayLastMonth),
-            thisYearSales: getSalesSum(firstDayThisYear),
+            thisMonthSales: Math.round(thisMonthSales * 100) / 100, // Round to 2 decimal places
+            lastMonthSales: Math.round(lastMonthSales * 100) / 100,
+            thisYearSales: Math.round(thisYearSales * 100) / 100,
         };
+
+        console.log('[Payments API] Credit Card Stats:', {
+            totalOrders: allOrders.length,
+            completedCreditCardOrders: completedCreditCardOrders.length,
+            stats,
+            currentDate: now.toISOString(),
+            currentMonth: currentMonth,
+            currentYear: currentYear,
+            sampleOrders: completedCreditCardOrders.slice(0, 5).map(o => ({
+                orderNo: o.orderNo,
+                amount: o.amount,
+                status: o.status,
+                paymentMethod: o.paymentMethod,
+                createdAt: o.createdAt,
+                completedAt: o.completedAt,
+                orderMonth: o.completedAt ? new Date(o.completedAt).getMonth() : new Date(o.createdAt).getMonth(),
+                orderYear: o.completedAt ? new Date(o.completedAt).getFullYear() : new Date(o.createdAt).getFullYear()
+            }))
+        });
 
         return NextResponse.json({ 
             orders: allOrders,

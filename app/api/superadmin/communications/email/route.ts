@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
-import Subscriber from '@/models/Subscriber';
+import User from '@/models/User';
 import CommunicationLog from '@/models/CommunicationLog';
 import { sendEmail } from '@/lib/resend';
 
@@ -21,8 +21,8 @@ export async function POST(req: Request) {
 
         await dbConnect();
 
-        // Build query based on filter for Subscribers
-        let query: any = {};
+        // Build query based on filter for Users (photographers with role='admin')
+        let query: any = { role: 'admin' }; // Only photographers
 
         if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
             query._id = { $in: selectedIds };
@@ -36,11 +36,35 @@ export async function POST(req: Request) {
             }
         }
 
-        const photographers = await Subscriber.find(query).select('_id name email');
+        const photographers = await User.find(query).select('_id name email studioName');
 
         if (photographers.length === 0) {
             return NextResponse.json({ error: 'Alıcı bulunamadı' }, { status: 404 });
         }
+
+        console.log(`[Bulk Email] Sending to ${photographers.length} photographers:`, photographers.map(p => p.email));
+
+        // Get superadmin user ID as ObjectId - find by role instead of email
+        const superadminUser = await User.findOne({ role: 'superadmin' }).select('_id');
+        
+        // If no superadmin found, try to find by session email
+        let sentByUserId;
+        if (superadminUser) {
+            sentByUserId = superadminUser._id;
+        } else {
+            // Fallback: find by session email
+            const currentUser = await User.findOne({ email: session.user.email }).select('_id');
+            if (!currentUser) {
+                console.error('[Bulk Email] No superadmin or current user found, using dummy ObjectId');
+                // Create a dummy ObjectId to avoid validation error
+                const mongoose = await import('mongoose');
+                sentByUserId = new mongoose.Types.ObjectId();
+            } else {
+                sentByUserId = currentUser._id;
+            }
+        }
+
+        console.log('[Bulk Email] Using sentBy ID:', sentByUserId);
 
         // Create communication log
         const log = await CommunicationLog.create({
@@ -53,8 +77,8 @@ export async function POST(req: Request) {
                 email: p.email,
                 status: 'pending'
             })),
-            filter,
-            sentBy: session.user.id,
+            filter: selectedIds && selectedIds.length > 0 ? 'custom' : filter,
+            sentBy: sentByUserId, // Use ObjectId instead of string
             status: 'sending'
         });
 
@@ -139,7 +163,10 @@ export async function POST(req: Request) {
                 });
 
                 if (!result.success) {
-                    throw new Error(result.error?.message || 'E-posta gönderimi başarısız oldu');
+                    const errorMsg = result.error && typeof result.error === 'object' && 'message' in result.error 
+                        ? (result.error as any).message 
+                        : 'E-posta gönderimi başarısız oldu';
+                    throw new Error(errorMsg);
                 }
 
                 // Update recipient status
@@ -148,8 +175,9 @@ export async function POST(req: Request) {
                     { $set: { 'recipients.$.status': 'sent' } }
                 );
                 successCount++;
+                console.log(`[Bulk Email] ✓ Sent to ${photographer.email}`);
             } catch (error) {
-                console.error(`Failed to send email to ${photographer.email}:`, error);
+                console.error(`[Bulk Email] ✗ Failed to send email to ${photographer.email}:`, error);
                 await CommunicationLog.updateOne(
                     { _id: log._id, 'recipients.photographerId': photographer._id },
                     { $set: { 'recipients.$.status': 'failed' } }
@@ -165,6 +193,8 @@ export async function POST(req: Request) {
             { $set: { status: finalStatus } }
         );
 
+        console.log(`[Bulk Email] Complete: ${successCount} sent, ${failCount} failed`);
+
         return NextResponse.json({
             success: true,
             sent: successCount,
@@ -173,7 +203,7 @@ export async function POST(req: Request) {
         });
 
     } catch (error: any) {
-        console.error('Bulk email error:', error);
+        console.error('[Bulk Email] Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

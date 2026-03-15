@@ -12,6 +12,7 @@ import {
 import PublicHeader from '@/components/layout/PublicHeader';
 import PublicFooter from '@/components/layout/PublicFooter';
 import CreativeLoader from '@/components/ui/CreativeLoader';
+import ForgotPasswordModal from '@/components/ForgotPasswordModal';
 
 function LoginContent() {
     const searchParams = useSearchParams();
@@ -22,6 +23,7 @@ function LoginContent() {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -223,6 +225,17 @@ function LoginContent() {
                                         : <><span>Giriş Yap</span> <ArrowRight className="w-5 h-5" /></>
                                     }
                                 </button>
+
+                                {/* Forgot Password Link */}
+                                <div className="mt-4 text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowForgotPassword(true)}
+                                        className="text-sm text-purple-600 hover:text-purple-700 font-semibold transition-colors"
+                                    >
+                                        Şifremi Unuttum
+                                    </button>
+                                </div>
                             </form>
 
                             <div className="mt-8 pt-6 border-t border-slate-100 text-center">
@@ -241,6 +254,17 @@ function LoginContent() {
             </main>
 
             <PublicFooter />
+
+            {/* Forgot Password Modal */}
+            {showForgotPassword && (
+                <ForgotPasswordModal
+                    onClose={() => setShowForgotPassword(false)}
+                    onSuccess={() => {
+                        setShowForgotPassword(false);
+                        setError('');
+                    }}
+                />
+            )}
         </div>
     );
 }

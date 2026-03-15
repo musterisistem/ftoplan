@@ -12,6 +12,7 @@ import {
     Clock,
     AlertCircle
 } from 'lucide-react';
+import PinVerification from '@/components/PinVerification';
 
 interface CommunicationLog {
     _id: string;
@@ -29,10 +30,36 @@ export default function BulkSMSPage() {
     const [history, setHistory] = useState<CommunicationLog[]>([]);
     const [showHistory, setShowHistory] = useState(false);
     const [result, setResult] = useState<any>(null);
+    const [photographers, setPhotographers] = useState<any[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [loadingPhotographers, setLoadingPhotographers] = useState(true);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pendingSendData, setPendingSendData] = useState<any>(null);
 
     const characterCount = message.length;
     const characterLimit = 160;
     const remaining = characterLimit - characterCount;
+
+    useEffect(() => {
+        if (!showHistory) {
+            fetchPhotographers();
+        }
+    }, [showHistory]);
+
+    const fetchPhotographers = async () => {
+        setLoadingPhotographers(true);
+        try {
+            const res = await fetch('/api/superadmin/photographers');
+            if (res.ok) {
+                const data = await res.json();
+                setPhotographers(data);
+            }
+        } catch (error) {
+            console.error('Error fetching photographers:', error);
+        } finally {
+            setLoadingPhotographers(false);
+        }
+    };
 
     useEffect(() => {
         if (showHistory) {
@@ -63,21 +90,27 @@ export default function BulkSMSPage() {
             return;
         }
 
-        if (!confirm(`${getFilterText(filter)} SMS göndermek istediğinize emin misiniz?`)) {
-            return;
-        }
+        // Store data and show PIN modal
+        setPendingSendData({
+            message,
+            filter: selectedIds.length > 0 ? 'custom' : filter,
+            selectedIds: selectedIds.length > 0 ? selectedIds : undefined
+        });
+        setShowPinModal(true);
+    };
+
+    const executeSend = async () => {
+        if (!pendingSendData) return;
 
         setSending(true);
         setResult(null);
+        setShowPinModal(false);
 
         try {
             const res = await fetch('/api/superadmin/communications/sms', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message,
-                    filter
-                })
+                body: JSON.stringify(pendingSendData)
             });
 
             const data = await res.json();
@@ -85,6 +118,7 @@ export default function BulkSMSPage() {
             if (res.ok) {
                 setResult(data);
                 setMessage('');
+                setSelectedIds([]);
                 alert(`SMS başarıyla gönderildi!\n\nGönderilen: ${data.sent}\nBaşarısız: ${data.failed}\nToplam: ${data.total}\n\n${data.note || ''}`);
             } else {
                 alert('Hata: ' + data.error);
@@ -105,9 +139,24 @@ export default function BulkSMSPage() {
             'pro': 'Pro paketindeki fotoğrafçılara',
             'premium': 'Premium paketindeki fotoğrafçılara',
             'active': 'Aktif fotoğrafçılara',
-            'inactive': 'Pasif fotoğrafçılara'
+            'inactive': 'Pasif fotoğrafçılara',
+            'custom': 'Seçili fotoğrafçılara'
         };
         return filters[f] || f;
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(photographers.map(p => p._id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
     };
 
     const getStatusIcon = (status: string) => {
@@ -210,6 +259,60 @@ export default function BulkSMSPage() {
                                 </button>
                             ))}
                         </div>
+
+                        {/* Photographers List */}
+                        <div className="mt-6 border border-white/10 rounded-xl overflow-hidden bg-gray-900/50">
+                            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gray-800/80">
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.length === photographers.length && photographers.length > 0}
+                                        onChange={handleSelectAll}
+                                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm font-medium text-white">Tümünü Seç</span>
+                                </div>
+                                <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full">{selectedIds.length} Seçili</span>
+                            </div>
+                            <div className="max-h-60 overflow-y-auto w-full custom-scrollbar">
+                                {loadingPhotographers ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">Yükleniyor...</div>
+                                ) : photographers.length === 0 ? (
+                                    <div className="p-4 text-center text-sm text-gray-400">Fotoğrafçı bulunamadı.</div>
+                                ) : (
+                                    <div className="flex flex-col">
+                                        {photographers.map(p => {
+                                            let isVisible = true;
+                                            if (filter === 'active' && !p.isActive) isVisible = false;
+                                            if (filter === 'inactive' && p.isActive) isVisible = false;
+                                            if (filter !== 'all' && filter !== 'active' && filter !== 'inactive' && p.packageType !== filter) isVisible = false;
+
+                                            if (!isVisible) return null;
+
+                                            return (
+                                                <label key={p._id} className="cursor-pointer flex items-center justify-between p-3 border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(p._id)}
+                                                            onChange={() => handleSelectOne(p._id)}
+                                                            className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+                                                        />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium text-white">{p.name} {p.studioName ? `(${p.studioName})` : ''}</span>
+                                                            <span className="text-xs text-gray-400">{p.phone || 'Telefon yok'}</span>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full ${p.isActive ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                                                        {p.packageType}
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     {/* SMS Composer */}
@@ -280,6 +383,19 @@ export default function BulkSMSPage() {
                         </button>
                     </div>
                 </>
+            )}
+
+            {/* PIN Verification Modal */}
+            {showPinModal && (
+                <PinVerification
+                    onVerify={executeSend}
+                    onCancel={() => {
+                        setShowPinModal(false);
+                        setPendingSendData(null);
+                    }}
+                    title="SMS Gönderimi Onayı"
+                    description="Toplu SMS göndermek için 4 haneli PIN kodunu girin."
+                />
             )}
         </div>
     );

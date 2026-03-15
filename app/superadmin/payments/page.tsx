@@ -26,6 +26,8 @@ export default function PaymentsPage() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [clearingHistory, setClearingHistory] = useState(false);
+    const [deletingOrder, setDeletingOrder] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -66,12 +68,69 @@ export default function PaymentsPage() {
             setActionLoading(null);
         }
     };
+    const handleClearHistory = async () => {
+        if (!confirm('Tüm geçmiş işlemler silinecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?')) {
+            return;
+        }
+
+        setClearingHistory(true);
+        try {
+            const res = await fetch('/api/superadmin/payments/clear-history', {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert(data.message || 'Geçmiş işlemler temizlendi', 'success');
+                fetchData();
+            } else {
+                showAlert(data.error || 'İşlem başarısız', 'error');
+            }
+        } catch {
+            showAlert('Sunucuya bağlanılamadı', 'error');
+        } finally {
+            setClearingHistory(false);
+        }
+    };
+    const handleDeleteOrder = async (orderId: string) => {
+        if (!confirm('Bu siparişi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
+            return;
+        }
+
+        setDeletingOrder(true);
+        try {
+            const res = await fetch(`/api/superadmin/payments/${orderId}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showAlert(data.message || 'Sipariş silindi', 'success');
+                setSelectedOrder(null);
+                fetchData();
+            } else {
+                showAlert(data.error || 'İşlem başarısız', 'error');
+            }
+        } catch {
+            showAlert('Sunucuya bağlanılamadı', 'error');
+        } finally {
+            setDeletingOrder(false);
+        }
+    };
+
+
 
     const bankOrders = orders.filter(o => o.paymentMethod === 'bank_transfer');
     const ccOrders = orders.filter(o => o.paymentMethod === 'credit_card');
     
     const pendingBankOrders = bankOrders.filter(o => o.status === 'awaiting_transfer');
     const historyBankOrders = bankOrders.filter(o => o.status !== 'awaiting_transfer');
+
+    // Format currency properly (Turkish Lira with kuruş)
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('tr-TR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    };
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto pb-20">
@@ -99,7 +158,7 @@ export default function PaymentsPage() {
                             {s.icon}
                         </div>
                         <div className="text-2xl font-black text-white">
-                            ₺{s.value?.toLocaleString('tr-TR')}
+                            ₺{formatCurrency(s.value || 0)}
                         </div>
                     </div>
                 ))}
@@ -163,7 +222,7 @@ export default function PaymentsPage() {
                                             <div className="flex items-center gap-4 mt-3 text-[11px]">
                                                 <span className="text-gray-500">Sipariş: <span className="text-gray-300 font-mono">{order.orderNo}</span></span>
                                                 <span className="text-gray-500">Paket: <span className="text-gray-300">{order.packageId?.name || '—'}</span></span>
-                                                <span className="text-gray-400 font-bold">₺{(order.amount || 0).toLocaleString('tr-TR')}</span>
+                                                <span className="text-gray-400 font-bold">₺{formatCurrency(order.amount || 0)}</span>
                                             </div>
                                         </div>
                                         <div className="flex gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
@@ -193,7 +252,26 @@ export default function PaymentsPage() {
                     {/* History */}
                     {historyBankOrders.length > 0 && (
                         <div>
-                            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">Geçmiş İşlemler</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500">Geçmiş İşlemler</h2>
+                                <button
+                                    onClick={handleClearHistory}
+                                    disabled={clearingHistory}
+                                    className="flex items-center gap-2 px-4 py-2 bg-red-900/20 hover:bg-red-900/40 border border-red-500/20 hover:border-red-500/40 rounded-xl text-red-400 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {clearingHistory ? (
+                                        <>
+                                            <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                            Temizleniyor...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            Geçmişi Temizle
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                             <div className="space-y-2">
                                 {historyBankOrders.map((order: any) => (
                                     <div 
@@ -203,7 +281,7 @@ export default function PaymentsPage() {
                                     >
                                         <span className="font-semibold text-gray-300 flex-1 group-hover:text-white transition-colors">{order.userId?.studioName || order.userId?.name || '—'}</span>
                                         <span className="text-xs text-gray-500 font-mono hidden md:inline">{order.orderNo}</span>
-                                        <span className="text-sm text-white font-bold">₺{(order.amount || 0).toLocaleString('tr-TR')}</span>
+                                        <span className="text-sm text-white font-bold">₺{formatCurrency(order.amount || 0)}</span>
                                         <StatusBadge status={order.status} />
                                     </div>
                                 ))}
@@ -244,7 +322,7 @@ export default function PaymentsPage() {
                                         <p className="text-[10px] text-gray-500 font-medium">{new Date(order.createdAt).toLocaleString('tr-TR')} | {order.packageId?.name}</p>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-base font-black text-white">₺{(order.amount || 0).toLocaleString('tr-TR')}</div>
+                                        <div className="text-base font-black text-white">₺{formatCurrency(order.amount || 0)}</div>
                                         <p className="text-[10px] text-gray-500 font-mono">{order.orderNo}</p>
                                     </div>
                                 </div>
@@ -320,17 +398,74 @@ export default function PaymentsPage() {
                                     </div>
                                     <div className="flex justify-between items-center pt-4 border-t border-white/5">
                                         <span className="text-base font-bold text-white">Toplam Ödeme</span>
-                                        <span className="text-xl font-black text-purple-400">₺{(selectedOrder.amount || 0).toLocaleString('tr-TR')}</span>
+                                        <span className="text-xl font-black text-purple-400">₺{formatCurrency(selectedOrder.amount || 0)}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="p-4 bg-gray-950/50 flex justify-end">
+                        <div className="p-4 bg-gray-950/50 flex justify-between items-center gap-3">
+                            {/* Show action buttons for awaiting_transfer orders */}
+                            {selectedOrder.status === 'awaiting_transfer' && (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            handleAction(selectedOrder._id, 'approve');
+                                            setSelectedOrder(null);
+                                        }}
+                                        disabled={!!actionLoading}
+                                        className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                                    >
+                                        {actionLoading === selectedOrder._id + 'approve' ? (
+                                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <CheckCircle className="w-3.5 h-3.5" />
+                                        )}
+                                        Onayla
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleAction(selectedOrder._id, 'reject');
+                                            setSelectedOrder(null);
+                                        }}
+                                        disabled={!!actionLoading}
+                                        className="px-6 py-2.5 bg-red-900/20 hover:bg-red-900/40 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                                    >
+                                        {actionLoading === selectedOrder._id + 'reject' ? (
+                                            <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <XCircle className="w-3.5 h-3.5" />
+                                        )}
+                                        Reddet
+                                    </button>
+                                </div>
+                            )}
+                            
+                            {/* Show Delete button only for history items (completed or failed) */}
+                            {(selectedOrder.status === 'completed' || selectedOrder.status === 'failed') && (
+                                <button 
+                                    onClick={() => handleDeleteOrder(selectedOrder._id)}
+                                    disabled={deletingOrder}
+                                    className="px-6 py-2.5 bg-red-900/20 hover:bg-red-900/40 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {deletingOrder ? (
+                                        <>
+                                            <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                                            Siliniyor...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircle className="w-3.5 h-3.5" />
+                                            Siparişi Sil
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                            
                             <button 
                                 onClick={() => setSelectedOrder(null)}
-                                className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold rounded-xl transition-all active:scale-95"
+                                className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold rounded-xl transition-all active:scale-95 ml-auto"
                             >
                                 Kapat
                             </button>

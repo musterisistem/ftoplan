@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Globe, User, Mail, Phone, Package, Server, ShieldAlert, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
+import PinVerification from '@/components/PinVerification';
 
 interface Photographer {
     _id: string;
@@ -16,6 +17,7 @@ interface Photographer {
     storageLimit: number;
     isActive: boolean;
     subscriptionExpiry?: string;
+    createdAt?: string;
     legalConsents?: {
         privacyPolicyConfirmed: boolean;
         termsOfUseConfirmed: boolean;
@@ -36,6 +38,8 @@ export default function EditPhotographerPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pendingSaveData, setPendingSaveData] = useState<any>(null);
 
     const formatPhoneNumber = (value: string) => {
         const cleaned = value.replace(/[^\d+]/g, '');
@@ -88,37 +92,68 @@ export default function EditPhotographerPage() {
 
     const handleSave = async () => {
         if (!photographer) return;
+
+        // Check if email or phone changed - if so, require PIN
+        const originalPhotographer = await fetch(`/api/superadmin/photographers/${id}`).then(r => r.json());
+        const emailChanged = photographer.email !== originalPhotographer.email;
+        const phoneChanged = photographer.phone !== originalPhotographer.phone;
+
+        if (emailChanged || phoneChanged) {
+            // Store the data and show PIN modal
+            setPendingSaveData({
+                name: photographer.name,
+                email: photographer.email,
+                studioName: photographer.studioName,
+                slug: photographer.slug,
+                phone: photographer.phone,
+                packageType: photographer.packageType,
+                storageLimit: photographer.storageLimit,
+                isActive: photographer.isActive,
+                subscriptionExpiry: photographer.subscriptionExpiry
+            });
+            setShowPinModal(true);
+            return;
+        }
+
+        // If no email/phone change, save directly
+        executeSave({
+            name: photographer.name,
+            studioName: photographer.studioName,
+            slug: photographer.slug,
+            phone: photographer.phone,
+            packageType: photographer.packageType,
+            storageLimit: photographer.storageLimit,
+            isActive: photographer.isActive,
+            subscriptionExpiry: photographer.subscriptionExpiry
+        });
+    };
+
+    const executeSave = async (data: any) => {
         setSaving(true);
         setError('');
         setSuccess('');
+        setShowPinModal(false);
 
         try {
             const res = await fetch(`/api/superadmin/photographers/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: photographer.name,
-                    studioName: photographer.studioName,
-                    slug: photographer.slug,
-                    phone: photographer.phone,
-                    packageType: photographer.packageType,
-                    storageLimit: photographer.storageLimit,
-                    isActive: photographer.isActive,
-                    subscriptionExpiry: photographer.subscriptionExpiry
-                })
+                body: JSON.stringify(data)
             });
 
             if (res.ok) {
                 setSuccess('Değişiklikler kaydedildi!');
                 setTimeout(() => setSuccess(''), 3000);
+                fetchPhotographer(); // Refresh data
             } else {
-                const data = await res.json();
-                setError(data.error || 'Bir hata oluştu');
+                const responseData = await res.json();
+                setError(responseData.error || 'Bir hata oluştu');
             }
         } catch (error) {
             setError('Sunucu hatası');
         } finally {
             setSaving(false);
+            setPendingSaveData(null);
         }
     };
 
@@ -252,8 +287,8 @@ export default function EditPhotographerPage() {
                         <input
                             type="email"
                             value={photographer.email}
-                            disabled
-                            className="w-full px-4 py-3 bg-gray-900/30 border border-white/10 rounded-lg text-gray-500"
+                            onChange={(e) => setPhotographer({ ...photographer, email: e.target.value })}
+                            className="w-full px-4 py-3 bg-gray-900/50 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                     </div>
                     <div>
@@ -323,6 +358,38 @@ export default function EditPhotographerPage() {
                         />
                     </div>
                 </div>
+
+                {/* Subscription Info */}
+                {photographer.subscriptionExpiry && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <p className="text-xs text-gray-400 mb-1">Üyelik Başlangıç</p>
+                                <p className="text-sm font-semibold text-white">
+                                    {photographer.createdAt ? new Date(photographer.createdAt).toLocaleDateString('tr-TR') : '-'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-400 mb-1">Üyelik Bitiş</p>
+                                <p className="text-sm font-semibold text-white">
+                                    {new Date(photographer.subscriptionExpiry).toLocaleDateString('tr-TR')}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-400 mb-1">Kalan Gün</p>
+                                <p className={`text-sm font-semibold ${
+                                    Math.ceil((new Date(photographer.subscriptionExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) < 7
+                                        ? 'text-red-400'
+                                        : Math.ceil((new Date(photographer.subscriptionExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) < 30
+                                        ? 'text-yellow-400'
+                                        : 'text-green-400'
+                                }`}>
+                                    {Math.max(0, Math.ceil((new Date(photographer.subscriptionExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} gün
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Active Toggle */}
                 <div className="flex items-center justify-between pt-4 border-t border-white/10">
@@ -407,6 +474,19 @@ export default function EditPhotographerPage() {
                     </div>
                 )}
             </div>
+
+            {/* PIN Verification Modal */}
+            {showPinModal && pendingSaveData && (
+                <PinVerification
+                    title="Güvenlik Doğrulaması"
+                    description="Email veya telefon bilgisini güncellemek için PIN kodunu girin."
+                    onVerify={() => executeSave(pendingSaveData)}
+                    onCancel={() => {
+                        setShowPinModal(false);
+                        setPendingSaveData(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

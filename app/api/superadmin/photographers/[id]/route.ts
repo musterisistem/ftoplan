@@ -38,6 +38,18 @@ export async function PUT(
         console.log('PUT Photographer - Body received:', body);
         console.log('PUT Photographer - Slug in body:', body.slug);
 
+        // Check if email is being updated and if it already exists for another user
+        if (body.email) {
+            const existingEmail = await User.findOne({
+                email: body.email.toLowerCase(),
+                _id: { $ne: id }
+            });
+            if (existingEmail) {
+                return NextResponse.json({ error: 'Bu email adresi zaten kullanılıyor' }, { status: 400 });
+            }
+            body.email = body.email.toLowerCase();
+        }
+
         // Check if slug is being updated and if it already exists for another user
         if (body.slug) {
             const existingSlug = await User.findOne({
