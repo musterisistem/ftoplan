@@ -22,13 +22,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAlert } from '@/context/AlertContext';
 import { Suspense } from 'react';
 
-// Mock Data (In a real app, these would come from APIs)
-const PACKAGES = [
-    { id: '1', name: 'Gold Düğün Paketi', price: 15000 },
-    { id: '2', name: 'Platin Dış Çekim', price: 8500 },
-    { id: '3', name: 'Standart Video Klip', price: 5000 },
-];
-
 function NewAppointmentContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -40,12 +33,26 @@ function NewAppointmentContent() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [noAppointment, setNoAppointment] = useState(false);
     const [contracts, setContracts] = useState<any[]>([]);
+    const [packages, setPackages] = useState<any[]>([]);
 
     useEffect(() => {
+        // Fetch contracts
         fetch('/api/contracts')
             .then(res => res.json())
             .then(data => setContracts(data))
             .catch(err => console.error('Failed to fetch contracts', err));
+        
+        // Fetch packages
+        fetch('/api/admin/packages')
+            .then(res => res.json())
+            .then(data => {
+                if (data.packages) {
+                    // Only show active packages
+                    const activePackages = data.packages.filter((pkg: any) => pkg.isActive);
+                    setPackages(activePackages);
+                }
+            })
+            .catch(err => console.error('Failed to fetch packages', err));
     }, []);
 
     // Credentials Modal State
@@ -173,7 +180,7 @@ function NewAppointmentContent() {
     // Handlers
     const handlePackageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const pkgId = e.target.value;
-        const pkg = PACKAGES.find(p => p.id === pkgId);
+        const pkg = packages.find(p => p._id === pkgId);
         if (pkg) {
             setFormData(prev => ({ ...prev, packageId: pkgId, listPrice: pkg.price, agreedPrice: pkg.price }));
         } else {
@@ -645,7 +652,7 @@ function NewAppointmentContent() {
                             {pricingType === 'package' && (
                                 <select value={formData.packageId} onChange={handlePackageChange} className="w-full px-3 py-3 text-sm border border-gray-200 rounded-xl focus:border-indigo-500 outline-none bg-white">
                                     <option value="">Paket Seçiniz</option>
-                                    {PACKAGES.map(pkg => (<option key={pkg.id} value={pkg.id}>{pkg.name} - {pkg.price.toLocaleString()} TL</option>))}
+                                    {packages.map(pkg => (<option key={pkg._id} value={pkg._id}>{pkg.name} - {pkg.price?.toLocaleString() || 0} TL</option>))}
                                 </select>
                             )}
                             <div>
