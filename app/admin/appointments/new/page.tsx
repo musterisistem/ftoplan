@@ -47,9 +47,8 @@ function NewAppointmentContent() {
             .then(res => res.json())
             .then(data => {
                 if (data.packages) {
-                    // Only show active packages
-                    const activePackages = data.packages.filter((pkg: any) => pkg.isActive);
-                    setPackages(activePackages);
+                    // Show all packages (active and inactive)
+                    setPackages(data.packages);
                 }
             })
             .catch(err => console.error('Failed to fetch packages', err));

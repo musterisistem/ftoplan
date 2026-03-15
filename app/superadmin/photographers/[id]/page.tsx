@@ -16,6 +16,8 @@ interface Photographer {
     packageType: string;
     storageLimit: number;
     isActive: boolean;
+    isEmailVerified?: boolean;
+    isPhoneVerified?: boolean;
     subscriptionExpiry?: string;
     createdAt?: string;
     legalConsents?: {
@@ -124,6 +126,8 @@ export default function EditPhotographerPage() {
             packageType: photographer.packageType,
             storageLimit: photographer.storageLimit,
             isActive: photographer.isActive,
+            isEmailVerified: photographer.isEmailVerified,
+            isPhoneVerified: photographer.isPhoneVerified,
             subscriptionExpiry: photographer.subscriptionExpiry
         });
     };
@@ -405,6 +409,40 @@ export default function EditPhotographerPage() {
                             }`}
                     >
                         {photographer.isActive ? 'Aktif' : 'Pasif'}
+                    </button>
+                </div>
+
+                {/* Email Verification Toggle */}
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                    <div>
+                        <p className="text-white font-medium">Email Doğrulama</p>
+                        <p className="text-sm text-gray-400">Doğrulanmış hesaplar email doğrulama ekranı görmez</p>
+                    </div>
+                    <button
+                        onClick={() => setPhotographer({ ...photographer, isEmailVerified: !photographer.isEmailVerified })}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${photographer.isEmailVerified
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            }`}
+                    >
+                        {photographer.isEmailVerified ? 'Doğrulanmış' : 'Doğrulanmamış'}
+                    </button>
+                </div>
+
+                {/* Phone Verification Toggle */}
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                    <div>
+                        <p className="text-white font-medium">SMS Doğrulama</p>
+                        <p className="text-sm text-gray-400">Doğrulanmış hesaplar SMS doğrulama ekranı görmez</p>
+                    </div>
+                    <button
+                        onClick={() => setPhotographer({ ...photographer, isPhoneVerified: !photographer.isPhoneVerified })}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${photographer.isPhoneVerified
+                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                            : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                            }`}
+                    >
+                        {photographer.isPhoneVerified ? 'Doğrulanmış' : 'Doğrulanmamış'}
                     </button>
                 </div>
             </div>

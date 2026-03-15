@@ -197,10 +197,10 @@ export default function Header() {
                     {(session?.user?.packageType === 'trial' || session?.user?.packageType === 'standart') && (
                         <button
                             onClick={() => setUpgradeModalOpen(true)}
-                            className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
+                            className="hidden sm:flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-indigo-50"
                         >
-                            <Zap className="w-4 h-4" />
-                            <span>Paketi Yükselt</span>
+                            <Zap className="w-3.5 h-3.5" />
+                            <span>Yükselt</span>
                         </button>
                     )}
 
