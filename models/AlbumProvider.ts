@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const AlbumProviderSchema = new mongoose.Schema({
     photographerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Subscriber',
+        ref: 'User',
         required: true,
     },
     name: {
