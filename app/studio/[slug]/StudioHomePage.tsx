@@ -237,13 +237,10 @@ export default function StudioHomePage({ photographer }: { photographer: Photogr
                             </a>
                         )}
                         {photographer.phone && (
-                            <a
-                                href={`tel:${photographer.phone}`}
-                                className="flex items-center gap-3 px-8 py-5 bg-white/5 border border-white/20 text-white rounded-2xl font-bold text-lg hover:bg-white hover:text-gray-900 transition-all duration-300"
-                            >
+                            <div className="flex items-center gap-3 px-8 py-5 bg-white/5 border border-white/20 text-white rounded-2xl font-bold text-lg">
                                 <Phone className="w-6 h-6" />
                                 Ara: {photographer.phone}
-                            </a>
+                            </div>
                         )}
                         {photographer.instagram && (
                             <a

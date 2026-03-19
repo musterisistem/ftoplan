@@ -11,7 +11,6 @@ export default function WarmContact({ photographer, slug }: { photographer: any;
             icon: MapPin,
             title: 'ADRES',
             value: photographer.address || null,
-            href: photographer.address ? `https://maps.google.com/?q=${photographer.address}` : null,
             visible: !!photographer.address
         },
         {
@@ -19,7 +18,6 @@ export default function WarmContact({ photographer, slug }: { photographer: any;
             icon: Phone,
             title: 'TELEFON',
             value: photographer.phone || '+90 555 000 0000',
-            href: `tel:${photographer.phone}`,
             visible: true
         },
         {
@@ -27,7 +25,6 @@ export default function WarmContact({ photographer, slug }: { photographer: any;
             icon: MessageCircle,
             title: 'WHATSAPP',
             value: photographer.whatsapp || 'Mesaj Gönder',
-            href: `https://wa.me/${photographer.whatsapp?.replace(/\D/g, '')}`,
             visible: true
         },
         {
@@ -35,7 +32,6 @@ export default function WarmContact({ photographer, slug }: { photographer: any;
             icon: Mail,
             title: 'E-POSTA',
             value: photographer.email || 'hello@studio.com',
-            href: `mailto:${photographer.email}`,
             visible: true
         }
     ];
@@ -84,16 +80,14 @@ export default function WarmContact({ photographer, slug }: { photographer: any;
                 {/* INFO TEXT GRID (No Boxes) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8">
                     {contacts.filter(c => c.visible).map((c, i) => (
-                        <motion.a
+                        <motion.div
                             key={i}
-                            href={c.href || '#'}
-                            target="_blank"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.15, duration: 0.6 }}
                             className="group block"
                         >
-                            <div className={`flex items-center gap-3 mb-4 ${cardTitle} ${cardGroupHover} transition-colors`}>
+                            <div className={`flex items-center gap-3 mb-4 ${cardTitle} transition-colors`}>
                                 <c.icon className="w-5 h-5" />
                                 <span className="text-xs font-bold tracking-[0.2em] uppercase font-syne">{c.title}</span>
                             </div>
@@ -102,12 +96,10 @@ export default function WarmContact({ photographer, slug }: { photographer: any;
                                 <h3 className={`text-xl md:text-2xl font-medium leading-snug transition-colors ${cardValue}`}>
                                     {c.value}
                                 </h3>
-                                {/* Hover Line Animation */}
-                                <div className={`h-[1px] w-full ${lineBg} mt-6 relative overflow-hidden`}>
-                                    <div className={`absolute inset-0 w-full -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out ${lineActive}`} />
-                                </div>
+                                {/* Static Line */}
+                                <div className={`h-[1px] w-full ${lineBg} mt-6`} />
                             </div>
-                        </motion.a>
+                        </motion.div>
                     ))}
                 </div>
             </div>

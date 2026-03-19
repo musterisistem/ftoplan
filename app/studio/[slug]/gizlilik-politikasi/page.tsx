@@ -212,13 +212,13 @@ export default async function GizlilikPolitikasiPage({ params }: { params: Promi
                         {photographer.phone && (
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-semibold text-gray-500 w-24">Telefon</span>
-                                <a href={`tel:${photographer.phone}`} className="text-sm font-medium text-blue-600">{photographer.phone}</a>
+                                <span className="text-sm font-medium text-gray-900">{photographer.phone}</span>
                             </div>
                         )}
                         {photographer.email && (
                             <div className="flex items-center gap-3">
                                 <span className="text-xs font-semibold text-gray-500 w-24">E-posta</span>
-                                <a href={`mailto:${photographer.email}`} className="text-sm font-medium text-blue-600">{photographer.email}</a>
+                                <span className="text-sm font-medium text-gray-900">{photographer.email}</span>
                             </div>
                         )}
                     </div>
